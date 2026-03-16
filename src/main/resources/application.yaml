@@ -1,7 +1,8 @@
 spring:
-  application:
-    name: campusClassroomReservationSystem
+#  激活local配置
   profiles:
     active: local
+  application:
+    name: campusClassroomReservationSystem
 server:
   port: 8080

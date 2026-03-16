@@ -7,7 +7,7 @@ import org.springframework.context.annotation.ComponentScan;
 
 
 @SpringBootApplication
-@ComponentScan("org.campus.classroom.controller")
+@ComponentScan({"org.campus.classroom.controller", "org.campus.classroom.service", "org.campus.classroom.utils"})
 @MapperScan("org.campus.classroom.mapper")
 public class CampusClassroomReservationSystemApplication {
     public static void main(String[] args) {

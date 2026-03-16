@@ -2,11 +2,18 @@ package org.campus.classroom.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Data
-@AllArgsConstructor
 public class User {
-    private long id;
+    private Long id;
     private String username;
     private String password;
+    private String nickname;
+    private String email;
+    private String role;
+    private int status;
+    private LocalDateTime createTime;
 }
