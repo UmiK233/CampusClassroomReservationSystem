@@ -1,27 +1,37 @@
 package org.campus.classroom.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.campus.classroom.dto.RegisterRequest;
+import org.campus.classroom.dto.LoginDTO;
+import org.campus.classroom.dto.RegisterDTO;
 import org.campus.classroom.entity.User;
+import org.campus.classroom.exception.BusinessException;
 import org.campus.classroom.mapper.UserMapper;
+import org.campus.classroom.security.JwtTokenProvider;
 import org.campus.classroom.service.AuthService;
+import org.campus.classroom.vo.LoginVO;
+import org.campus.classroom.vo.UserInfoVO;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
+
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Override
-    public void register(RegisterRequest request) {
+    public void register(RegisterDTO request) {
         // 1. 判重
         User existUser = userMapper.findByUsername(request.getUsername());
         if (existUser != null) {
-            throw new RuntimeException("用户名已存在");
+            throw new BusinessException(400, "用户名已存在");
         }
 
         // 2. 组装用户对象
         User user = new User();
+        //Mapper默认自增id,不需要设置id,置为null即可
         user.setUsername(request.getUsername());
         user.setPassword(request.getPassword());
         // 默认昵称使用用户名
@@ -32,7 +42,56 @@ public class AuthServiceImpl implements AuthService {
         // 3. 保存
         int rows = userMapper.insert(user);
         if (rows <= 0) {
-            throw new RuntimeException("注册失败");
+            throw new BusinessException(500, "注册失败");
         }
     }
+
+    @Override
+    public LoginVO login(LoginDTO request) {
+        // 1. 查用户
+        User user = userMapper.findByUsername(request.getUsername());
+        if (user == null) {
+            throw new BusinessException(400, "用户不存在");
+        }
+        // 2. 判断状态
+        if (user.getStatus() == null || user.getStatus() != 1) {
+            throw new BusinessException(400, "账号已被禁用");
+        }
+        // 3. 判断密码
+        if (!Objects.equals(user.getPassword(), request.getPassword())) {
+            throw new BusinessException(401, "用户名或密码错误");
+        }
+        // 4. 生成 token
+        String token = jwtTokenProvider.generateToken(user.getId(), user.getUsername(), user.getRole());
+        // 5. 生成UserInfo
+        UserInfoVO userInfoVO = new UserInfoVO();
+        userInfoVO.setId(user.getId());
+        userInfoVO.setUsername(user.getUsername());
+        userInfoVO.setNickname(user.getNickname());
+        userInfoVO.setEmail(user.getEmail());
+        userInfoVO.setRole(user.getRole());
+        // 6. 返回结果
+        LoginVO loginVO = new LoginVO();
+        loginVO.setToken(token);
+        loginVO.setUserInfo(userInfoVO);
+        return loginVO;
+    }
+
+    @Override
+    public UserInfoVO getUserInfo(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new BusinessException(400, "未登录");
+        }
+        String token = authHeader.substring(7);
+        String userId = jwtTokenProvider.parseToken(token);
+        User user = userMapper.findById(Long.parseLong(userId));
+        UserInfoVO userInfoVO = new UserInfoVO();
+        userInfoVO.setId(user.getId());
+        userInfoVO.setUsername(user.getUsername());
+        userInfoVO.setNickname(user.getNickname());
+        userInfoVO.setEmail(user.getEmail());
+        userInfoVO.setRole(user.getRole());
+        return userInfoVO;
+    }
+
 }

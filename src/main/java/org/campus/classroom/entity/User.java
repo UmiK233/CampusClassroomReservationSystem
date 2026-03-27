@@ -14,6 +14,6 @@ public class User {
     private String nickname;
     private String email;
     private String role;
-    private int status;
+    private Integer status;
     private LocalDateTime createTime;
 }

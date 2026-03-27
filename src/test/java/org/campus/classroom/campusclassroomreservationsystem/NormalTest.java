@@ -1,6 +1,7 @@
 package org.campus.classroom.campusclassroomreservationsystem;
 
 import io.jsonwebtoken.impl.Base64UrlCodec;
+import org.campus.classroom.common.ResultCode;
 import org.campus.classroom.utils.JWTUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
