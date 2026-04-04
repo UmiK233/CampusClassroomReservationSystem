@@ -16,8 +16,8 @@ public class SeatController {
     private final SeatService seatService;
 
     @PutMapping("/{id}")
-    public Result<SeatVO> update(@PathVariable @NotNull String id,@RequestBody SeatUpdateDTO request) {
-        seatService.update(Long.valueOf(id), request);
-        return Result.success("座位信息更新成功",seatService.getSeatById(Long.valueOf(id)));
+    public Result<SeatVO> update(@PathVariable @NotNull Long id,@RequestBody SeatUpdateDTO request) {
+        seatService.update(id, request);
+        return Result.success("座位信息更新成功",seatService.getSeatById(id));
     }
 }

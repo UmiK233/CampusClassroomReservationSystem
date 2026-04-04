@@ -48,8 +48,8 @@ public class AdminClassroomController {
     }
 
     @GetMapping("/list")
-    public List<ClassroomVO> list(String building, @RequestParam("min_capacity") Integer minCapacity, String status) {
-        return classroomService.adminGetClassroomList(building, minCapacity, status);
+    public Result<List<ClassroomVO>>  list(String building, @RequestParam("min_capacity") Integer minCapacity, String status) {
+        return Result.success("获取成功",classroomService.adminGetClassroomList(building, minCapacity, status));
     }
 
 }

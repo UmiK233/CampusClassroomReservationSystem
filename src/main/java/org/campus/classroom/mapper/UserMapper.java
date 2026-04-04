@@ -8,10 +8,10 @@ import org.campus.classroom.entity.User;
 
 public interface UserMapper {
     @Select("select * from user where id = #{id}")
-    User findById(Long id);
+    User selectById(Long id);
 
     @Select("select * from user where username = #{username} limit 1")
-    User findByUsername(String username);
+    User selectByUsername(String username);
 
     @Insert("insert into user(username, password,nickname,email, role) values(#{username}, #{password}, #{nickname}, #{email},#{role})")
     @Options(useGeneratedKeys = true, keyProperty = "id")

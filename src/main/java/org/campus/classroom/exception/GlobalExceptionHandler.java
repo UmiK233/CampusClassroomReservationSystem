@@ -1,15 +1,47 @@
 package org.campus.classroom.exception;
 
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import org.apache.tomcat.websocket.AuthenticationException;
 import org.campus.classroom.common.Result;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    /**
+     * 捕获 JWT 过期异常
+     */
+    @ExceptionHandler(ExpiredJwtException.class)
+    public Result<String> handleExpiredJwtException(ExpiredJwtException e) {
+        // 返回你项目统一的格式就行
+        return Result.fail(401, "登录状态已过期，请重新登录");
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public Result<String> handleJwtException(JwtException e) {
+        // 返回你项目统一的格式就行
+        return Result.fail(401, "无效的登录状态，请重新登录");
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public Result<String> handleBadCredentialsException(BadCredentialsException e) {
+        // 返回你项目统一的格式就行
+        return Result.fail(401, "认证失败，请检查用户名和密码");
+    }
+    @ExceptionHandler(AccessDeniedException.class)
+    public Result<String> handleAccessDeniedException(AccessDeniedException e) {
+        // 返回你项目统一的格式就行
+        return Result.fail(401, "权限不足，无法访问");
+    }
+
 
     @ExceptionHandler(BusinessException.class)
     public Result<Void> handleBusinessException(BusinessException e) {

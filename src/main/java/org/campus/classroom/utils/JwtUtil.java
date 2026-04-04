@@ -10,16 +10,16 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+
 @Component
-public class JWTUtils {
+public class JwtUtil {
     private final SecretKey KEY;
     private final long DEFAULT_EXPIRATION; // 默认过期时间1小时
 
-    public JWTUtils(@Value("${jwt.secret}") String secretKey, @Value("${jwt.expiration}") long expirationTime) {
+    public JwtUtil(@Value("${jwt.secret}") String secretKey, @Value("${jwt.expiration}") long expirationTime) {
         this.KEY = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
         this.DEFAULT_EXPIRATION = expirationTime; // 1小时
     }
@@ -41,15 +41,14 @@ public class JWTUtils {
     /**
      * 生成 JWT
      *
-     * @param userId
-     * @param username
-     * @param role
-     * @param expirationTime 过期时间（毫秒）
+     * @param userId 1
+     * @param username 1
+     * @param role 1
      * @return token
      */
-    public String generateToken(Long userId, String username, String role, long expirationTime) {
+    public String generateToken(Long userId, String username, String role) {
         Date now = new Date();
-        Date expireDate = new Date(now.getTime() + expirationTime);
+        Date expireDate = new Date(now.getTime() + DEFAULT_EXPIRATION);
         Map<String, Object> claims = new LinkedHashMap<>();
         claims.put("username", username);
         claims.put("role", role);
@@ -67,19 +66,19 @@ public class JWTUtils {
 
 
     /**
-     * 解析 token，成功返回 subject，失败抛异常
+     * 解析 token，成功返回 Claims，失败抛异常
      *
      * @param token JWT字符串
      * @return subject
      */
-    public String parseToken(String token) {
+    public Claims parseToken(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(KEY)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
 
-        return claims.getSubject();
+        return claims;
     }
 
     /**

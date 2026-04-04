@@ -12,10 +12,7 @@ public interface ClassroomMapper {
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(Classroom classroom);
 
-    @Select("select id,room_number as roomNumber,building,seat_rows as seatRows,seat_cols as seatCols,status,remark from classroom where id = #{id}")
-    Classroom selectById(Long id);
-
-    @Select("select * from classroom where building = #{building} and seat_rows*seat_cols >= #{min_capacity} and status = #{status}")
+    @Select("select * from classroom where id = #{id}")
     @Results(id = "classroomResultMap", value = {
             @Result(column = "id", property = "id"),
             @Result(column = "room_number", property = "roomNumber"),
@@ -25,6 +22,10 @@ public interface ClassroomMapper {
             @Result(column = "status", property = "status"),
             @Result(column = "remark", property = "remark")
     })
+    Classroom selectById(Long id);
+
+    @Select("select * from classroom where building = #{building} and seat_rows*seat_cols >= #{min_capacity} and status = #{status}")
+    @ResultMap("classroomResultMap")
     List<Classroom> selectList(@Param("building")String building,@Param("min_capacity") Integer minCapacity,@Param("status") String status);
 
     @Select("select * from classroom where building=#{building} and room_number=#{room_number}")

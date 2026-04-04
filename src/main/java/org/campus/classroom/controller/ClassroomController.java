@@ -19,14 +19,14 @@ public class ClassroomController {
     private final SeatService seatService;
 
     @GetMapping("/{id}")
-    public Result<ClassroomVO> getClassroomById(@PathVariable @NotNull String id) {
-        ClassroomVO classroomVO = classroomService.getClassroomById(Long.valueOf(id));
+    public Result<ClassroomVO> getClassroomById(@PathVariable @NotNull Long id) {
+        ClassroomVO classroomVO = classroomService.getClassroomById(id);
         return Result.success("查询成功", classroomVO);
     }
 
     @GetMapping("/{id}/seats")
-    public Result<ClassroomSeatLayoutVO> getClassroomSeatLayout(@PathVariable @NotNull String id) {
-        ClassroomSeatLayoutVO classroomSeatLayoutVO = seatService.getSeatLayout(Long.valueOf(id));
+    public Result<ClassroomSeatLayoutVO> getClassroomSeatLayout(@PathVariable @NotNull Long id) {
+        ClassroomSeatLayoutVO classroomSeatLayoutVO = seatService.getSeatLayout(id);
         return Result.success("查询成功", classroomSeatLayoutVO);
     }
 

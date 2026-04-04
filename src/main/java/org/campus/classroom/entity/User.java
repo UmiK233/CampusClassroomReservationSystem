@@ -15,5 +15,6 @@ public class User {
     private String email;
     private String role;
     private Integer status;
+    //插入自动生成,取出时需要对应
     private LocalDateTime createTime;
 }
