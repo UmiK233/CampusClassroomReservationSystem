@@ -6,12 +6,14 @@ import org.campus.classroom.dto.ClassroomUpdateDTO;
 import org.campus.classroom.entity.Classroom;
 import org.campus.classroom.entity.Seat;
 import org.campus.classroom.enums.ClassroomStatus;
+import org.campus.classroom.enums.ResultCode;
 import org.campus.classroom.enums.SeatStatus;
 import org.campus.classroom.exception.BusinessException;
 import org.campus.classroom.mapper.ClassroomMapper;
 import org.campus.classroom.mapper.SeatMapper;
 import org.campus.classroom.service.ClassroomService;
 import org.campus.classroom.vo.ClassroomVO;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -31,7 +33,7 @@ public class ClassroomServiceImpl implements ClassroomService {
         //1.判重
         Classroom existing = classroomMapper.selectByBuildingAndNumber(request.getBuilding().trim(), request.getRoomNumber().trim());
         if (existing != null) {
-            throw new BusinessException(402, "该教学楼下教室名称已存在");
+            throw new BusinessException(ResultCode.CONFLICT, "该教学楼下教室名称已存在");
         }
 
         //2. 检验DTO的status参数, 若不存在则默认设为ENABLE, 若存在则判断是否合法后使用
@@ -55,7 +57,7 @@ public class ClassroomServiceImpl implements ClassroomService {
         //将Entity对象插入数据库
         int rows = classroomMapper.insert(classroom);
         if (rows <= 0) {
-            throw new BusinessException(400, "创建失败");
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "创建失败");
         }
         //插入成功后，MyBatis会自动将生成的主键ID设置到classroom对象的id属性中,因此我们可以直接使用classroom.getId()来获取新创建的教室ID。
         //根据教室的行列数生成座位数据并插入数据库
@@ -84,9 +86,9 @@ public class ClassroomServiceImpl implements ClassroomService {
         //1. 查询是否存在
         Classroom existing = classroomMapper.selectById(id);
         if (existing == null) {
-            throw new BusinessException(404, "教室不存在");
+            throw new BusinessException(ResultCode.BAD_REQUEST, "教室不存在");
         }
-        //2. 是否和别的教室重名
+        //2. 是否重复教室
         checkDuplicate(existing.getBuilding().trim(), existing.getRoomNumber().trim(), id);
 
         //3. 检验DTO的status参数,若不存在则默认为之前的,若存在则判断是否合法后使用
@@ -106,7 +108,7 @@ public class ClassroomServiceImpl implements ClassroomService {
 
         int rows = classroomMapper.updateById(classroom);
         if (rows <= 0) {
-            throw new BusinessException(400, "更新失败");
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "更新失败");
         }
         return true;
     }
@@ -116,10 +118,10 @@ public class ClassroomServiceImpl implements ClassroomService {
         //1.查询是否存在
         Classroom classroom = classroomMapper.selectById(id);
         if (classroom == null) {
-            throw new BusinessException(404,"教室不存在");
+            throw new BusinessException(ResultCode.BAD_REQUEST,"教室不存在");
         }
         //2.将Entity对象转换为VO对象
-        return toVO(classroom);
+        return classroomToClassroomVO(classroom);
     }
 
     /**
@@ -135,7 +137,7 @@ public class ClassroomServiceImpl implements ClassroomService {
         List<Classroom> classroomList = classroomMapper.selectList(building, minCapacity, ClassroomStatus.ENABLED.name());
         //将Entity对象转换为VO对象
         return classroomList.stream()
-                .map(this::toVO)
+                .map(this::classroomToClassroomVO)
                 .collect(Collectors.toList());
     }
 
@@ -155,39 +157,33 @@ public class ClassroomServiceImpl implements ClassroomService {
         }
         List<Classroom> classrooms = classroomMapper.selectList(building, minCapacity, status);
         return classrooms.stream()
-                .map(this::toVO)
+                .map(this::classroomToClassroomVO)
                 .toList();
     }
 
     private void checkDuplicate(String building, String roomNumber, Long currentId) {
         Classroom duplicate = classroomMapper.selectByBuildingAndNumber(building, roomNumber);
-        //如果没有查询到重复的教室，说明没有重名问题，直接返回
+        //如果没有查询到重复的教室，说明没有重复问题，直接返回
         if (duplicate == null) {
             return;
         }
-        //如果查询到的重复教室的ID和当前正在更新的教室ID不同，说明存在重名问题，抛出异常
+        //如果查询到的重复教室的ID和当前正在更新的教室ID不同，说明存在重复问题，抛出异常
         if (!duplicate.getId().equals(currentId)) {
-            throw new BusinessException(402, "该教学楼下教室名称已存在");
+            throw new BusinessException(ResultCode.BAD_REQUEST, "该教学楼下教室名称已存在");
         }
     }
 
     private void validateStatus(String status) {
         if (!ClassroomStatus.ENABLED.name().equals(status)
                 && !ClassroomStatus.DISABLED.name().equals(status)) {
-            throw new BusinessException(402, "状态只能是 ENABLED 或 DISABLED");
+            throw new BusinessException(ResultCode.BAD_REQUEST, "状态只能是 ENABLED 或 DISABLED");
         }
     }
 
-    private ClassroomVO toVO(Classroom classroom) {
+    private ClassroomVO classroomToClassroomVO(Classroom classroom) {
         ClassroomVO classroomVO = new ClassroomVO();
-        classroomVO.setId(classroom.getId());
-        classroomVO.setRoomNumber(classroom.getRoomNumber());
-        classroomVO.setBuilding(classroom.getBuilding());
-        classroomVO.setSeatRows(classroom.getSeatRows());
-        classroomVO.setSeatCols(classroom.getSeatCols());
+        BeanUtils.copyProperties(classroom, classroomVO);
         classroomVO.setCapacity(classroom.getSeatRows() * classroom.getSeatCols());
-        classroomVO.setStatus(classroom.getStatus());
-        classroomVO.setRemark(classroom.getRemark());
         return classroomVO;
     }
 

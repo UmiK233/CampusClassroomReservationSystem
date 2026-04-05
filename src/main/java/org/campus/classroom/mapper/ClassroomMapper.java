@@ -3,6 +3,7 @@ package org.campus.classroom.mapper;
 import org.apache.ibatis.annotations.*;
 import org.campus.classroom.entity.Classroom;
 
+import java.util.Collection;
 import java.util.List;
 
 @Mapper
@@ -24,13 +25,23 @@ public interface ClassroomMapper {
     })
     Classroom selectById(Long id);
 
+
+    @Select("""
+        <script>
+            select * from classroom where id in
+            <foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach>
+        </script>
+        """)
+    @ResultMap("classroomResultMap")
+    List<Classroom> selectByIds(@Param("ids") Collection<Long> ids);
+
     @Select("select * from classroom where building = #{building} and seat_rows*seat_cols >= #{min_capacity} and status = #{status}")
     @ResultMap("classroomResultMap")
-    List<Classroom> selectList(@Param("building")String building,@Param("min_capacity") Integer minCapacity,@Param("status") String status);
+    List<Classroom> selectList(@Param("building") String building, @Param("min_capacity") Integer minCapacity, @Param("status") String status);
 
     @Select("select * from classroom where building=#{building} and room_number=#{room_number}")
     @ResultMap("classroomResultMap")
-    Classroom selectByBuildingAndNumber(@Param("building") String building,@Param("room_number") String roomNumber);
+    Classroom selectByBuildingAndNumber(@Param("building") String building, @Param("room_number") String roomNumber);
 
     @Update("update classroom set status = #{status},remark = #{remark} where id = #{id}")
     int updateById(Classroom classroom);

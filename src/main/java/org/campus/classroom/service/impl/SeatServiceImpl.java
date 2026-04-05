@@ -5,6 +5,7 @@ import org.campus.classroom.dto.SeatUpdateDTO;
 import org.campus.classroom.entity.Classroom;
 import org.campus.classroom.entity.Seat;
 import org.campus.classroom.enums.ClassroomStatus;
+import org.campus.classroom.enums.ResultCode;
 import org.campus.classroom.enums.SeatStatus;
 import org.campus.classroom.exception.BusinessException;
 import org.campus.classroom.mapper.ClassroomMapper;
@@ -12,6 +13,7 @@ import org.campus.classroom.mapper.SeatMapper;
 import org.campus.classroom.service.SeatService;
 import org.campus.classroom.vo.ClassroomSeatLayoutVO;
 import org.campus.classroom.vo.SeatVO;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +32,7 @@ public class SeatServiceImpl implements SeatService {
         //2.判断教室是否已经初始化过座位
         int count = seatMapper.countByClassroomId(classroomId);
         if (count > 0) {
-            throw new BusinessException(400, "座位已经初始化过了");
+            throw new BusinessException(ResultCode.BAD_REQUEST, "座位已经初始化过了");
         }
         Classroom classroom = classroomMapper.selectById(classroomId);
         //初始化座位
@@ -51,9 +53,9 @@ public class SeatServiceImpl implements SeatService {
     public SeatVO getSeatById(Long id) {
         Seat seat = seatMapper.selectById(id);
         if (seat == null) {
-            throw new BusinessException(404, "座位不存在");
+            throw new BusinessException(ResultCode.NOT_FOUND, "座位不存在");
         }
-        return toVO(seat);
+        return seatToSeatVO(seat);
     }
 
     @Override
@@ -61,7 +63,7 @@ public class SeatServiceImpl implements SeatService {
         //1.验证教室是否存在且可用
         validateClassroom(classroomId);
         //2.查询座位列表并转换为VO
-        List<SeatVO> seatVOS = seatMapper.selectByClassroomId(classroomId).stream().map(this::toVO).toList();
+        List<SeatVO> seatVOS = seatMapper.selectByClassroomId(classroomId).stream().map(this::seatToSeatVO).toList();
         Classroom classroom = classroomMapper.selectById(classroomId);
         ClassroomSeatLayoutVO classroomSeatLayoutVO = new ClassroomSeatLayoutVO();
         classroomSeatLayoutVO.setClassroomId(classroomId);
@@ -78,7 +80,7 @@ public class SeatServiceImpl implements SeatService {
         //1.查询座位是否存在
         Seat existing = seatMapper.selectById(id);
         if (existing == null) {
-            throw new BusinessException(404, "座位不存在");
+            throw new BusinessException(ResultCode.NOT_FOUND, "座位不存在");
         }
         //2. 检验DTO的status参数,若不存在则默认为之前的,若存在则判断是否合法后使用
         String status = request.getStatus();
@@ -111,14 +113,14 @@ public class SeatServiceImpl implements SeatService {
         String status = request.getStatus();
 
         if (status == null || status.trim().isEmpty()) {
-            throw new BusinessException(400, "状态不能为空");
+            throw new BusinessException(ResultCode.BAD_REQUEST, "状态不能为空");
         }
         status = status.trim();
         validateStatus(status);
         //3.批量更新座位状态
         int rows = seatMapper.batchUpdateByClassroomId(classroomId, status, request.getRemark());
         if (rows <= 0) {
-            throw new BusinessException(400, "未更新到任何座位");
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "未更新到任何座位");
         }
         return true;
 
@@ -127,7 +129,7 @@ public class SeatServiceImpl implements SeatService {
     private void validateStatus(String status) {
         if (!SeatStatus.ENABLED.name().equals(status)
                 && !SeatStatus.DISABLED.name().equals(status)) {
-            throw new BusinessException(402, "状态只能是 ENABLED 或 DISABLED");
+            throw new BusinessException(ResultCode.BAD_REQUEST, "状态只能是 ENABLED 或 DISABLED");
         }
     }
 
@@ -135,23 +137,17 @@ public class SeatServiceImpl implements SeatService {
         //1.查询教室是否存在
         Classroom classroom = classroomMapper.selectById(classroomId);
         if (classroom == null) {
-            throw new BusinessException(404, "教室不存在");
+            throw new BusinessException(ResultCode.NOT_FOUND, "教室不存在");
         }
         //2.查询教室是否可用
         if (!ClassroomStatus.ENABLED.name().equals(classroom.getStatus())) {
-            throw new BusinessException(400, "教室不可用");
+            throw new BusinessException(ResultCode.FORBIDDEN, "教室不可用");
         }
     }
 
-    private SeatVO toVO(Seat seat) {
+    private SeatVO seatToSeatVO(Seat seat) {
         SeatVO seatVO = new SeatVO();
-        seatVO.setId(seat.getId());
-        seatVO.setClassroomId(seat.getClassroomId());
-        seatVO.setSeatNumber(seat.getSeatNumber());
-        seatVO.setRowNumber(seat.getRowNumber());
-        seatVO.setColNumber(seat.getColNumber());
-        seatVO.setStatus(seat.getStatus());
-        seatVO.setRemark(seat.getRemark());
+        BeanUtils.copyProperties(seat, seatVO);
         return seatVO;
     }
 }

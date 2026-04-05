@@ -10,6 +10,7 @@ import org.campus.classroom.dto.SeatUpdateDTO;
 import org.campus.classroom.service.ClassroomService;
 import org.campus.classroom.service.SeatService;
 import org.campus.classroom.vo.ClassroomVO;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/classrooms")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminClassroomController {
     private final ClassroomService classroomService;
     private final SeatService seatService;

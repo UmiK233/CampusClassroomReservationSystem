@@ -4,6 +4,7 @@ import org.apache.ibatis.annotations.*;
 import org.campus.classroom.entity.Reservation;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -52,41 +53,50 @@ public interface ReservationMapper {
     @ResultMap("reservationResultMap")
     List<Reservation> selectAll();
 
-    @Update("UPDATE reservation SET status = #{status} WHERE id = #{id}")
-    Integer updateStatusById(@Param("id") Long id,
-                             @Param("status") String status);
+    @Update("""
+            UPDATE reservation
+            SET status = 'CANCELLED'
+            WHERE id = #{id}
+              AND status = 'ACTIVE'
+              AND end_time >= current_timestamp()
+            """)
+    int cancelReservation(@Param("id") Long id);
+
+    @Update("""
+            UPDATE reservation
+            SET status = 'EXPIRED'
+            WHERE status = 'ACTIVE'
+              AND end_time < current_timestamp()
+            """)
+    int expireActiveReservations();
 
     @Select("""
             SELECT *
             FROM reservation
             WHERE resource_type='SEAT'
               AND resource_id=#{seatId}
-              AND reserve_date = #{reserveDate}
               AND status = 'ACTIVE'
               AND start_time < #{endTime}
               AND end_time > #{startTime}
             """)
     @ResultMap("reservationResultMap")
     List<Reservation> selectSeatConflicts(@Param("seatId") Long seatId,
-                                          @Param("reserveDate") LocalDate reserveDate,
-                                          @Param("startTime") LocalTime startTime,//开始时间必须在其他预约中的结束之前之后,否则冲突, end_time > #{startTime} 就冲突
-                                          @Param("endTime") LocalTime endTime);//结束时间必须在其他预约中的开始时间之前,否则冲突, start_time < #{endTime} 就冲突
+                                          @Param("startTime") LocalDateTime startTime,//开始时间必须在其他预约中的结束之前之后,否则冲突, end_time > #{startTime} 就冲突
+                                          @Param("endTime") LocalDateTime endTime);//结束时间必须在其他预约中的开始时间之前,否则冲突, start_time < #{endTime} 就冲突
 
     @Select("""
             SELECT *
             FROM reservation
             WHERE resource_type='CLASSROOM'
               AND resource_id=#{classroomId}
-              AND reserve_date = #{reserveDate}
               AND status = 'ACTIVE'
               AND start_time < #{endTime}
               AND end_time > #{startTime}
             """)
     @ResultMap("reservationResultMap")
     List<Reservation> selectClassroomConflicts(@Param("classroomId") Long classroomId,
-                                               @Param("reserveDate") LocalDate reserveDate,
-                                               @Param("startTime") LocalTime startTime,
-                                               @Param("endTime") LocalTime endTime);
+                                               @Param("startTime") LocalDateTime startTime,
+                                               @Param("endTime") LocalDateTime endTime);
 
     //查询classroom预约时有无seat被预约
     @Select("""
@@ -94,29 +104,25 @@ public interface ReservationMapper {
             FROM reservation
             WHERE classroom_id = #{classroomId}
               AND resource_type = 'SEAT'
-              AND reserve_date = #{reserveDate}
               AND status = 'ACTIVE'
               AND start_time < #{endTime}
               AND end_time > #{startTime}
             """)
     @ResultMap("reservationResultMap")
     List<Reservation> selectSeatConflictsInClassroom(@Param("classroomId") Long classroomId,
-                                                     @Param("reserveDate") LocalDate reserveDate,
-                                                     @Param("startTime") LocalTime startTime,
-                                                     @Param("endTime") LocalTime endTime);
+                                                     @Param("startTime") LocalDateTime startTime,
+                                                     @Param("endTime") LocalDateTime endTime);
 
     @Select("""
             SELECT count(*)
             FROM reservation
             WHERE user_id=#{userId}
               AND resource_type = 'SEAT'
-              AND reserve_date = #{reserveDate}
               AND status = 'ACTIVE'
               AND start_time < #{endTime}
               AND end_time > #{startTime}
             """)
-    Integer selectStudentTimeConflict(@Param("userId") Long userId,
-                                      @Param("reserveDate") LocalDate reserveDate,
-                                      @Param("startTime") LocalTime startTime,
-                                      @Param("endTime") LocalTime endTime);
+    int selectStudentTimeConflict(@Param("userId") Long userId,
+                                      @Param("startTime") LocalDateTime startTime,
+                                      @Param("endTime") LocalDateTime endTime);
 }

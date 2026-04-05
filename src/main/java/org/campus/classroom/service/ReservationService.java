@@ -13,5 +13,7 @@ public interface ReservationService {
 
     Boolean cancelReservation(Long currentUserId,Long reservationId);
 
+    int expireActiveReservations();
+
     List<ReservationVO> listUserReservations(Long currentUserId);
 }

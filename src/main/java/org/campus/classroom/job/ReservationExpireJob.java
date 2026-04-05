@@ -1,0 +1,25 @@
+package org.campus.classroom.job;
+
+import lombok.RequiredArgsConstructor;
+import org.campus.classroom.service.ReservationService;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+public class ReservationExpireJob {
+
+    private final ReservationService reservationService;
+
+    /**
+     * 每分钟执行一次
+     */
+    @Scheduled(fixedDelay = 60000)
+    public void expireReservations() {
+//        System.out.println("执行预约过期任务: " + System.currentTimeMillis());
+        int count = reservationService.expireActiveReservations();
+        if (count > 0) {
+            System.out.println("本次自动过期预约数量: " + count);
+        }
+    }
+}

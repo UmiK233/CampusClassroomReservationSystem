@@ -4,6 +4,7 @@ package org.campus.classroom.mapper;
 import org.apache.ibatis.annotations.*;
 import org.campus.classroom.entity.Seat;
 
+import java.util.Collection;
 import java.util.List;
 
 @Mapper
@@ -23,6 +24,18 @@ public interface SeatMapper {
             @Result(column = "remark", property = "remark")
     })
     Seat selectById(Long id);
+
+
+    @Select("""
+            <script>
+            select *
+            from seat
+            where id in
+            <foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach>
+            </script>
+            """)
+    @ResultMap("seatResultMap")
+    List<Seat> selectByIds(@Param("ids") Collection<Long> ids);
 
     @Select("""
             select id,classroom_id, seat_number, `row_number`, col_number, status, remark

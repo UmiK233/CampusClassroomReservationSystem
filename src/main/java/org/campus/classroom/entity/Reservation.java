@@ -18,11 +18,11 @@ public class Reservation {
 
     //冗余字段设计
     private Long classroomId;
+    private LocalDate reserveDate;
 
     //预约时间相关字段
-    private LocalDate reserveDate;
-    private LocalTime startTime;
-    private LocalTime endTime;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
 
     private String reason;
 

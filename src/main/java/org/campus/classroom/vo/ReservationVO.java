@@ -14,10 +14,11 @@ public class ReservationVO {
     private Long userId;
     private String resourceType;
     private Long resourceId;
-    private Long classroomId;
+    private ClassroomVO classroomVO;
+    private SeatVO seatVO;
     private LocalDate reserveDate;
-    private LocalTime startTime;
-    private LocalTime endTime;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
     private String reason;
     private String status;
     private LocalDateTime createTime;

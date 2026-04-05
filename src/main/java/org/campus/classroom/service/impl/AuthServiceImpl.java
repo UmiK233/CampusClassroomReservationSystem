@@ -3,6 +3,7 @@ package org.campus.classroom.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.campus.classroom.dto.RegisterDTO;
 import org.campus.classroom.entity.User;
+import org.campus.classroom.enums.ResultCode;
 import org.campus.classroom.exception.BusinessException;
 import org.campus.classroom.mapper.UserMapper;
 import org.campus.classroom.security.LoginUser;
@@ -27,7 +28,7 @@ public class AuthServiceImpl implements AuthService {
         // 1. 判重
         User existUser = userMapper.selectByUsername(request.getUsername());
         if (existUser != null) {
-            throw new BusinessException(400, "用户名已存在");
+            throw new BusinessException(ResultCode.BAD_REQUEST, "用户名已存在");
         }
 
         // 2. 组装用户对象
@@ -43,7 +44,7 @@ public class AuthServiceImpl implements AuthService {
         // 3. 保存
         int rows = userMapper.insert(user);
         if (rows <= 0) {
-            throw new BusinessException(500, "注册失败");
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "注册失败");
         }
     }
 
