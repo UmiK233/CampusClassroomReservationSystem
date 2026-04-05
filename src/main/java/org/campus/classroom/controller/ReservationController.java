@@ -40,8 +40,14 @@ public class ReservationController {
     }
 
     @GetMapping("/list")
-    public Result<List<ReservationVO>> listReservations(@AuthenticationPrincipal LoginUser loginUser) {
-        List<ReservationVO> reservationVOList = reservationService.listUserReservations(loginUser.getId());
-        return Result.success("查询预约列表成功", reservationVOList);
+    public Result<List<ReservationVO>> listUserAvailableReservations(@AuthenticationPrincipal LoginUser loginUser) {
+        List<ReservationVO> reservationVOList = reservationService.listUserAvailableReservations(loginUser.getId());
+        return Result.success("查询可用预约列表成功", reservationVOList);
+    }
+
+    @GetMapping("/list_history")
+    public Result<List<ReservationVO>> listUserDisableReservations(@AuthenticationPrincipal LoginUser loginUser) {
+        List<ReservationVO> reservationVOList = reservationService.listUserHistoryReservations(loginUser.getId());
+        return Result.success("查询历史预约列表成功", reservationVOList);
     }
 }

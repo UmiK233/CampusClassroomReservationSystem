@@ -11,11 +11,9 @@ import java.time.LocalTime;
 @Data
 public class ReservationVO {
     private Long id;
-    private Long userId;
     private String resourceType;
     private Long resourceId;
-    private ClassroomVO classroomVO;
-    private SeatVO seatVO;
+    private String resourceName;
     private LocalDate reserveDate;
     private LocalDateTime startTime;
     private LocalDateTime endTime;

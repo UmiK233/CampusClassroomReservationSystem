@@ -15,5 +15,6 @@ public interface ReservationService {
 
     int expireActiveReservations();
 
-    List<ReservationVO> listUserReservations(Long currentUserId);
+    List<ReservationVO> listUserAvailableReservations(Long currentUserId);
+    List<ReservationVO> listUserHistoryReservations(Long currentUserId);
 }

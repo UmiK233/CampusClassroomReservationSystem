@@ -12,9 +12,7 @@ import org.campus.classroom.mapper.ClassroomMapper;
 import org.campus.classroom.mapper.ReservationMapper;
 import org.campus.classroom.mapper.SeatMapper;
 import org.campus.classroom.service.ReservationService;
-import org.campus.classroom.vo.ClassroomVO;
 import org.campus.classroom.vo.ReservationVO;
-import org.campus.classroom.vo.SeatVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -117,8 +115,24 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public List<ReservationVO> listUserReservations(Long currentUserId) {
-        List<Reservation> reservationList = reservationMapper.selectByUserId(currentUserId);
+    public List<ReservationVO> listUserAvailableReservations(Long currentUserId) {
+        List<Reservation> reservationList = reservationMapper.selectByUserIdAndStatus(
+                currentUserId,
+                ReservationStatus.ACTIVE.name()
+        );
+        return buildReservationVOList(reservationList);
+    }
+
+    @Override
+    public List<ReservationVO> listUserHistoryReservations(Long currentUserId) {
+        List<Reservation> reservationList = reservationMapper.selectByUserIdAndNotStatus(
+                currentUserId,
+                ReservationStatus.ACTIVE.name()
+        );
+        return buildReservationVOList(reservationList);
+    }
+
+    private List<ReservationVO> buildReservationVOList(List<Reservation> reservationList) {
 
         // 1. 收集所有 classroomId
         Set<Long> classroomIds = reservationList.stream()
@@ -132,49 +146,31 @@ public class ReservationServiceImpl implements ReservationService {
                 .collect(Collectors.toSet());
 
         // 3. 批量查 classroom
-        Map<Long, ClassroomVO> classroomVOMap = classroomIds.isEmpty()
+        Map<Long, Classroom> classroomMap = classroomIds.isEmpty()
                 ? Collections.emptyMap()
-                : classroomMapper.selectByIds(classroomIds).stream().map(this::classroomToClassroomVO)
-                .collect(Collectors.toMap(ClassroomVO::getId, Function.identity()));
+                : classroomMapper.selectByIds(classroomIds).stream()
+                .collect(Collectors.toMap(Classroom::getId, Function.identity()));
 
         // 4. 批量查 seat
-        Map<Long, SeatVO> seatVOMap = seatIds.isEmpty()
+        Map<Long, Seat> seatMap = seatIds.isEmpty()
                 ? Collections.emptyMap()
-                : seatMapper.selectByIds(seatIds).stream().map(this::seatToSeatVO)
-                .collect(Collectors.toMap(SeatVO::getId, Function.identity()));
+                : seatMapper.selectByIds(seatIds).stream()
+                .collect(Collectors.toMap(Seat::getId, Function.identity()));
 
 
-        return reservationList.stream().map(reservation -> reservationToReservationVO(reservation, classroomVOMap, seatVOMap)).toList();
+        return reservationList.stream().map(reservation -> reservationToReservationVO(reservation, classroomMap, seatMap)).toList();
 
     }
 
-    private ClassroomVO classroomToClassroomVO(Classroom classroom) {
-        ClassroomVO classroomVO = new ClassroomVO();
-        BeanUtils.copyProperties(classroom, classroomVO);
-        classroomVO.setCapacity(classroom.getSeatRows() * classroom.getSeatCols());
-        return classroomVO;
-    }
 
-    private SeatVO seatToSeatVO(Seat seat) {
-        SeatVO seatVO = new SeatVO();
-        BeanUtils.copyProperties(seat, seatVO);
-        return seatVO;
-    }
-
-    private ReservationVO reservationToReservationVO(Reservation reservation, Map<Long, ClassroomVO> classroomVOMap,
-                                                     Map<Long, SeatVO> seatVOMap) {
+    private ReservationVO reservationToReservationVO(Reservation reservation, Map<Long, Classroom> classroomMap,
+                                                     Map<Long, Seat> seatMap) {
         ReservationVO reservationVO = new ReservationVO();
         BeanUtils.copyProperties(reservation, reservationVO);
-        ClassroomVO classroomVO = classroomVOMap.get(reservation.getClassroomId());
-        if (classroomVO != null) {
-            reservationVO.setClassroomVO(classroomVO);
-        }
-
-        if (reservation.getResourceType().equals(ResourceType.SEAT.name())) {
-            SeatVO seatVO = seatVOMap.get(reservation.getResourceId());
-            if (seatVO != null) {
-                reservationVO.setSeatVO(seatVO);
-            }
+        Classroom classroom = classroomMap.get(reservation.getClassroomId());
+        if (classroom != null) {
+            Seat seat = seatMap.get(reservation.getResourceId());
+            reservationVO.setResourceName(classroom.getBuilding() + " " + classroom.getRoomNumber() + (seat != null ? " " + seat.getSeatNumber() : ""));
         }
 
         return reservationVO;

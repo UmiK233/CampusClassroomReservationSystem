@@ -70,6 +70,29 @@ public interface ReservationMapper {
             """)
     int expireActiveReservations();
 
+
+    @Select("""
+            SELECT *
+            FROM reservation
+            WHERE user_id = #{userId}
+              AND status = #{status}
+            ORDER BY create_time DESC
+            """)
+    @ResultMap("reservationResultMap")
+    List<Reservation> selectByUserIdAndStatus(@Param("userId") Long userId,
+                                              @Param("status") String status);
+
+    @Select("""
+            SELECT *
+            FROM reservation
+            WHERE user_id = #{userId}
+              AND status != #{status}
+            ORDER BY create_time DESC
+            """)
+    @ResultMap("reservationResultMap")
+    List<Reservation> selectByUserIdAndNotStatus(@Param("userId") Long userId,
+                                              @Param("status") String status);
+
     @Select("""
             SELECT *
             FROM reservation
