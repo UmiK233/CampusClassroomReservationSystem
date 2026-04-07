@@ -1,6 +1,7 @@
 package org.campus.classroom.exception;
 
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.validation.ConstraintViolation;
@@ -8,11 +9,15 @@ import jakarta.validation.ConstraintViolationException;
 import org.apache.tomcat.websocket.AuthenticationException;
 import org.campus.classroom.common.Result;
 import org.campus.classroom.enums.ResultCode;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.time.DateTimeException;
+import java.time.format.DateTimeParseException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -38,6 +43,27 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public Result<String> handleAccessDeniedException(AccessDeniedException e) {
         return Result.fail(ResultCode.FORBIDDEN, "权限不足，无法访问");
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public Result<String> handleJsonParseError(HttpMessageNotReadableException e) {
+
+        Throwable cause = e.getCause();
+
+        // 1. 如果是 JSON 格式错误（时间、数字、枚举等）
+        if (cause instanceof InvalidFormatException) {
+            // 2. 判断是不是时间解析异常
+            if (cause.getCause() instanceof DateTimeParseException ||
+                    cause.getCause() instanceof java.time.DateTimeException) {
+                return Result.fail(ResultCode.BAD_REQUEST, "时间格式错误或时间值非法");
+            }
+
+            // 其他类型错误（如字符串转数字）
+            return Result.fail(ResultCode.BAD_REQUEST, "参数类型不正确");
+        }
+
+        // 3. 其他 JSON 错误（格式非法、少逗号等）
+        return Result.fail(ResultCode.BAD_REQUEST, "请求参数格式不正确");
     }
 
 

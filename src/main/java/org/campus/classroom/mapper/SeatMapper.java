@@ -10,7 +10,7 @@ import java.util.List;
 @Mapper
 public interface SeatMapper {
     @Select("""
-            select id, classroom_id, seat_number, `row_number`, col_number, status
+            select *
             from seat
             where id = #{id}
             """)
@@ -25,6 +25,13 @@ public interface SeatMapper {
     })
     Seat selectById(Long id);
 
+
+    @Select("""
+            select *
+            from seat
+            where id = #{id}
+            """)
+    Seat selectByIdForUpdate(Long id);
 
     @Select("""
             <script>
@@ -59,7 +66,6 @@ public interface SeatMapper {
             """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(Seat seat);
-
 
 
     @Delete("""

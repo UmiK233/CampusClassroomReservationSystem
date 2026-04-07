@@ -1,6 +1,7 @@
 package org.campus.classroom.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.campus.classroom.dto.ClassroomReservationCreateDTO;
 import org.campus.classroom.dto.SeatReservationCreateDTO;
 import org.campus.classroom.entity.Classroom;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReservationServiceImpl implements ReservationService {
     private final ReservationMapper reservationMapper;
     private final SeatMapper seatMapper;
@@ -35,9 +37,10 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @Transactional
     public Long createSeatReservation(Long currentUserId, SeatReservationCreateDTO request) {
+        //验证时间合法性
         validateTime(request.getStartTime(), request.getEndTime());
-
-        int studentReservationCount = reservationMapper.selectStudentTimeConflict(
+        //判断是否有同时间段的预约,防止浪费资源
+        int studentReservationCount = reservationMapper.selectStudentTimeConflictForUpdate(
                 currentUserId,
                 request.getStartTime(),
                 request.getEndTime()
@@ -46,6 +49,7 @@ public class ReservationServiceImpl implements ReservationService {
             throw new BusinessException(ResultCode.CONFLICT, "同一时间段只能有一个预约,请先取消之前的预约");
         }
 
+        //判断座位是否可以预约(处理并发问题)
         Long classroomId = checkSeatReservableAndGetClassroomId(request);
 
 
@@ -62,6 +66,7 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setStatus(ReservationStatus.ACTIVE.name());
 
         reservationMapper.insert(reservation);
+        log.info("thread={} insert 完成 id={}", Thread.currentThread().getName(), reservation.getId());
 
         return reservation.getId();
     }
@@ -69,8 +74,9 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @Transactional
     public Long createClassroomReservation(Long currentUserId, ClassroomReservationCreateDTO request) {
+        //验证时间合法性
         validateTime(request.getStartTime(), request.getEndTime());
-
+        //检查教室是否可用(处理并发)
         checkClassroomReservable(request);
 
         Reservation reservation = new Reservation();
@@ -193,8 +199,18 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
 
-    private Long checkSeatReservableAndGetClassroomId(SeatReservationCreateDTO request) {
-        Seat seat = seatMapper.selectById(request.getSeatId());
+    public Long checkSeatReservableAndGetClassroomId(SeatReservationCreateDTO request) {
+        Long classroomId = seatMapper.selectById(request.getSeatId()).getClassroomId();
+        // 1. 先锁 classroom
+        Classroom classroom = classroomMapper.selectByIdForUpdate(classroomId);
+        if (classroom == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "教室不存在");
+        }
+        if (!ClassroomStatus.ENABLED.name().equals(classroom.getStatus())) {
+            throw new BusinessException(ResultCode.FORBIDDEN, "教室不可预约");
+        }
+        // 2. 再锁 seat
+        Seat seat = seatMapper.selectByIdForUpdate(request.getSeatId());
         // 判断座位是否存在和可用
         if (seat == null) {
             throw new BusinessException(ResultCode.NOT_FOUND, "座位不存在");
@@ -202,27 +218,18 @@ public class ReservationServiceImpl implements ReservationService {
         if (seat.getStatus().equals(SeatStatus.DISABLED.name())) {
             throw new BusinessException(ResultCode.FORBIDDEN, "该座位不可用");
         }
-        //判断座位所在教室是否可用
-        Long classroomId = seat.getClassroomId();
-        Classroom classroom = classroomMapper.selectById(classroomId);
-        if (classroom == null) {
-            throw new BusinessException(ResultCode.NOT_FOUND, "教室不存在");
-        }
-        if (classroom.getStatus().equals(ClassroomStatus.DISABLED.name())) {
-            throw new BusinessException(ResultCode.FORBIDDEN, "该座位所在教室不可用");
-        }
         //判断座位是否被预约
-        boolean withSeatConflict = !reservationMapper.selectSeatConflicts(
+        List<Reservation> withSeatConflictReservations = reservationMapper.selectSeatConflictsForUpdate(
                 request.getSeatId(),
                 request.getStartTime(),
                 request.getEndTime()
-        ).isEmpty();
-
+        );
+        boolean withSeatConflict = !withSeatConflictReservations.isEmpty();
         if (withSeatConflict) {
             throw new BusinessException(ResultCode.CONFLICT, "该座位在当前时间段已被预约");
         }
         //判断座位所在教室是否被预约
-        boolean withClassroomConflict = !reservationMapper.selectClassroomConflicts(
+        boolean withClassroomConflict = !reservationMapper.selectClassroomConflictsForUpdate(
                 classroomId,
                 request.getStartTime(),
                 request.getEndTime()
@@ -234,14 +241,15 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     private void checkClassroomReservable(ClassroomReservationCreateDTO request) {
-        Classroom classroom = classroomMapper.selectById(request.getClassroomId());
+        Classroom classroom = classroomMapper.selectByIdForUpdate(request.getClassroomId());
         if (classroom == null) {
             throw new BusinessException(ResultCode.NOT_FOUND, "教室不存在");
         }
-        if (classroom.getStatus().equals(SeatStatus.DISABLED.name())) {
+        if (classroom.getStatus().equals(ClassroomStatus.DISABLED.name())) {
             throw new BusinessException(ResultCode.FORBIDDEN, "该教室不可用");
         }
-        boolean withClassroomConflict = !reservationMapper.selectClassroomConflicts(
+
+        boolean withClassroomConflict = !reservationMapper.selectClassroomConflictsForUpdate(
                 request.getClassroomId(),
                 request.getStartTime(),
                 request.getEndTime()
@@ -250,7 +258,7 @@ public class ReservationServiceImpl implements ReservationService {
             throw new BusinessException(ResultCode.CONFLICT, "该教室在当前时间段已被预约");
         }
 
-        boolean withSeatConflict = !reservationMapper.selectSeatConflictsInClassroom(
+        boolean withSeatConflict = !reservationMapper.selectSeatConflictsInClassroomForUpdate(
                 request.getClassroomId(),
                 request.getStartTime(),
                 request.getEndTime()

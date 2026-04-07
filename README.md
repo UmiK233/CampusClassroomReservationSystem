@@ -1,2 +1,2 @@
 # CampusClassroomReservationSystem
-一个校园空教室预定系统 毕业设计项目
+一个校园教室预定系统 毕业设计项目

@@ -26,6 +26,11 @@ public interface ClassroomMapper {
     Classroom selectById(Long id);
 
 
+    @Select("select * from classroom where id = #{id} for update")
+    @ResultMap("classroomResultMap")
+    Classroom selectByIdForUpdate(Long id);
+
+
     @Select("""
         <script>
             select * from classroom where id in

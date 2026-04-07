@@ -101,9 +101,10 @@ public interface ReservationMapper {
               AND status = 'ACTIVE'
               AND start_time < #{endTime}
               AND end_time > #{startTime}
+            FOR UPDATE
             """)
     @ResultMap("reservationResultMap")
-    List<Reservation> selectSeatConflicts(@Param("seatId") Long seatId,
+    List<Reservation> selectSeatConflictsForUpdate(@Param("seatId") Long seatId,
                                           @Param("startTime") LocalDateTime startTime,//开始时间必须在其他预约中的结束之前之后,否则冲突, end_time > #{startTime} 就冲突
                                           @Param("endTime") LocalDateTime endTime);//结束时间必须在其他预约中的开始时间之前,否则冲突, start_time < #{endTime} 就冲突
 
@@ -115,9 +116,10 @@ public interface ReservationMapper {
               AND status = 'ACTIVE'
               AND start_time < #{endTime}
               AND end_time > #{startTime}
+            FOR UPDATE
             """)
     @ResultMap("reservationResultMap")
-    List<Reservation> selectClassroomConflicts(@Param("classroomId") Long classroomId,
+    List<Reservation> selectClassroomConflictsForUpdate(@Param("classroomId") Long classroomId,
                                                @Param("startTime") LocalDateTime startTime,
                                                @Param("endTime") LocalDateTime endTime);
 
@@ -130,9 +132,10 @@ public interface ReservationMapper {
               AND status = 'ACTIVE'
               AND start_time < #{endTime}
               AND end_time > #{startTime}
+            FOR UPDATE
             """)
     @ResultMap("reservationResultMap")
-    List<Reservation> selectSeatConflictsInClassroom(@Param("classroomId") Long classroomId,
+    List<Reservation> selectSeatConflictsInClassroomForUpdate(@Param("classroomId") Long classroomId,
                                                      @Param("startTime") LocalDateTime startTime,
                                                      @Param("endTime") LocalDateTime endTime);
 
@@ -144,8 +147,20 @@ public interface ReservationMapper {
               AND status = 'ACTIVE'
               AND start_time < #{endTime}
               AND end_time > #{startTime}
+            FOR UPDATE
             """)
-    int selectStudentTimeConflict(@Param("userId") Long userId,
+    int selectStudentTimeConflictForUpdate(@Param("userId") Long userId,
                                       @Param("startTime") LocalDateTime startTime,
                                       @Param("endTime") LocalDateTime endTime);
+
+    @Select("""
+            SELECT count(*)
+            FROM reservation
+            WHERE resource_type='SEAT'
+              AND resource_id=#{seatId}
+              AND status = 'ACTIVE'
+              AND start_time < #{endTime}
+              AND end_time > #{startTime}
+            """)
+    long countActiveSeatConflict(Long seatId, LocalDateTime startTime, LocalDateTime endTime);
 }
