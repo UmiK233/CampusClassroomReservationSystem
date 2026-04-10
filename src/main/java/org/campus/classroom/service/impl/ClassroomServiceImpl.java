@@ -1,6 +1,7 @@
 package org.campus.classroom.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.campus.classroom.dto.ClassroomCreateDTO;
 import org.campus.classroom.dto.ClassroomUpdateDTO;
 import org.campus.classroom.entity.Classroom;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ClassroomServiceImpl implements ClassroomService {
     private final ClassroomMapper classroomMapper;
     private final SeatMapper seatMapper;
@@ -30,9 +32,13 @@ public class ClassroomServiceImpl implements ClassroomService {
     @Transactional
     @Override
     public Long create(ClassroomCreateDTO request) {
+        log.info("[教室创建开始] building={}, roomNumber={}, seatRows={}, seatCols={}",
+                request.getBuilding(), request.getRoomNumber(), request.getSeatRows(), request.getSeatCols());
         //1.判重
         Classroom existing = classroomMapper.selectByBuildingAndNumber(request.getBuilding().trim(), request.getRoomNumber().trim());
         if (existing != null) {
+            log.warn("[教室创建失败] building={}, roomNumber={}, reason=duplicate classroom",
+                    request.getBuilding(), request.getRoomNumber());
             throw new BusinessException(ResultCode.CONFLICT, "该教学楼下教室名称已存在");
         }
 
@@ -57,6 +63,8 @@ public class ClassroomServiceImpl implements ClassroomService {
         //将Entity对象插入数据库
         int rows = classroomMapper.insert(classroom);
         if (rows <= 0) {
+            log.error("[教室创建失败] building={}, roomNumber={}, reason=insert failed",
+                    request.getBuilding(), request.getRoomNumber());
             throw new BusinessException(ResultCode.INTERNAL_ERROR, "创建失败");
         }
         //插入成功后，MyBatis会自动将生成的主键ID设置到classroom对象的id属性中,因此我们可以直接使用classroom.getId()来获取新创建的教室ID。
@@ -72,6 +80,8 @@ public class ClassroomServiceImpl implements ClassroomService {
                 seatMapper.insert(seat);
             }
         }
+        log.info("[教室创建成功] classroomId={}, building={}, roomNumber={}",
+                classroom.getId(), classroom.getBuilding(), classroom.getRoomNumber());
         return classroom.getId();
     }
 
@@ -83,9 +93,11 @@ public class ClassroomServiceImpl implements ClassroomService {
      */
     @Override
     public Boolean update(Long id, ClassroomUpdateDTO request) {
+        log.info("[教室更新开始] classroomId={}, request={}", id, request);
         //1. 查询是否存在
         Classroom existing = classroomMapper.selectById(id);
         if (existing == null) {
+            log.warn("[教室更新失败] classroomId={}, reason=not found", id);
             throw new BusinessException(ResultCode.BAD_REQUEST, "教室不存在");
         }
         //2. 是否重复教室
@@ -108,20 +120,26 @@ public class ClassroomServiceImpl implements ClassroomService {
 
         int rows = classroomMapper.updateById(classroom);
         if (rows <= 0) {
+            log.error("[教室更新失败] classroomId={}, reason=update failed", id);
             throw new BusinessException(ResultCode.INTERNAL_ERROR, "更新失败");
         }
+        log.info("[教室更新成功] classroomId={}, status={}", id, status);
         return true;
     }
 
     @Override
     public ClassroomVO getClassroomById(Long id) {
+        log.info("[教室查询] classroomId={}", id);
         //1.查询是否存在
         Classroom classroom = classroomMapper.selectById(id);
         if (classroom == null) {
+            log.warn("[教室查询失败] classroomId={}, reason=not found", id);
             throw new BusinessException(ResultCode.BAD_REQUEST,"教室不存在");
         }
         //2.将Entity对象转换为VO对象
-        return classroomToClassroomVO(classroom);
+        ClassroomVO classroomVO = classroomToClassroomVO(classroom);
+        log.info("[教室查询成功] classroomId={}", id);
+        return classroomVO;
     }
 
     /**
@@ -133,12 +151,15 @@ public class ClassroomServiceImpl implements ClassroomService {
      */
     @Override
     public List<ClassroomVO> getAvailableClassroomList(String building, Integer minCapacity) {
+        log.info("[教室可用列表查询] building={}, minCapacity={}", building, minCapacity);
         //判断教室是否可用
         List<Classroom> classroomList = classroomMapper.selectList(building, minCapacity, ClassroomStatus.ENABLED.name());
         //将Entity对象转换为VO对象
-        return classroomList.stream()
+        List<ClassroomVO> classroomVOS = classroomList.stream()
                 .map(this::classroomToClassroomVO)
                 .collect(Collectors.toList());
+        log.info("[教室可用列表结果] count={}", classroomVOS.size());
+        return classroomVOS;
     }
 
     /**
@@ -151,14 +172,17 @@ public class ClassroomServiceImpl implements ClassroomService {
      */
     @Override
     public List<ClassroomVO> adminGetClassroomList(String building, Integer minCapacity, String status) {
+        log.info("[管理员教室列表查询] building={}, minCapacity={}, status={}", building, minCapacity, status);
         //校验教室状态是否合法
         if (StringUtils.hasText(status)) {
             validateStatus(status);
         }
         List<Classroom> classrooms = classroomMapper.selectList(building, minCapacity, status);
-        return classrooms.stream()
+        List<ClassroomVO> classroomVOS = classrooms.stream()
                 .map(this::classroomToClassroomVO)
                 .toList();
+        log.info("[管理员教室列表查询结果] count={}", classroomVOS.size());
+        return classroomVOS;
     }
 
     private void checkDuplicate(String building, String roomNumber, Long currentId) {
@@ -169,6 +193,8 @@ public class ClassroomServiceImpl implements ClassroomService {
         }
         //如果查询到的重复教室的ID和当前正在更新的教室ID不同，说明存在重复问题，抛出异常
         if (!duplicate.getId().equals(currentId)) {
+            log.warn("[教室重复] building={}, roomNumber={}, currentId={}, duplicateId={}",
+                    building, roomNumber, currentId, duplicate.getId());
             throw new BusinessException(ResultCode.BAD_REQUEST, "该教学楼下教室名称已存在");
         }
     }
@@ -176,6 +202,7 @@ public class ClassroomServiceImpl implements ClassroomService {
     private void validateStatus(String status) {
         if (!ClassroomStatus.ENABLED.name().equals(status)
                 && !ClassroomStatus.DISABLED.name().equals(status)) {
+            log.warn("[教室状态非法] status={}", status);
             throw new BusinessException(ResultCode.BAD_REQUEST, "状态只能是 ENABLED 或 DISABLED");
         }
     }

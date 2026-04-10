@@ -1,6 +1,7 @@
 package org.campus.classroom.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.campus.classroom.dto.RegisterDTO;
 import org.campus.classroom.entity.User;
 import org.campus.classroom.enums.ResultCode;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final JwtUtil jwtUtil;
@@ -25,9 +27,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void register(RegisterDTO request) {
+        log.info("[注册开始] username={}, email={}", request.getUsername(), request.getEmail());
         // 1. 判重
         User existUser = userMapper.selectByUsername(request.getUsername());
         if (existUser != null) {
+            log.warn("[注册失败] username={}, reason=duplicate username", request.getUsername());
             throw new BusinessException(ResultCode.BAD_REQUEST, "用户名已存在");
         }
 
@@ -44,12 +48,15 @@ public class AuthServiceImpl implements AuthService {
         // 3. 保存
         int rows = userMapper.insert(user);
         if (rows <= 0) {
+            log.error("[注册失败] username={}, reason=insert failed", request.getUsername());
             throw new BusinessException(ResultCode.INTERNAL_ERROR, "注册失败");
         }
+        log.info("[注册成功] userId={}, username={}", user.getId(), user.getUsername());
     }
 
     @Override
     public LoginVO login(LoginUser user) {
+        log.info("[登录开始] userId={}, username={}", user.getId(), user.getUsername());
 //        // 1. 查用户
 //        User user = userMapper.selectByUsername(request.getUsername());
 //        if (user == null) {
@@ -76,11 +83,13 @@ public class AuthServiceImpl implements AuthService {
         LoginVO loginVO = new LoginVO();
         loginVO.setToken(token);
         loginVO.setUserInfo(userInfoVO);
+        log.info("[登录成功] userId={}, username={}, role={}", user.getId(), user.getUsername(), user.getRole());
         return loginVO;
     }
 
     @Override
     public UserInfoVO getUserInfo(LoginUser loginUser) {
+        log.info("[获取用户信息] userId={}, username={}", loginUser.getId(), loginUser.getUsername());
         UserInfoVO userInfoVO = new UserInfoVO();
         userInfoVO.setId(loginUser.getId());
         userInfoVO.setUsername(loginUser.getUsername());

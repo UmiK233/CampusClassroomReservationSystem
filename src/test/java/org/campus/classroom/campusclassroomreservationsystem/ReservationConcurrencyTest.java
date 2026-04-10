@@ -1,5 +1,6 @@
 package org.campus.classroom.campusclassroomreservationsystem;
 
+import org.campus.classroom.dto.ClassroomReservationCreateDTO;
 import org.campus.classroom.dto.SeatReservationCreateDTO;
 import org.campus.classroom.exception.BusinessException;
 import org.campus.classroom.mapper.ReservationMapper;
@@ -39,8 +40,8 @@ class ReservationConcurrencyTest {
         AtomicInteger failCount = new AtomicInteger(0);
 
         Long seatId = 118L;
-        LocalDateTime startTime = LocalDateTime.of(2026, 4, 7, 21, 33);
-        LocalDateTime endTime = LocalDateTime.of(2026, 4, 7, 22, 0);
+        LocalDateTime startTime = LocalDateTime.of(2026, 4, 9, 22, 33);
+        LocalDateTime endTime = LocalDateTime.of(2026, 4, 9, 23, 0);
 
 //        List<Long> userIds = List.of(
 //                10011L, 10012L, 10013L, 10014L, 10015L,
@@ -62,7 +63,6 @@ class ReservationConcurrencyTest {
                     dto.setStartTime(startTime);
                     dto.setEndTime(endTime);
                     System.out.println(dto);
-
                     reservationService.createSeatReservation(userId, dto);
 
                     successCount.incrementAndGet();

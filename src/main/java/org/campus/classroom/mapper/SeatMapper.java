@@ -30,7 +30,9 @@ public interface SeatMapper {
             select *
             from seat
             where id = #{id}
+            for update
             """)
+    @ResultMap("seatResultMap")
     Seat selectByIdForUpdate(Long id);
 
     @Select("""

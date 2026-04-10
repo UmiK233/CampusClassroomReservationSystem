@@ -1,6 +1,7 @@
 package org.campus.classroom.security;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.campus.classroom.entity.User;
 import org.campus.classroom.enums.ResultCode;
 import org.campus.classroom.exception.BusinessException;

@@ -2,7 +2,9 @@ package org.campus.classroom.controller;
 
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.aspectj.weaver.ast.Not;
 import org.campus.classroom.common.Result;
 import org.campus.classroom.dto.ClassroomCreateDTO;
 import org.campus.classroom.dto.ClassroomUpdateDTO;
@@ -37,12 +39,15 @@ public class AdminClassroomController {
         return Result.success("教室信息更新成功", classroomVO);
     }
 
+    // 教室座位初始化
     @PostMapping("/{id}/seats/init")
     public Result<Void> initSeats(@PathVariable Long id) {
         seatService.initSeats(id);
         return Result.success("座位初始化成功");
     }
 
+
+    //批量更新一个教室下的座位状态
     @PutMapping("/{id}/seats/status")
     public Result<Void> batchUpdateSeatsStatus(@PathVariable Long id,@RequestBody @Valid SeatUpdateDTO request) {
         seatService.batchUpdateSeatStatus(id, request);
@@ -50,7 +55,7 @@ public class AdminClassroomController {
     }
 
     @GetMapping("/list")
-    public Result<List<ClassroomVO>>  list(String building, @RequestParam("min_capacity") Integer minCapacity, String status) {
+    public Result<List<ClassroomVO>>  list(@NotNull String building,@NotNull @RequestParam("min_capacity") Integer minCapacity,@NotNull String status) {
         return Result.success("获取成功",classroomService.adminGetClassroomList(building, minCapacity, status));
     }
 

@@ -1,0 +1,319 @@
+2026-04-09 12:12:07.510 [http-nio-8080-exec-5] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [教室预约开始] userId=10004, request=ClassroomReservationCreateDTO(classroomId=6, startTime=2026-04-05T23:42:06, endTime=2026-04-05T23:52:20, reason=null)
+2026-04-09 12:12:07.520 [http-nio-8080-exec-5] ERROR [] o.c.classroom.service.impl.ReservationServiceImpl - 预约时间不合法,开始时间必须晚于当前时间,start=2026-04-05T23:42:06,now=2026-04-09T12:12:07.520740800
+2026-04-09 12:12:18.360 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-09 12:12:18.402 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-09 12:12:18.405 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-09 12:12:18.408 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-09 18:22:56.552 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-09 18:22:56.602 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 85128 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-09 18:22:56.603 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-09 18:22:57.664 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-09 18:22:57.673 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-09 18:22:57.674 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-09 18:22:57.674 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-09 18:22:57.764 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-09 18:22:57.764 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1111 ms
+2026-04-09 18:22:58.075 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-09 18:22:58.479 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-09 18:22:58.494 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-09 18:22:58.501 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 2.47 seconds (process running for 3.204)
+2026-04-09 18:22:58.516 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-09 18:22:58.792 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@3958bd82
+2026-04-09 18:22:58.794 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-09 18:22:59.749 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-09 18:22:59.749 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-09 18:22:59.750 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2026-04-09 18:22:59.962 [http-nio-8080-exec-1] INFO  [] org.campus.classroom.service.impl.AuthServiceImpl - [登录开始] userId=10015, username=13
+2026-04-09 18:23:00.028 [http-nio-8080-exec-1] INFO  [] org.campus.classroom.service.impl.AuthServiceImpl - [登录成功] userId=10015, username=13, role=STUDENT
+2026-04-09 18:23:55.656 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-09 18:23:55.695 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-09 18:23:55.698 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-09 18:23:55.702 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-09 18:24:56.796 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-09 18:24:56.845 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 64556 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-09 18:24:56.846 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-09 18:24:57.893 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-09 18:24:57.902 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-09 18:24:57.903 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-09 18:24:57.903 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-09 18:24:57.989 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-09 18:24:57.989 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1098 ms
+2026-04-09 18:24:58.283 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-09 18:24:58.663 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-09 18:24:58.681 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-09 18:24:58.689 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 2.412 seconds (process running for 3.023)
+2026-04-09 18:24:58.703 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-09 18:24:58.790 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-09 18:24:58.790 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-09 18:24:58.790 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2026-04-09 18:24:58.960 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4ca09a85
+2026-04-09 18:24:58.961 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-09 18:24:59.088 [http-nio-8080-exec-1] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [教室预约开始] userId=10004, request=ClassroomReservationCreateDTO(classroomId=6, startTime=2026-04-05T23:42:06, endTime=2026-04-05T23:52:20, reason=null)
+2026-04-09 18:24:59.089 [http-nio-8080-exec-1] ERROR [] o.c.classroom.service.impl.ReservationServiceImpl - 预约时间不合法,开始时间必须晚于当前时间,start=2026-04-05T23:42:06,now=2026-04-09T18:24:59.089492700
+2026-04-09 18:24:59.921 [http-nio-8080-exec-2] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [教室预约开始] userId=10004, request=ClassroomReservationCreateDTO(classroomId=6, startTime=2026-04-05T23:42:06, endTime=2026-04-05T23:52:20, reason=null)
+2026-04-09 18:24:59.921 [http-nio-8080-exec-2] ERROR [] o.c.classroom.service.impl.ReservationServiceImpl - 预约时间不合法,开始时间必须晚于当前时间,start=2026-04-05T23:42:06,now=2026-04-09T18:24:59.921797800
+2026-04-09 18:25:01.236 [http-nio-8080-exec-5] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10004, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-08T21:42:06, endTime=2026-04-08T22:12:20, reason=null)
+2026-04-09 18:25:01.236 [http-nio-8080-exec-5] ERROR [] o.c.classroom.service.impl.ReservationServiceImpl - 预约时间不合法,开始时间必须晚于当前时间,start=2026-04-08T21:42:06,now=2026-04-09T18:25:01.236354900
+2026-04-09 18:25:02.846 [http-nio-8080-exec-4] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [取消预约] userId=10015, reservationId=39
+2026-04-09 18:25:02.848 [http-nio-8080-exec-4] WARN  [] o.c.classroom.service.impl.ReservationServiceImpl - [取消失败] 预约不存在 reservationId=39
+2026-04-09 18:27:19.220 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-09 18:27:19.260 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-09 18:27:19.263 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-09 18:27:19.266 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-09 18:27:24.666 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-09 18:27:24.716 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 63760 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-09 18:27:24.716 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-09 18:27:25.734 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-09 18:27:25.742 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-09 18:27:25.742 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-09 18:27:25.743 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-09 18:27:25.819 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-09 18:27:25.819 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1055 ms
+2026-04-09 18:27:26.098 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-09 18:27:26.470 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-09 18:27:26.488 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-09 18:27:26.496 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 2.394 seconds (process running for 3.02)
+2026-04-09 18:27:26.511 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-09 18:27:26.754 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@49c8fd62
+2026-04-09 18:27:26.755 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-09 18:27:28.455 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-09 18:27:28.498 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-09 18:27:28.502 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-09 18:27:28.506 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-09 18:27:34.390 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-09 18:27:34.447 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 97784 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-09 18:27:34.449 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-09 18:27:35.446 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-09 18:27:35.453 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-09 18:27:35.454 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-09 18:27:35.454 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-09 18:27:35.537 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-09 18:27:35.537 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1037 ms
+2026-04-09 18:27:35.850 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-09 18:27:36.264 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-09 18:27:36.280 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-09 18:27:36.290 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 2.48 seconds (process running for 3.119)
+2026-04-09 18:27:36.304 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-09 18:27:36.501 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@11cf18fb
+2026-04-09 18:27:36.503 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-09 18:27:39.179 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-09 18:27:39.179 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-09 18:27:39.179 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2026-04-09 18:27:46.474 [http-nio-8080-exec-2] INFO  [] org.campus.classroom.service.impl.AuthServiceImpl - [登录开始] userId=10004, username=233
+2026-04-09 18:27:46.528 [http-nio-8080-exec-2] INFO  [] org.campus.classroom.service.impl.AuthServiceImpl - [登录成功] userId=10004, username=233, role=STUDENT
+2026-04-09 18:28:17.264 [http-nio-8080-exec-3] INFO  [] org.campus.classroom.service.impl.SeatServiceImpl - [教室座位布局查询开始] classroomId=5
+2026-04-09 18:28:17.271 [http-nio-8080-exec-3] INFO  [] org.campus.classroom.service.impl.SeatServiceImpl - [教室座位布局查询成功] classroomId=5, seatCount=6
+2026-04-09 18:28:21.757 [http-nio-8080-exec-5] INFO  [] org.campus.classroom.service.impl.SeatServiceImpl - [教室座位布局查询开始] classroomId=5
+2026-04-09 18:28:21.759 [http-nio-8080-exec-5] INFO  [] org.campus.classroom.service.impl.SeatServiceImpl - [教室座位布局查询成功] classroomId=5, seatCount=6
+2026-04-09 18:30:19.096 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-09 18:30:19.140 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-09 18:30:19.144 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-09 18:30:19.149 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-09 18:30:25.152 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-09 18:30:25.202 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 27532 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-09 18:30:25.203 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-09 18:30:26.356 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-09 18:30:26.365 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-09 18:30:26.366 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-09 18:30:26.366 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-09 18:30:26.464 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-09 18:30:26.464 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1215 ms
+2026-04-09 18:30:26.784 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-09 18:30:27.173 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-09 18:30:27.188 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-09 18:30:27.196 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 2.632 seconds (process running for 3.379)
+2026-04-09 18:30:27.209 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-09 18:30:27.496 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@34e935e
+2026-04-09 18:30:27.497 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-09 18:30:29.331 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-09 18:30:29.331 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-09 18:30:29.333 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-04-09 18:30:29.426 [http-nio-8080-exec-1] INFO  [63d38debf0d340609491797105ae832b] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=63d38debf0d340609491797105ae832b, method=GET, uri=/classrooms/5/seats, query=null
+2026-04-09 18:30:29.462 [http-nio-8080-exec-1] INFO  [63d38debf0d340609491797105ae832b] org.campus.classroom.service.impl.SeatServiceImpl - [教室座位布局查询开始] classroomId=5
+2026-04-09 18:30:29.470 [http-nio-8080-exec-1] INFO  [63d38debf0d340609491797105ae832b] org.campus.classroom.service.impl.SeatServiceImpl - [教室座位布局查询成功] classroomId=5, seatCount=6
+2026-04-09 18:30:29.508 [http-nio-8080-exec-1] INFO  [63d38debf0d340609491797105ae832b] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=63d38debf0d340609491797105ae832b, method=GET, uri=/classrooms/5/seats, status=200, cost=82ms
+2026-04-09 18:30:47.054 [http-nio-8080-exec-2] INFO  [0907fb3c8a3444ebac6c44e66d723d23] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=0907fb3c8a3444ebac6c44e66d723d23, method=GET, uri=/classrooms/5/seats, query=null
+2026-04-09 18:30:47.055 [http-nio-8080-exec-2] INFO  [0907fb3c8a3444ebac6c44e66d723d23] org.campus.classroom.service.impl.SeatServiceImpl - [教室座位布局查询开始] classroomId=5
+2026-04-09 18:30:47.057 [http-nio-8080-exec-2] INFO  [0907fb3c8a3444ebac6c44e66d723d23] org.campus.classroom.service.impl.SeatServiceImpl - [教室座位布局查询成功] classroomId=5, seatCount=6
+2026-04-09 18:30:47.058 [http-nio-8080-exec-2] INFO  [0907fb3c8a3444ebac6c44e66d723d23] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=0907fb3c8a3444ebac6c44e66d723d23, method=GET, uri=/classrooms/5/seats, status=200, cost=4ms
+2026-04-09 18:30:47.634 [http-nio-8080-exec-5] INFO  [290c548e7f7e488bb72b629453336a6a] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=290c548e7f7e488bb72b629453336a6a, method=GET, uri=/classrooms/5/seats, query=null
+2026-04-09 18:30:47.634 [http-nio-8080-exec-5] INFO  [290c548e7f7e488bb72b629453336a6a] org.campus.classroom.service.impl.SeatServiceImpl - [教室座位布局查询开始] classroomId=5
+2026-04-09 18:30:47.637 [http-nio-8080-exec-5] INFO  [290c548e7f7e488bb72b629453336a6a] org.campus.classroom.service.impl.SeatServiceImpl - [教室座位布局查询成功] classroomId=5, seatCount=6
+2026-04-09 18:30:47.639 [http-nio-8080-exec-5] INFO  [290c548e7f7e488bb72b629453336a6a] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=290c548e7f7e488bb72b629453336a6a, method=GET, uri=/classrooms/5/seats, status=200, cost=5ms
+2026-04-09 18:32:30.906 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-09 18:32:30.945 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-09 18:32:30.947 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-09 18:32:30.951 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-09 18:32:33.363 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-09 18:32:33.405 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 70536 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-09 18:32:33.405 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-09 18:32:34.388 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-09 18:32:34.395 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-09 18:32:34.395 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-09 18:32:34.396 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-09 18:32:34.472 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-09 18:32:34.472 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1020 ms
+2026-04-09 18:32:34.743 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-09 18:32:35.113 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-09 18:32:35.138 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-09 18:32:35.145 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 2.321 seconds (process running for 2.988)
+2026-04-09 18:32:35.158 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-09 18:32:35.345 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@724d7fa1
+2026-04-09 18:32:35.347 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-09 18:32:39.219 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-09 18:32:39.219 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-09 18:32:39.220 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-04-09 18:32:39.316 [http-nio-8080-exec-1] INFO  [5c20df68efc544dea296f8848d75ceac] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=5c20df68efc544dea296f8848d75ceac, method=GET, uri=/classrooms/5/seats, query=null
+2026-04-09 18:32:39.351 [http-nio-8080-exec-1] INFO  [5c20df68efc544dea296f8848d75ceac] org.campus.classroom.service.impl.SeatServiceImpl - [教室座位布局查询开始] classroomId=5
+2026-04-09 18:32:39.359 [http-nio-8080-exec-1] INFO  [5c20df68efc544dea296f8848d75ceac] org.campus.classroom.service.impl.SeatServiceImpl - [教室座位布局查询成功] classroomId=5, seatCount=6
+2026-04-09 18:32:39.400 [http-nio-8080-exec-1] INFO  [5c20df68efc544dea296f8848d75ceac] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=5c20df68efc544dea296f8848d75ceac, method=GET, uri=/classrooms/5/seats, status=200, cost=84ms
+2026-04-09 18:32:43.428 [http-nio-8080-exec-2] INFO  [31792c81e98549f39e5925b20acab7d8] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=31792c81e98549f39e5925b20acab7d8, method=GET, uri=/classrooms/5/seats, query=null
+2026-04-09 18:32:43.429 [http-nio-8080-exec-2] INFO  [31792c81e98549f39e5925b20acab7d8] org.campus.classroom.service.impl.SeatServiceImpl - [教室座位布局查询开始] classroomId=5
+2026-04-09 18:32:43.432 [http-nio-8080-exec-2] INFO  [31792c81e98549f39e5925b20acab7d8] org.campus.classroom.service.impl.SeatServiceImpl - [教室座位布局查询成功] classroomId=5, seatCount=6
+2026-04-09 18:32:43.433 [http-nio-8080-exec-2] INFO  [31792c81e98549f39e5925b20acab7d8] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=31792c81e98549f39e5925b20acab7d8, method=GET, uri=/classrooms/5/seats, status=200, cost=5ms
+2026-04-09 20:59:34.852 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-09 20:59:34.890 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-09 20:59:34.894 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-09 20:59:34.896 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-09 22:25:05.219 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-09 22:25:05.260 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - Starting ReservationConcurrencyTest using Java 17.0.9 with PID 13164 (started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-09 22:25:05.261 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - The following 1 profile is active: "local"
+2026-04-09 22:25:08.106 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-09 22:25:10.041 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - Started ReservationConcurrencyTest in 5.434 seconds (process running for 7.468)
+2026-04-09 22:25:10.113 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-09 22:25:11.329 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@450c1184
+2026-04-09 22:25:11.332 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-09 22:25:13.097 [pool-2-thread-5] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10015, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:25:13.097 [pool-2-thread-3] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10013, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:25:13.097 [pool-2-thread-4] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10014, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:25:13.097 [pool-2-thread-1] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10011, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:25:13.097 [pool-2-thread-2] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10012, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:25:13.170 [pool-2-thread-2] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:25:13.219 [pool-2-thread-2] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约成功] userId=10012, reservationId=40, seatId=118
+2026-04-09 22:25:13.226 [pool-2-thread-5] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:25:13.237 [pool-2-thread-5] WARN  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位冲突] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:25:13.244 [pool-2-thread-4] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:25:13.247 [pool-2-thread-4] WARN  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位冲突] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:25:13.248 [pool-2-thread-3] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:25:13.252 [pool-2-thread-3] WARN  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位冲突] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:25:13.253 [pool-2-thread-1] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:25:13.256 [pool-2-thread-1] WARN  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位冲突] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:25:13.345 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-09 22:25:13.359 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-09 22:26:05.383 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-09 22:26:05.444 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - Starting ReservationConcurrencyTest using Java 17.0.9 with PID 94016 (started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-09 22:26:05.446 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - The following 1 profile is active: "local"
+2026-04-09 22:26:08.648 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-09 22:26:10.641 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - Started ReservationConcurrencyTest in 5.879 seconds (process running for 7.55)
+2026-04-09 22:26:10.700 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-09 22:26:12.248 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@2145c7ca
+2026-04-09 22:26:12.251 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-09 22:26:13.666 [pool-2-thread-2] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10012, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:26:13.666 [pool-2-thread-3] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10013, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:26:13.666 [pool-2-thread-1] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10011, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:26:13.666 [pool-2-thread-4] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10014, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:26:13.666 [pool-2-thread-5] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10015, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:26:13.720 [pool-2-thread-2] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:26:13.750 [pool-2-thread-2] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约成功] userId=10012, reservationId=41, seatId=118
+2026-04-09 22:26:13.756 [pool-2-thread-1] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:26:13.764 [pool-2-thread-1] WARN  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位冲突] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:26:13.771 [pool-2-thread-3] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:26:13.775 [pool-2-thread-3] WARN  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位冲突] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:26:13.775 [pool-2-thread-5] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:26:13.781 [pool-2-thread-5] WARN  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位冲突] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:26:13.782 [pool-2-thread-4] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:26:13.785 [pool-2-thread-4] WARN  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位冲突] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:26:13.861 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-09 22:26:13.874 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-09 22:27:51.507 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-09 22:27:51.550 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - Starting ReservationConcurrencyTest using Java 17.0.9 with PID 93308 (started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-09 22:27:51.552 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - The following 1 profile is active: "local"
+2026-04-09 22:27:54.460 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-09 22:27:56.120 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - Started ReservationConcurrencyTest in 5.203 seconds (process running for 7.208)
+2026-04-09 22:27:56.176 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-09 22:27:57.384 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@2145c7ca
+2026-04-09 22:27:57.385 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-09 22:27:58.255 [pool-2-thread-1] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10011, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:27:58.255 [pool-2-thread-3] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10013, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:27:58.255 [pool-2-thread-5] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10015, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:27:58.255 [pool-2-thread-2] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10012, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:27:58.255 [pool-2-thread-4] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10014, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:27:58.316 [pool-2-thread-2] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:27:58.341 [pool-2-thread-5] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:27:58.343 [pool-2-thread-3] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:27:58.345 [pool-2-thread-1] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:27:58.347 [pool-2-thread-4] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:27:58.425 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-09 22:27:58.434 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-09 22:28:54.839 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-09 22:28:54.896 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - Starting ReservationConcurrencyTest using Java 17.0.9 with PID 94356 (started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-09 22:28:54.897 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - The following 1 profile is active: "local"
+2026-04-09 22:28:57.959 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-09 22:28:59.745 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - Started ReservationConcurrencyTest in 5.382 seconds (process running for 7.014)
+2026-04-09 22:28:59.800 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-09 22:29:01.104 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@51b97c15
+2026-04-09 22:29:01.106 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-09 22:29:02.525 [pool-2-thread-2] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10012, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:29:02.525 [pool-2-thread-3] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10013, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:29:02.525 [pool-2-thread-4] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10014, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:29:02.525 [pool-2-thread-1] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10011, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:29:02.525 [pool-2-thread-5] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10015, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:29:02.599 [pool-2-thread-3] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:29:02.620 [pool-2-thread-2] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:29:02.622 [pool-2-thread-1] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:29:02.624 [pool-2-thread-5] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:29:02.627 [pool-2-thread-4] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:29:02.717 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-09 22:29:02.729 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-09 22:29:31.456 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-09 22:29:31.524 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - Starting ReservationConcurrencyTest using Java 17.0.9 with PID 77428 (started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-09 22:29:31.528 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - The following 1 profile is active: "local"
+2026-04-09 22:29:34.812 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-09 22:29:36.846 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - Started ReservationConcurrencyTest in 6.011 seconds (process running for 7.994)
+2026-04-09 22:29:36.870 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-09 22:29:38.306 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@501a0a50
+2026-04-09 22:29:38.311 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-09 22:29:39.865 [pool-2-thread-3] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10013, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:29:39.865 [pool-2-thread-2] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10012, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:29:39.865 [pool-2-thread-4] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10014, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:29:39.865 [pool-2-thread-5] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10015, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:29:39.865 [pool-2-thread-1] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10011, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:29:41.978 [pool-2-thread-5] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:30:55.254 [HikariPool-1:housekeeper] WARN  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=1m16s838ms505µs500ns).
+2026-04-09 22:30:55.352 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-09 22:30:55.361 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-09 22:31:25.417 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-09 22:31:25.464 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - Starting ReservationConcurrencyTest using Java 17.0.9 with PID 55752 (started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-09 22:31:25.469 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - The following 1 profile is active: "local"
+2026-04-09 22:31:28.389 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-09 22:31:30.272 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - Started ReservationConcurrencyTest in 5.431 seconds (process running for 7.183)
+2026-04-09 22:31:30.352 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-09 22:31:31.774 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@69d57292
+2026-04-09 22:31:31.782 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-09 22:31:33.387 [pool-2-thread-3] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10013, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:31:33.387 [pool-2-thread-1] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10011, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:31:33.387 [pool-2-thread-5] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10015, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:31:33.387 [pool-2-thread-4] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10014, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:31:33.387 [pool-2-thread-2] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约开始] userId=10012, request=SeatReservationCreateDTO(seatId=118, startTime=2026-04-09T22:33, endTime=2026-04-09T23:00, reason=null)
+2026-04-09 22:31:33.441 [pool-2-thread-4] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:31:33.446 [pool-2-thread-4] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [加锁座位] seatId=118
+2026-04-09 22:31:33.448 [pool-2-thread-4] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [加锁教室] classroomId=5
+2026-04-09 22:31:33.464 [pool-2-thread-4] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位预约成功] userId=10014, reservationId=42, seatId=118
+2026-04-09 22:31:33.470 [pool-2-thread-1] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:31:33.471 [pool-2-thread-1] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [加锁座位] seatId=118
+2026-04-09 22:31:33.471 [pool-2-thread-1] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [加锁教室] classroomId=5
+2026-04-09 22:31:33.476 [pool-2-thread-1] WARN  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位冲突] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:31:33.480 [pool-2-thread-2] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:31:33.481 [pool-2-thread-2] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [加锁座位] seatId=118
+2026-04-09 22:31:33.481 [pool-2-thread-2] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [加锁教室] classroomId=5
+2026-04-09 22:31:33.482 [pool-2-thread-2] WARN  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位冲突] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:31:33.483 [pool-2-thread-3] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:31:33.484 [pool-2-thread-3] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [加锁座位] seatId=118
+2026-04-09 22:31:33.484 [pool-2-thread-3] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [加锁教室] classroomId=5
+2026-04-09 22:31:33.486 [pool-2-thread-3] WARN  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位冲突] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:31:33.487 [pool-2-thread-5] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位检查开始] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:31:33.488 [pool-2-thread-5] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [加锁座位] seatId=118
+2026-04-09 22:31:33.488 [pool-2-thread-5] INFO  [] o.c.classroom.service.impl.ReservationServiceImpl - [加锁教室] classroomId=5
+2026-04-09 22:31:33.489 [pool-2-thread-5] WARN  [] o.c.classroom.service.impl.ReservationServiceImpl - [座位冲突] seatId=118, start=2026-04-09T22:33, end=2026-04-09T23:00
+2026-04-09 22:31:33.546 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-09 22:31:33.556 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.

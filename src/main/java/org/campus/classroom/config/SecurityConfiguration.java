@@ -2,12 +2,14 @@ package org.campus.classroom.config;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.campus.classroom.common.Result;
+import org.campus.classroom.enums.ResultCode;
 import org.campus.classroom.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -19,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -45,12 +48,24 @@ public class SecurityConfiguration {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login","/auth/register").permitAll() //放行登录接口不走过滤
+                        .requestMatchers("/auth/login", "/auth/register").permitAll() //放行登录接口不走过滤
+                        .requestMatchers("/admin/**").hasRole("ADMIN") //只有ADMIN角色可以访问/admin接口
                         .anyRequest().authenticated()
                 )
                 //在UsernamePasswordAuthenticationFilter前添加jwtAuthenticationFilter，验证Token是否合法，如果合法就直接放行，不需要再走UsernamePasswordAuthenticationFilter了
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
+        //在过滤链拦截权限不足的请求，返回403错误和自定义的错误信息
+        http.exceptionHandling(exception -> exception
+                .accessDeniedHandler((request, response, e) -> {
+                    log.error("Filter: 权限不足，无法访问: {}", e.getMessage());
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    new ObjectMapper().writeValue(
+                            response.getWriter(),
+                            Result.fail(ResultCode.FORBIDDEN, "权限不足，无法访问")
+                    );
+                })
+        );
         return http.build();
     }
 

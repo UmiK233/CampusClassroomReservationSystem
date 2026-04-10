@@ -1,0 +1,678 @@
+2026-04-10 04:56:48.438 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-10 04:56:48.470 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - Starting ReservationConcurrencyTest using Java 17.0.9 with PID 81408 (started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-10 04:56:48.471 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - The following 1 profile is active: "local"
+2026-04-10 04:56:50.056 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-10 04:56:50.993 [main] INFO  [] o.c.c.c.ReservationConcurrencyTest - Started ReservationConcurrencyTest in 2.973 seconds (process running for 4.72)
+2026-04-10 04:56:51.024 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-10 04:56:51.456 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@207d8308
+2026-04-10 04:56:51.459 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-10 04:56:51.482 [scheduling-1] INFO  [] org.campus.classroom.job.ReservationExpireJob - [预约过期] 本次自动过期预约数量: 1
+2026-04-10 04:56:51.486 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-10 04:56:51.490 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-10 04:58:32.866 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-10 04:58:32.906 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 52960 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-10 04:58:32.907 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-10 04:58:33.732 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-10 04:58:33.742 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-10 04:58:33.743 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-10 04:58:33.743 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-10 04:58:33.822 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-10 04:58:33.822 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 877 ms
+2026-04-10 04:58:34.097 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-10 04:58:34.450 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-10 04:58:34.464 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-10 04:58:34.471 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 2.039 seconds (process running for 2.656)
+2026-04-10 04:58:34.483 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-10 04:58:34.646 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@2a0278e9
+2026-04-10 04:58:34.647 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-10 04:58:44.453 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-10 04:58:44.453 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-10 04:58:44.454 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-04-10 04:58:44.466 [http-nio-8080-exec-1] INFO  [a4d9e1405cfd4d2fa67cf97f34c01194] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=a4d9e1405cfd4d2fa67cf97f34c01194, method=POST, uri=/auth/register, query=null
+2026-04-10 04:58:44.569 [http-nio-8080-exec-1] INFO  [a4d9e1405cfd4d2fa67cf97f34c01194] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=a4d9e1405cfd4d2fa67cf97f34c01194, method=POST, uri=/auth/register, status=200, cost=103ms
+2026-04-10 04:58:57.235 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-10 04:58:57.278 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-10 04:58:57.281 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-10 04:58:57.284 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-10 04:59:01.060 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-10 04:59:01.095 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 61316 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-10 04:59:01.096 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-10 04:59:01.869 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-10 04:59:01.876 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-10 04:59:01.877 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-10 04:59:01.877 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-10 04:59:01.945 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-10 04:59:01.947 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 822 ms
+2026-04-10 04:59:02.180 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-10 04:59:02.562 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-10 04:59:02.578 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-10 04:59:02.585 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 1.96 seconds (process running for 2.483)
+2026-04-10 04:59:02.600 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-10 04:59:02.810 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@5c237844
+2026-04-10 04:59:02.811 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-10 04:59:03.481 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-10 04:59:03.482 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-10 04:59:03.483 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-04-10 04:59:03.505 [http-nio-8080-exec-1] INFO  [ed06c87fa3234a01bba38cf4fda9a152] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=ed06c87fa3234a01bba38cf4fda9a152, method=POST, uri=/auth/register, query=null
+2026-04-10 04:59:03.628 [http-nio-8080-exec-1] INFO  [ed06c87fa3234a01bba38cf4fda9a152] org.campus.classroom.service.impl.AuthServiceImpl - [注册开始] username=admin, email=admin
+2026-04-10 04:59:03.727 [http-nio-8080-exec-1] INFO  [ed06c87fa3234a01bba38cf4fda9a152] org.campus.classroom.service.impl.AuthServiceImpl - [注册成功] userId=10017, username=admin
+2026-04-10 04:59:03.760 [http-nio-8080-exec-1] INFO  [ed06c87fa3234a01bba38cf4fda9a152] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=ed06c87fa3234a01bba38cf4fda9a152, method=POST, uri=/auth/register, status=200, cost=255ms
+2026-04-10 04:59:07.294 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-10 04:59:07.343 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-10 04:59:07.346 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-10 04:59:07.350 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-10 05:02:13.352 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-10 05:02:13.388 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 80104 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-10 05:02:13.388 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-10 05:02:14.143 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-10 05:02:14.150 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-10 05:02:14.151 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-10 05:02:14.151 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-10 05:02:14.209 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-10 05:02:14.210 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 794 ms
+2026-04-10 05:02:14.476 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-10 05:02:14.794 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-10 05:02:14.807 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-10 05:02:14.813 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 1.871 seconds (process running for 2.357)
+2026-04-10 05:02:14.824 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-10 05:02:14.995 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@1ff235fb
+2026-04-10 05:02:14.996 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-10 05:02:25.226 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-10 05:02:25.226 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-10 05:02:25.226 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2026-04-10 05:02:25.241 [http-nio-8080-exec-1] INFO  [6b6dd7fd44cf4dc2ac1e9e32ce1e197a] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=6b6dd7fd44cf4dc2ac1e9e32ce1e197a, method=POST, uri=/auth/login, query=null
+2026-04-10 05:02:25.341 [http-nio-8080-exec-1] INFO  [6b6dd7fd44cf4dc2ac1e9e32ce1e197a] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=6b6dd7fd44cf4dc2ac1e9e32ce1e197a, method=POST, uri=/auth/login, status=200, cost=100ms
+2026-04-10 05:02:30.375 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-10 05:02:30.411 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-10 05:02:30.414 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-10 05:02:30.417 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-10 05:02:34.112 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-10 05:02:34.149 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 96032 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-10 05:02:34.149 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-10 05:02:34.886 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-10 05:02:34.892 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-10 05:02:34.893 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-10 05:02:34.893 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-10 05:02:34.947 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-10 05:02:34.947 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 769 ms
+2026-04-10 05:02:35.194 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-10 05:02:35.540 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-10 05:02:35.554 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-10 05:02:35.561 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 1.857 seconds (process running for 2.339)
+2026-04-10 05:02:35.572 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-10 05:02:35.604 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-10 05:02:35.605 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-10 05:02:35.605 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2026-04-10 05:02:35.621 [http-nio-8080-exec-1] INFO  [76014e3d0b9c4e46b540183930d476f2] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=76014e3d0b9c4e46b540183930d476f2, method=POST, uri=/auth/login, query=null
+2026-04-10 05:02:35.787 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@9182580
+2026-04-10 05:02:35.788 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-10 05:02:35.884 [http-nio-8080-exec-1] INFO  [76014e3d0b9c4e46b540183930d476f2] org.campus.classroom.service.impl.AuthServiceImpl - [登录开始] userId=10017, username=admin
+2026-04-10 05:02:35.957 [http-nio-8080-exec-1] INFO  [76014e3d0b9c4e46b540183930d476f2] org.campus.classroom.service.impl.AuthServiceImpl - [登录成功] userId=10017, username=admin, role=ADMIN
+2026-04-10 05:02:35.974 [http-nio-8080-exec-1] INFO  [76014e3d0b9c4e46b540183930d476f2] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=76014e3d0b9c4e46b540183930d476f2, method=POST, uri=/auth/login, status=200, cost=353ms
+2026-04-10 05:02:42.375 [http-nio-8080-exec-2] INFO  [] o.c.classroom.security.JwtAuthenticationFilter - [ROLE_ADMIN]
+2026-04-10 05:02:42.376 [http-nio-8080-exec-2] INFO  [085e8e57d54c496e87cae66ca26e6ef2] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=085e8e57d54c496e87cae66ca26e6ef2, method=GET, uri=/auth/me, query=null
+2026-04-10 05:02:42.377 [http-nio-8080-exec-2] INFO  [085e8e57d54c496e87cae66ca26e6ef2] org.campus.classroom.service.impl.AuthServiceImpl - [获取用户信息] userId=10017, username=admin
+2026-04-10 05:02:42.378 [http-nio-8080-exec-2] INFO  [085e8e57d54c496e87cae66ca26e6ef2] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=085e8e57d54c496e87cae66ca26e6ef2, method=GET, uri=/auth/me, status=200, cost=2ms
+2026-04-10 05:03:51.450 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-10 05:03:51.484 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-10 05:03:51.487 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-10 05:03:51.490 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-10 05:17:52.094 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-10 05:17:52.137 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 71684 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-10 05:17:52.138 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-10 05:17:52.928 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-10 05:17:52.936 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-10 05:17:52.937 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-10 05:17:52.937 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-10 05:17:52.999 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-10 05:17:52.999 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 828 ms
+2026-04-10 05:17:53.264 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-10 05:17:53.602 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-10 05:17:53.618 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-10 05:17:53.625 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 1.947 seconds (process running for 2.561)
+2026-04-10 05:17:53.638 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-10 05:17:53.812 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@375d6e79
+2026-04-10 05:17:53.814 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-10 05:18:34.355 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-10 05:18:34.355 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-10 05:18:34.356 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-04-10 05:18:34.450 [http-nio-8080-exec-1] INFO  [5df6b7c931bd4e9d83784375463f1fda] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=5df6b7c931bd4e9d83784375463f1fda, method=GET, uri=/admin/classrooms, query=null
+2026-04-10 05:18:34.453 [http-nio-8080-exec-1] ERROR [5df6b7c931bd4e9d83784375463f1fda] o.c.classroom.exception.GlobalExceptionHandler - Request method 'GET' is not supported
+org.springframework.web.HttpRequestMethodNotSupportedException: Request method 'GET' is not supported
+	at org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping.handleNoMatch(RequestMappingInfoHandlerMapping.java:267)
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodMapping.lookupHandlerMethod(AbstractHandlerMethodMapping.java:441)
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodMapping.getHandlerInternal(AbstractHandlerMethodMapping.java:382)
+	at org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping.getHandlerInternal(RequestMappingInfoHandlerMapping.java:127)
+	at org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping.getHandlerInternal(RequestMappingInfoHandlerMapping.java:68)
+	at org.springframework.web.servlet.handler.AbstractHandlerMapping.getHandler(AbstractHandlerMapping.java:509)
+	at org.springframework.web.servlet.DispatcherServlet.getHandler(DispatcherServlet.java:1284)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1065)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.campus.classroom.security.RequestTraceIdFilter.doFilterInternal(RequestTraceIdFilter.java:38)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:110)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108)
+	at org.springframework.security.web.FilterChainProxy.lambda$doFilterInternal$3(FilterChainProxy.java:231)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:365)
+	at org.springframework.security.web.access.intercept.AuthorizationFilter.doFilter(AuthorizationFilter.java:101)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:125)
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:119)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:131)
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:85)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:100)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:179)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.campus.classroom.security.JwtAuthenticationFilter.doFilterInternal(JwtAuthenticationFilter.java:56)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90)
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233)
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.filter.ServletRequestPathFilter.doFilter(ServletRequestPathFilter.java:52)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74)
+	at org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebSecurityConfiguration.java:319)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$4(HandlerMappingIntrospector.java:267)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74)
+	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:240)
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:362)
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:278)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:88)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:342)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:399)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1774)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:973)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:491)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+2026-04-10 05:18:34.482 [http-nio-8080-exec-1] INFO  [5df6b7c931bd4e9d83784375463f1fda] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=5df6b7c931bd4e9d83784375463f1fda, method=GET, uri=/admin/classrooms, status=200, cost=32ms
+2026-04-10 05:19:39.509 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-10 05:19:39.542 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-10 05:19:39.545 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-10 05:19:39.548 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-10 05:19:43.410 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-10 05:19:43.452 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 101508 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-10 05:19:43.452 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-10 05:19:44.262 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-10 05:19:44.269 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-10 05:19:44.270 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-10 05:19:44.270 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-10 05:19:44.341 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-10 05:19:44.341 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 853 ms
+2026-04-10 05:19:44.586 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-10 05:19:44.903 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-10 05:19:44.921 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-10 05:19:44.928 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 1.994 seconds (process running for 2.505)
+2026-04-10 05:19:44.940 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-10 05:19:45.109 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@502be085
+2026-04-10 05:19:45.110 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-10 05:19:48.890 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-10 05:19:48.890 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-10 05:19:48.890 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2026-04-10 05:19:48.979 [http-nio-8080-exec-1] INFO  [dea959cb4c0946488debf88aa64a8586] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=dea959cb4c0946488debf88aa64a8586, method=GET, uri=/admin/classrooms, query=null
+2026-04-10 05:19:48.983 [http-nio-8080-exec-1] ERROR [dea959cb4c0946488debf88aa64a8586] o.c.classroom.exception.GlobalExceptionHandler - 请求类型错误: Request method 'GET' is not supported
+2026-04-10 05:19:49.011 [http-nio-8080-exec-1] INFO  [dea959cb4c0946488debf88aa64a8586] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=dea959cb4c0946488debf88aa64a8586, method=GET, uri=/admin/classrooms, status=200, cost=32ms
+2026-04-10 05:19:53.018 [http-nio-8080-exec-2] INFO  [67947078e23046b69316e114329fd934] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=67947078e23046b69316e114329fd934, method=POST, uri=/admin/classrooms, query=null
+2026-04-10 05:19:53.036 [http-nio-8080-exec-2] INFO  [67947078e23046b69316e114329fd934] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=67947078e23046b69316e114329fd934, method=POST, uri=/admin/classrooms, status=200, cost=18ms
+2026-04-10 05:19:59.259 [http-nio-8080-exec-5] INFO  [52e1410222a648d785fb71ef741aa20d] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=52e1410222a648d785fb71ef741aa20d, method=POST, uri=/admin/classrooms/1, query=null
+2026-04-10 05:19:59.260 [http-nio-8080-exec-5] ERROR [52e1410222a648d785fb71ef741aa20d] o.c.classroom.exception.GlobalExceptionHandler - 请求类型错误: Request method 'POST' is not supported
+2026-04-10 05:19:59.261 [http-nio-8080-exec-5] INFO  [52e1410222a648d785fb71ef741aa20d] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=52e1410222a648d785fb71ef741aa20d, method=POST, uri=/admin/classrooms/1, status=200, cost=2ms
+2026-04-10 05:20:03.121 [http-nio-8080-exec-4] INFO  [f736a95f94354631a3ab627b41fa2906] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=f736a95f94354631a3ab627b41fa2906, method=GET, uri=/admin/classrooms/1, query=null
+2026-04-10 05:20:03.121 [http-nio-8080-exec-4] ERROR [f736a95f94354631a3ab627b41fa2906] o.c.classroom.exception.GlobalExceptionHandler - 请求类型错误: Request method 'GET' is not supported
+2026-04-10 05:20:03.121 [http-nio-8080-exec-4] INFO  [f736a95f94354631a3ab627b41fa2906] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=f736a95f94354631a3ab627b41fa2906, method=GET, uri=/admin/classrooms/1, status=200, cost=0ms
+2026-04-10 05:22:54.989 [http-nio-8080-exec-6] INFO  [03c7dd8afa8f4faa8d1246322fcbf88c] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=03c7dd8afa8f4faa8d1246322fcbf88c, method=GET, uri=/admin/classrooms/list, query=null
+2026-04-10 05:22:55.027 [http-nio-8080-exec-6] INFO  [03c7dd8afa8f4faa8d1246322fcbf88c] o.c.classroom.service.impl.ClassroomServiceImpl - [管理员教室列表查询] building=数智楼, minCapacity=1, status=null
+2026-04-10 05:22:55.031 [http-nio-8080-exec-6] INFO  [03c7dd8afa8f4faa8d1246322fcbf88c] o.c.classroom.service.impl.ClassroomServiceImpl - [管理员教室列表查询结果] count=0
+2026-04-10 05:22:55.039 [http-nio-8080-exec-6] INFO  [03c7dd8afa8f4faa8d1246322fcbf88c] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=03c7dd8afa8f4faa8d1246322fcbf88c, method=GET, uri=/admin/classrooms/list, status=200, cost=50ms
+2026-04-10 05:24:13.369 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-10 05:24:13.403 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-10 05:24:13.406 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-10 05:24:13.408 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-10 05:24:22.517 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-10 05:24:22.547 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 30292 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-10 05:24:22.547 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-10 05:24:23.417 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-10 05:24:23.430 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-10 05:24:23.431 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-10 05:24:23.431 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-10 05:24:23.495 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-10 05:24:23.495 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 919 ms
+2026-04-10 05:24:23.788 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-10 05:24:24.147 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-10 05:24:24.168 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-10 05:24:24.176 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 2.015 seconds (process running for 2.778)
+2026-04-10 05:24:24.190 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-10 05:24:24.438 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@17f543b2
+2026-04-10 05:24:24.440 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-10 05:24:49.094 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-10 05:24:49.094 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-10 05:24:49.094 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2026-04-10 05:24:49.187 [http-nio-8080-exec-1] INFO  [982a5cb8b2be404eb27458f1802a4455] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=982a5cb8b2be404eb27458f1802a4455, method=GET, uri=/admin/classrooms/list, query=null
+2026-04-10 05:24:49.239 [http-nio-8080-exec-1] INFO  [982a5cb8b2be404eb27458f1802a4455] o.c.classroom.service.impl.ClassroomServiceImpl - [管理员教室列表查询] building=数智楼, minCapacity=1, status=null
+2026-04-10 05:25:16.685 [HikariPool-1:housekeeper] WARN  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=52s132ms108µs800ns).
+2026-04-10 05:25:16.691 [http-nio-8080-exec-1] INFO  [982a5cb8b2be404eb27458f1802a4455] o.c.classroom.service.impl.ClassroomServiceImpl - [管理员教室列表查询结果] count=0
+2026-04-10 05:25:16.720 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-10 05:25:16.730 [http-nio-8080-exec-1] INFO  [982a5cb8b2be404eb27458f1802a4455] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=982a5cb8b2be404eb27458f1802a4455, method=GET, uri=/admin/classrooms/list, status=200, cost=27543ms
+2026-04-10 05:25:16.755 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-10 05:25:16.758 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-10 05:25:16.761 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-10 05:25:48.333 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-10 05:25:48.368 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 92360 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-10 05:25:48.368 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-10 05:25:49.132 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-10 05:25:49.139 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-10 05:25:49.139 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-10 05:25:49.140 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-10 05:25:49.195 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-10 05:25:49.196 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 797 ms
+2026-04-10 05:25:49.440 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-10 05:25:49.780 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-10 05:25:49.796 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-10 05:25:49.803 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 1.905 seconds (process running for 2.414)
+2026-04-10 05:25:49.815 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-10 05:25:49.989 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@7f3a3151
+2026-04-10 05:25:49.991 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-10 05:25:51.747 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-10 05:25:51.747 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-10 05:25:51.748 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2026-04-10 05:25:51.831 [http-nio-8080-exec-1] INFO  [ff43da711a5446d19bfe1437d55c0d82] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=ff43da711a5446d19bfe1437d55c0d82, method=GET, uri=/admin/classrooms/list, query=null
+2026-04-10 05:25:51.884 [http-nio-8080-exec-1] INFO  [ff43da711a5446d19bfe1437d55c0d82] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=ff43da711a5446d19bfe1437d55c0d82, method=GET, uri=/admin/classrooms/list, status=200, cost=53ms
+2026-04-10 05:26:04.335 [http-nio-8080-exec-2] INFO  [663ea05ba49e4200bee2c790f95852e9] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=663ea05ba49e4200bee2c790f95852e9, method=GET, uri=/admin/classrooms/list, query=null
+2026-04-10 05:26:04.347 [http-nio-8080-exec-2] INFO  [663ea05ba49e4200bee2c790f95852e9] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=663ea05ba49e4200bee2c790f95852e9, method=GET, uri=/admin/classrooms/list, status=200, cost=12ms
+2026-04-10 05:26:08.449 [http-nio-8080-exec-3] INFO  [7507e6612a074706ad4c84cd9ed8d2fe] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=7507e6612a074706ad4c84cd9ed8d2fe, method=GET, uri=/admin/classrooms/list, query=null
+2026-04-10 05:26:08.455 [http-nio-8080-exec-3] ERROR [7507e6612a074706ad4c84cd9ed8d2fe] o.c.classroom.exception.GlobalExceptionHandler - Required request parameter 'min_capacity' for method parameter type Integer is not present
+org.springframework.web.bind.MissingServletRequestParameterException: Required request parameter 'min_capacity' for method parameter type Integer is not present
+	at org.springframework.web.method.annotation.RequestParamMethodArgumentResolver.handleMissingValueInternal(RequestParamMethodArgumentResolver.java:220)
+	at org.springframework.web.method.annotation.RequestParamMethodArgumentResolver.handleMissingValue(RequestParamMethodArgumentResolver.java:196)
+	at org.springframework.web.method.annotation.AbstractNamedValueMethodArgumentResolver.resolveArgument(AbstractNamedValueMethodArgumentResolver.java:125)
+	at org.springframework.web.method.support.HandlerMethodArgumentResolverComposite.resolveArgument(HandlerMethodArgumentResolverComposite.java:122)
+	at org.springframework.web.method.support.InvocableHandlerMethod.getMethodArgumentValues(InvocableHandlerMethod.java:227)
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:181)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:991)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:896)
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.campus.classroom.security.RequestTraceIdFilter.doFilterInternal(RequestTraceIdFilter.java:38)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:110)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108)
+	at org.springframework.security.web.FilterChainProxy.lambda$doFilterInternal$3(FilterChainProxy.java:231)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:365)
+	at org.springframework.security.web.access.intercept.AuthorizationFilter.doFilter(AuthorizationFilter.java:101)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:125)
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:119)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:131)
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:85)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:100)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:179)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.campus.classroom.security.JwtAuthenticationFilter.doFilterInternal(JwtAuthenticationFilter.java:56)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90)
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233)
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.filter.ServletRequestPathFilter.doFilter(ServletRequestPathFilter.java:52)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74)
+	at org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebSecurityConfiguration.java:319)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$4(HandlerMappingIntrospector.java:267)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74)
+	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:240)
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:362)
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:278)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:88)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:342)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:399)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1774)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:973)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:491)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+2026-04-10 05:26:08.457 [http-nio-8080-exec-3] INFO  [7507e6612a074706ad4c84cd9ed8d2fe] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=7507e6612a074706ad4c84cd9ed8d2fe, method=GET, uri=/admin/classrooms/list, status=200, cost=8ms
+2026-04-10 05:29:30.729 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-10 05:29:30.786 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-10 05:29:30.790 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-10 05:29:30.793 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-10 05:29:34.940 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-10 05:29:34.979 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 29056 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-10 05:29:34.980 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-10 05:29:35.835 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-10 05:29:35.844 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-10 05:29:35.845 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-10 05:29:35.845 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-10 05:29:35.915 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-10 05:29:35.915 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 902 ms
+2026-04-10 05:29:36.203 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-10 05:29:36.554 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-10 05:29:36.572 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-10 05:29:36.579 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 2.093 seconds (process running for 2.674)
+2026-04-10 05:29:36.592 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-10 05:29:36.789 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@7d485c63
+2026-04-10 05:29:36.790 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-10 05:29:37.218 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-10 05:29:37.218 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-10 05:29:37.218 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2026-04-10 05:29:37.324 [http-nio-8080-exec-1] INFO  [b44dca0569db450e94365f7f3d067269] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=b44dca0569db450e94365f7f3d067269, method=GET, uri=/admin/classrooms/list, query=null
+2026-04-10 05:29:37.411 [http-nio-8080-exec-1] INFO  [b44dca0569db450e94365f7f3d067269] o.c.classroom.service.impl.ClassroomServiceImpl - [管理员教室列表查询] building=数智楼, minCapacity=1, status=ENABLE
+2026-04-10 05:29:37.412 [http-nio-8080-exec-1] WARN  [b44dca0569db450e94365f7f3d067269] o.c.classroom.service.impl.ClassroomServiceImpl - [教室状态非法] status=ENABLE
+2026-04-10 05:29:37.453 [http-nio-8080-exec-1] INFO  [b44dca0569db450e94365f7f3d067269] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=b44dca0569db450e94365f7f3d067269, method=GET, uri=/admin/classrooms/list, status=200, cost=129ms
+2026-04-10 05:29:41.741 [http-nio-8080-exec-3] INFO  [cf81f379bb004c7d897be1a62a32a7e4] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=cf81f379bb004c7d897be1a62a32a7e4, method=GET, uri=/admin/classrooms/list, query=null
+2026-04-10 05:29:41.750 [http-nio-8080-exec-3] INFO  [cf81f379bb004c7d897be1a62a32a7e4] o.c.classroom.service.impl.ClassroomServiceImpl - [管理员教室列表查询] building=数智楼, minCapacity=1, status=ENABLED
+2026-04-10 05:29:41.753 [http-nio-8080-exec-3] INFO  [cf81f379bb004c7d897be1a62a32a7e4] o.c.classroom.service.impl.ClassroomServiceImpl - [管理员教室列表查询结果] count=2
+2026-04-10 05:29:41.762 [http-nio-8080-exec-3] INFO  [cf81f379bb004c7d897be1a62a32a7e4] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=cf81f379bb004c7d897be1a62a32a7e4, method=GET, uri=/admin/classrooms/list, status=200, cost=21ms
+2026-04-10 05:29:44.437 [http-nio-8080-exec-5] INFO  [3d286d266be74453999298ea1ea74d05] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=3d286d266be74453999298ea1ea74d05, method=GET, uri=/admin/classrooms/list, query=null
+2026-04-10 05:29:44.445 [http-nio-8080-exec-5] INFO  [3d286d266be74453999298ea1ea74d05] o.c.classroom.service.impl.ClassroomServiceImpl - [管理员教室列表查询] building=数智楼, minCapacity=1, status=ENABLED
+2026-04-10 05:29:44.447 [http-nio-8080-exec-5] INFO  [3d286d266be74453999298ea1ea74d05] o.c.classroom.service.impl.ClassroomServiceImpl - [管理员教室列表查询结果] count=2
+2026-04-10 05:29:44.453 [http-nio-8080-exec-5] INFO  [3d286d266be74453999298ea1ea74d05] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=3d286d266be74453999298ea1ea74d05, method=GET, uri=/admin/classrooms/list, status=200, cost=16ms
+2026-04-10 05:29:53.557 [http-nio-8080-exec-4] INFO  [b4ad6330dbbc413d8352c67be57bb14b] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=b4ad6330dbbc413d8352c67be57bb14b, method=POST, uri=/auth/login, query=null
+2026-04-10 05:29:53.691 [http-nio-8080-exec-4] INFO  [b4ad6330dbbc413d8352c67be57bb14b] org.campus.classroom.service.impl.AuthServiceImpl - [登录开始] userId=10004, username=233
+2026-04-10 05:29:53.703 [http-nio-8080-exec-4] INFO  [b4ad6330dbbc413d8352c67be57bb14b] org.campus.classroom.service.impl.AuthServiceImpl - [登录成功] userId=10004, username=233, role=STUDENT
+2026-04-10 05:29:53.705 [http-nio-8080-exec-4] INFO  [b4ad6330dbbc413d8352c67be57bb14b] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=b4ad6330dbbc413d8352c67be57bb14b, method=POST, uri=/auth/login, status=200, cost=148ms
+2026-04-10 05:30:00.646 [http-nio-8080-exec-2] INFO  [d3e7e407ee134dac96990465a09c4efc] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=d3e7e407ee134dac96990465a09c4efc, method=GET, uri=/admin/classrooms/list, query=null
+2026-04-10 05:30:00.657 [http-nio-8080-exec-2] INFO  [d3e7e407ee134dac96990465a09c4efc] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=d3e7e407ee134dac96990465a09c4efc, method=GET, uri=/admin/classrooms/list, status=200, cost=11ms
+2026-04-10 05:30:05.122 [http-nio-8080-exec-6] INFO  [de806e6581bf4a97bdabf8bd9f834069] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=de806e6581bf4a97bdabf8bd9f834069, method=GET, uri=/admin/classrooms/list, query=null
+2026-04-10 05:30:05.135 [http-nio-8080-exec-6] INFO  [de806e6581bf4a97bdabf8bd9f834069] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=de806e6581bf4a97bdabf8bd9f834069, method=GET, uri=/admin/classrooms/list, status=200, cost=13ms
+2026-04-10 05:30:05.720 [http-nio-8080-exec-7] INFO  [da4ab19cf64e4ae8be3633233a0aa88b] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=da4ab19cf64e4ae8be3633233a0aa88b, method=GET, uri=/admin/classrooms/list, query=null
+2026-04-10 05:30:05.731 [http-nio-8080-exec-7] INFO  [da4ab19cf64e4ae8be3633233a0aa88b] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=da4ab19cf64e4ae8be3633233a0aa88b, method=GET, uri=/admin/classrooms/list, status=200, cost=11ms
+2026-04-10 06:21:12.438 [http-nio-8080-exec-9] INFO  [8ec3eddd123f40af9e8e59626baa31c9] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=8ec3eddd123f40af9e8e59626baa31c9, method=GET, uri=/admin/classrooms/list, query=null
+2026-04-10 06:21:12.491 [http-nio-8080-exec-9] INFO  [8ec3eddd123f40af9e8e59626baa31c9] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=8ec3eddd123f40af9e8e59626baa31c9, method=GET, uri=/admin/classrooms/list, status=200, cost=53ms
+2026-04-10 06:21:23.080 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-10 06:21:23.121 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-10 06:21:23.128 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-10 06:21:23.132 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-10 06:21:27.992 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-10 06:21:28.040 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 77628 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-10 06:21:28.041 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-10 06:21:29.098 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-10 06:21:29.108 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-10 06:21:29.109 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-10 06:21:29.109 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-10 06:21:29.188 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-10 06:21:29.188 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1111 ms
+2026-04-10 06:21:29.495 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-10 06:21:29.937 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-10 06:21:29.957 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-10 06:21:29.965 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 2.536 seconds (process running for 3.153)
+2026-04-10 06:21:29.980 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-10 06:21:30.255 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@221e8f9f
+2026-04-10 06:21:30.256 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-10 06:21:42.251 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-10 06:21:42.251 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-10 06:21:42.252 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-04-10 06:21:42.365 [http-nio-8080-exec-1] INFO  [bf585c49a1bf4eb295affe9d0fc2eb30] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=bf585c49a1bf4eb295affe9d0fc2eb30, method=GET, uri=/admin/classrooms/list, query=null
+2026-04-10 06:21:42.496 [http-nio-8080-exec-1] INFO  [bf585c49a1bf4eb295affe9d0fc2eb30] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=bf585c49a1bf4eb295affe9d0fc2eb30, method=GET, uri=/admin/classrooms/list, status=200, cost=130ms
+2026-04-10 06:21:46.436 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-10 06:21:46.472 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-10 06:21:46.475 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-10 06:21:46.478 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-10 06:21:50.182 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-10 06:21:50.222 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 82512 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-10 06:21:50.222 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-10 06:21:51.048 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-10 06:21:51.056 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-10 06:21:51.057 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-10 06:21:51.058 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-10 06:21:51.132 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-10 06:21:51.132 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 880 ms
+2026-04-10 06:21:51.441 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-10 06:21:51.958 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-10 06:21:51.976 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-10 06:21:51.985 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 2.251 seconds (process running for 2.803)
+2026-04-10 06:21:51.998 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-10 06:21:52.161 [http-nio-8080-exec-3] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-10 06:21:52.161 [http-nio-8080-exec-3] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-10 06:21:52.161 [http-nio-8080-exec-3] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2026-04-10 06:21:52.232 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@35e8784d
+2026-04-10 06:21:52.234 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-10 06:21:59.488 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-10 06:21:59.525 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-10 06:21:59.528 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-10 06:21:59.531 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-10 06:22:03.347 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-10 06:22:03.387 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 72792 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-10 06:22:03.387 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-10 06:22:04.227 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-10 06:22:04.235 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-10 06:22:04.236 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-10 06:22:04.236 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-10 06:22:04.313 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-10 06:22:04.313 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 885 ms
+2026-04-10 06:22:04.563 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-10 06:22:04.947 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-10 06:22:04.976 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-10 06:22:04.985 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 2.101 seconds (process running for 2.599)
+2026-04-10 06:22:05.001 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-10 06:22:05.019 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-10 06:22:05.020 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-10 06:22:05.020 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2026-04-10 06:22:05.217 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4b868a29
+2026-04-10 06:22:05.219 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-10 06:22:05.250 [http-nio-8080-exec-1] INFO  [ac0ae953ac144b6ca2cc63cd0e0425a0] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=ac0ae953ac144b6ca2cc63cd0e0425a0, method=GET, uri=/admin/classrooms/list, query=null
+2026-04-10 06:22:05.250 [http-nio-8080-exec-3] INFO  [e0f09cbb417e4a069fe33e3b2e700cd3] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=e0f09cbb417e4a069fe33e3b2e700cd3, method=GET, uri=/admin/classrooms/list, query=null
+2026-04-10 06:22:05.396 [http-nio-8080-exec-3] INFO  [e0f09cbb417e4a069fe33e3b2e700cd3] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=e0f09cbb417e4a069fe33e3b2e700cd3, method=GET, uri=/admin/classrooms/list, status=200, cost=146ms
+2026-04-10 06:22:05.396 [http-nio-8080-exec-1] INFO  [ac0ae953ac144b6ca2cc63cd0e0425a0] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=ac0ae953ac144b6ca2cc63cd0e0425a0, method=GET, uri=/admin/classrooms/list, status=200, cost=146ms
+2026-04-10 06:22:06.090 [http-nio-8080-exec-2] INFO  [206cf736100141d7ab6b0ea3c2079d60] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=206cf736100141d7ab6b0ea3c2079d60, method=GET, uri=/admin/classrooms/list, query=null
+2026-04-10 06:22:06.101 [http-nio-8080-exec-2] INFO  [206cf736100141d7ab6b0ea3c2079d60] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=206cf736100141d7ab6b0ea3c2079d60, method=GET, uri=/admin/classrooms/list, status=200, cost=11ms
+2026-04-10 06:22:25.831 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-10 06:22:25.867 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-10 06:22:25.870 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-10 06:22:25.873 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-10 06:22:29.703 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-10 06:22:29.754 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 106752 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-10 06:22:29.754 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-10 06:22:30.683 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-10 06:22:30.691 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-10 06:22:30.692 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-10 06:22:30.692 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-10 06:22:30.757 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-10 06:22:30.757 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 967 ms
+2026-04-10 06:22:31.049 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-10 06:22:31.405 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-10 06:22:31.421 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-10 06:22:31.428 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 2.248 seconds (process running for 2.812)
+2026-04-10 06:22:31.441 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-10 06:22:31.608 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@3958bd82
+2026-04-10 06:22:31.609 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-10 06:22:33.483 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-10 06:22:33.483 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-10 06:22:33.484 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2026-04-10 06:22:33.575 [http-nio-8080-exec-1] INFO  [59bd6a51bba94f378b1453715f548d14] o.campus.classroom.security.RequestTraceIdFilter - [请求开始] traceId=59bd6a51bba94f378b1453715f548d14, method=GET, uri=/admin/classrooms/list, query=null
+2026-04-10 06:22:33.631 [http-nio-8080-exec-1] INFO  [59bd6a51bba94f378b1453715f548d14] o.c.classroom.service.impl.ClassroomServiceImpl - [管理员教室列表查询] building=数智楼, minCapacity=1, status=ENABLED
+2026-04-10 06:22:33.636 [http-nio-8080-exec-1] INFO  [59bd6a51bba94f378b1453715f548d14] o.c.classroom.service.impl.ClassroomServiceImpl - [管理员教室列表查询结果] count=2
+2026-04-10 06:22:33.671 [http-nio-8080-exec-1] INFO  [59bd6a51bba94f378b1453715f548d14] o.campus.classroom.security.RequestTraceIdFilter - [请求结束] traceId=59bd6a51bba94f378b1453715f548d14, method=GET, uri=/admin/classrooms/list, status=200, cost=96ms
+2026-04-10 06:22:39.270 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-10 06:22:39.308 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-10 06:22:39.310 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-10 06:22:39.313 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-10 06:22:43.713 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-10 06:22:43.760 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 69984 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-10 06:22:43.762 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-10 06:22:44.547 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-10 06:22:44.554 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-10 06:22:44.555 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-10 06:22:44.555 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-10 06:22:44.615 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-10 06:22:44.615 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 819 ms
+2026-04-10 06:22:44.870 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-10 06:22:45.202 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-10 06:22:45.217 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-10 06:22:45.225 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 1.999 seconds (process running for 2.594)
+2026-04-10 06:22:45.236 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-10 06:22:45.407 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4030dbb2
+2026-04-10 06:22:45.408 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-10 06:22:50.343 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-10 06:22:50.383 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-10 06:22:50.386 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-10 06:22:50.389 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-10 14:05:51.816 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-10 14:05:51.908 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 107128 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-10 14:05:51.909 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-10 14:05:52.981 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-10 14:05:52.989 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-10 14:05:52.991 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-10 14:05:52.991 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-10 14:05:53.071 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-10 14:05:53.071 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1088 ms
+2026-04-10 14:05:53.358 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-10 14:05:53.738 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-10 14:05:53.753 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-10 14:05:53.761 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 2.643 seconds (process running for 3.35)
+2026-04-10 14:05:53.774 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-10 14:05:54.017 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@5bbf0484
+2026-04-10 14:05:54.018 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-10 14:06:07.893 [http-nio-8080-exec-2] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-10 14:06:07.893 [http-nio-8080-exec-2] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-10 14:06:07.894 [http-nio-8080-exec-2] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-04-10 14:06:21.930 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-10 14:06:21.965 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-10 14:06:21.968 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-10 14:06:21.982 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-04-10 14:06:39.213 [background-preinit] INFO  [] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-04-10 14:06:39.252 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Starting CampusClassroomReservationSystemApplication using Java 17.0.9 with PID 107512 (D:\JavaProject\campusClassroomReservationSystem\target\classes started by UmiK in D:\JavaProject\campusClassroomReservationSystem)
+2026-04-10 14:06:39.253 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - The following 1 profile is active: "local"
+2026-04-10 14:06:40.091 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-10 14:06:40.099 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-10 14:06:40.100 [main] INFO  [] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-10 14:06:40.100 [main] INFO  [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-04-10 14:06:40.165 [main] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-10 14:06:40.165 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 876 ms
+2026-04-10 14:06:40.429 [main] INFO  [] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name JWTUserDetailsService
+2026-04-10 14:06:40.768 [main] INFO  [] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-10 14:06:40.787 [main] INFO  [] o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-10 14:06:40.796 [main] INFO  [] o.c.c.CampusClassroomReservationSystemApplication - Started CampusClassroomReservationSystemApplication in 2.037 seconds (process running for 2.592)
+2026-04-10 14:06:40.809 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-04-10 14:06:40.986 [scheduling-1] INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@1586e763
+2026-04-10 14:06:40.989 [scheduling-1] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-10 14:06:47.821 [http-nio-8080-exec-1] INFO  [] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-10 14:06:47.821 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-10 14:06:47.822 [http-nio-8080-exec-1] INFO  [] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-04-10 14:06:47.920 [http-nio-8080-exec-1] ERROR [] org.campus.classroom.config.SecurityConfiguration - 权限不足，无法访问: Access Denied
+2026-04-10 14:30:59.981 [SpringApplicationShutdownHook] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-10 14:31:00.020 [tomcat-shutdown] INFO  [] o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-10 14:31:00.023 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-04-10 14:31:00.025 [SpringApplicationShutdownHook] INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.

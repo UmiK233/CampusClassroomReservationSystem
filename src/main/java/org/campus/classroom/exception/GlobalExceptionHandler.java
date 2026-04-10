@@ -6,25 +6,39 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-import org.apache.tomcat.websocket.AuthenticationException;
+import lombok.extern.slf4j.Slf4j;
 import org.campus.classroom.common.Result;
 import org.campus.classroom.enums.ResultCode;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.DateTimeException;
 import java.time.format.DateTimeParseException;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
-    /**
-     * 捕获 JWT 过期异常
-     */
+    // 处理：不支持的媒体类型（前端传了form-data，接口要求json）
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public Result<String> handleHttpMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException e) {
+        log.error("媒体类型错误: {}", e.getMessage());
+        return Result.fail(ResultCode.BAD_REQUEST, "请使用 JSON 格式请求");
+    }
+
+    // 处理：不支持的请求类型
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public Result<String> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
+        log.error("请求类型错误: {}", e.getMessage());
+        return Result.fail(ResultCode.BAD_REQUEST, e.getMessage());
+    }
+
+    // 捕获 JWT 过期异常
     @ExceptionHandler(ExpiredJwtException.class)
     public Result<String> handleExpiredJwtException(ExpiredJwtException e) {
         // 返回项目统一的格式就行
@@ -40,6 +54,7 @@ public class GlobalExceptionHandler {
     public Result<String> handleBadCredentialsException(BadCredentialsException e) {
         return Result.fail(ResultCode.UNAUTHORIZED, "认证失败，请检查用户名和密码");
     }
+
     @ExceptionHandler(AccessDeniedException.class)
     public Result<String> handleAccessDeniedException(AccessDeniedException e) {
         return Result.fail(ResultCode.FORBIDDEN, "权限不足，无法访问");
@@ -99,7 +114,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public Result<Void> handleException(Exception e) {
-        e.printStackTrace();
+        log.error(e.getMessage(), e);
         return Result.fail(ResultCode.INTERNAL_ERROR, "系统内部错误");
     }
 }

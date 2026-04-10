@@ -1,10 +1,12 @@
 package org.campus.classroom.job;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.campus.classroom.service.ReservationService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ReservationExpireJob {
@@ -19,7 +21,7 @@ public class ReservationExpireJob {
 //        System.out.println("执行预约过期任务: " + System.currentTimeMillis());
         int count = reservationService.expireActiveReservations();
         if (count > 0) {
-            System.out.println("本次自动过期预约数量: " + count);
+            log.info("[预约过期] 本次自动过期预约数量: {}", count);
         }
     }
 }
