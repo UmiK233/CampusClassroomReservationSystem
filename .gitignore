@@ -34,4 +34,4 @@ build/
 
 ### private file ###
 src/main/resources/application-local.yaml
-/logs/
+logs/**

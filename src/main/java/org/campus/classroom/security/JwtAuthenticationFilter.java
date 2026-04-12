@@ -30,36 +30,57 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final Logger log= LoggerFactory.getLogger(this.getClass());
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return "/auth/login".equals(path) || "/auth/register".equals(path);
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
             throws ServletException, IOException {
+
         String authHeader = request.getHeader("Authorization");
+
+        // 没带 token：不认证，直接继续
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.debug("Filter: 请求头中没有Authorization或者Authorization不以Bearer开头");
-            returnUnauthorizedResponse(response);
-            return;
-        }
-        if (SecurityContextHolder.getContext().getAuthentication() != null) {
-            log.info("Filter: 已经认证过了，直接放行");
+            log.debug("Filter: 没有 Bearer Token，跳过JWT认证");
             filterChain.doFilter(request, response);
             return;
         }
+
+        // 已经有认证信息：直接继续
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            log.debug("Filter: 已有认证信息，直接放行");
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
             String token = authHeader.substring(7);
             String username = jwtUtil.parseToken(token).get("username").toString();
+
             UserDetails loginUser = jwtUserDetailsService.loadUserByUsername(username);
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    loginUser,
-                    null,
-                    loginUser.getAuthorities()
+
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            loginUser,
+                            null,
+                            loginUser.getAuthorities()
+                    );
+
+            authentication.setDetails(
+                    new WebAuthenticationDetailsSource().buildDetails(request)
             );
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (Exception e) {
             log.debug("Filter: Token解析失败，错误信息: {}", e.getMessage());
             returnUnauthorizedResponse(response);
-            //这里必须返回,否则返回的错误信息会被后续的过滤器覆盖掉,导致前端拿不到错误信息
             return;
         }
+
         filterChain.doFilter(request, response);
     }
 
