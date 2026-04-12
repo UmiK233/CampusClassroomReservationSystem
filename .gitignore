@@ -32,4 +32,6 @@ build/
 ### VS Code ###
 .vscode/
 
+### private file ###
 src/main/resources/application-local.yaml
+logs/**

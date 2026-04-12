@@ -18,7 +18,6 @@ public class ReservationExpireJob {
      */
     @Scheduled(fixedDelay = 60000)
     public void expireReservations() {
-//        System.out.println("执行预约过期任务: " + System.currentTimeMillis());
         int count = reservationService.expireActiveReservations();
         if (count > 0) {
             log.info("[预约过期] 本次自动过期预约数量: {}", count);
