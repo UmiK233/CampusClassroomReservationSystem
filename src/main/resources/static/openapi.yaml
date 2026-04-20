@@ -1,0 +1,919 @@
+openapi: 3.0.3
+info:
+  title: Campus Classroom Reservation System API
+  description: >
+    API specification for the campus classroom reservation backend.
+    All endpoints require `Authorization: Bearer <JWT>` except `/auth/login` and `/auth/register`.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: Auth
+    description: Authentication and current user profile
+  - name: Classroom
+    description: Classroom and seat layout queries
+  - name: Reservation
+    description: Reservation operations
+  - name: Admin
+    description: Admin classroom and seat management
+  - name: Seat
+    description: Admin seat update endpoint
+  - name: Misc
+    description: Basic test endpoints
+security:
+  - bearerAuth: []
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: User login
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginDTO"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultLoginVO"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: User register
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterDTO"
+      responses:
+        "200":
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultVoid"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current user info
+      operationId: getMe
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultUserInfoVO"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /classrooms/{id}:
+    get:
+      tags: [Classroom]
+      summary: Get classroom by id
+      operationId: getClassroomById
+      parameters:
+        - $ref: "#/components/parameters/ClassroomId"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultClassroomVO"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /classrooms/{id}/seats:
+    get:
+      tags: [Classroom]
+      summary: Get classroom seat layout
+      operationId: getClassroomSeats
+      parameters:
+        - $ref: "#/components/parameters/ClassroomId"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultClassroomSeatLayoutVO"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /classrooms/available_list:
+    get:
+      tags: [Classroom]
+      summary: List available classrooms
+      operationId: listAvailableClassrooms
+      parameters:
+        - name: building
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Building filter
+        - name: min_capacity
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+          description: Minimum room capacity
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultClassroomVOList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /seats/{id}:
+    put:
+      tags: [Seat]
+      summary: Update seat (admin)
+      description: Requires ADMIN role.
+      operationId: updateSeat
+      parameters:
+        - $ref: "#/components/parameters/SeatId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeatUpdateDTO"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultSeatVO"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /reservations/seat:
+    post:
+      tags: [Reservation]
+      summary: Create seat reservation
+      operationId: createSeatReservation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeatReservationCreateDTO"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultLong"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /reservations/classroom:
+    post:
+      tags: [Reservation]
+      summary: Create classroom reservation
+      operationId: createClassroomReservation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassroomReservationCreateDTO"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultLong"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /reservations/{id}/cancel:
+    post:
+      tags: [Reservation]
+      summary: Cancel reservation
+      operationId: cancelReservation
+      parameters:
+        - $ref: "#/components/parameters/ReservationId"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultVoid"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /reservations/list:
+    get:
+      tags: [Reservation]
+      summary: List active reservations for current user
+      operationId: listActiveReservations
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultReservationVOList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /reservations/list_history:
+    get:
+      tags: [Reservation]
+      summary: List historical reservations for current user
+      operationId: listHistoryReservations
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultReservationVOList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /admin/classrooms:
+    post:
+      tags: [Admin]
+      summary: Create classroom (admin)
+      description: Requires ADMIN role.
+      operationId: adminCreateClassroom
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassroomCreateDTO"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultClassroomVO"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /admin/classrooms/{id}:
+    put:
+      tags: [Admin]
+      summary: Update classroom (admin)
+      description: Requires ADMIN role.
+      operationId: adminUpdateClassroom
+      parameters:
+        - $ref: "#/components/parameters/ClassroomId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassroomUpdateDTO"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultClassroomVO"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /admin/classrooms/{id}/seats/init:
+    post:
+      tags: [Admin]
+      summary: Initialize seats for classroom (admin)
+      description: Requires ADMIN role.
+      operationId: adminInitSeats
+      parameters:
+        - $ref: "#/components/parameters/ClassroomId"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultVoid"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /admin/classrooms/{id}/seats/status:
+    put:
+      tags: [Admin]
+      summary: Batch update seat status in classroom (admin)
+      description: Requires ADMIN role.
+      operationId: adminBatchUpdateSeatStatus
+      parameters:
+        - $ref: "#/components/parameters/ClassroomId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeatBatchUpdateRequest"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultVoid"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /admin/classrooms/list:
+    get:
+      tags: [Admin]
+      summary: List classrooms (admin)
+      description: Requires ADMIN role.
+      operationId: adminListClassrooms
+      parameters:
+        - name: building
+          in: query
+          required: true
+          schema:
+            type: string
+            maxLength: 50
+        - name: min_capacity
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+        - name: status
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [ENABLED, DISABLED]
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultClassroomVOList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ClassroomId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      description: Classroom id
+    SeatId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      description: Seat id
+    ReservationId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      description: Reservation id
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResult"
+    Unauthorized:
+      description: Missing/invalid token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResult"
+    Forbidden:
+      description: Permission denied or resource disabled
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResult"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResult"
+    Conflict:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResult"
+
+  schemas:
+    ResultBase:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: success
+
+    ErrorResult:
+      allOf:
+        - $ref: "#/components/schemas/ResultBase"
+        - type: object
+          properties:
+            data:
+              nullable: true
+              example: null
+
+    ResultVoid:
+      allOf:
+        - $ref: "#/components/schemas/ResultBase"
+        - type: object
+          properties:
+            data:
+              nullable: true
+              example: null
+
+    ResultLong:
+      allOf:
+        - $ref: "#/components/schemas/ResultBase"
+        - type: object
+          properties:
+            data:
+              type: integer
+              format: int64
+              example: 43
+
+    ResultLoginVO:
+      allOf:
+        - $ref: "#/components/schemas/ResultBase"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/LoginVO"
+
+    ResultUserInfoVO:
+      allOf:
+        - $ref: "#/components/schemas/ResultBase"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/UserInfoVO"
+
+    ResultSeatVO:
+      allOf:
+        - $ref: "#/components/schemas/ResultBase"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/SeatVO"
+
+    ResultClassroomVO:
+      allOf:
+        - $ref: "#/components/schemas/ResultBase"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/ClassroomVO"
+
+    ResultClassroomVOList:
+      allOf:
+        - $ref: "#/components/schemas/ResultBase"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/ClassroomVO"
+
+    ResultClassroomSeatLayoutVO:
+      allOf:
+        - $ref: "#/components/schemas/ResultBase"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/ClassroomSeatLayoutVO"
+
+    ResultReservationVOList:
+      allOf:
+        - $ref: "#/components/schemas/ResultBase"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/ReservationVO"
+
+    LoginDTO:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          example: student01
+        password:
+          type: string
+          format: password
+          example: Passw0rd!
+
+    RegisterDTO:
+      type: object
+      required: [username, password, email]
+      properties:
+        username:
+          type: string
+          minLength: 6
+          maxLength: 20
+          example: student01
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 20
+          example: Passw0rd!
+        email:
+          type: string
+          format: email
+          example: student01@example.com
+
+    ClassroomCreateDTO:
+      type: object
+      required: [roomNumber, building, seatRows, seatCols]
+      properties:
+        roomNumber:
+          type: string
+          maxLength: 50
+          example: A101
+        building:
+          type: string
+          maxLength: 50
+          example: MainBuilding
+        seatRows:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+          example: 8
+        seatCols:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+          example: 10
+        status:
+          type: string
+          enum: [ENABLED, DISABLED]
+          example: ENABLED
+        remark:
+          type: string
+          maxLength: 255
+          example: floor-1
+
+    ClassroomUpdateDTO:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ENABLED, DISABLED]
+          example: ENABLED
+        remark:
+          type: string
+          maxLength: 255
+          example: temporary maintenance
+
+    SeatUpdateDTO:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ENABLED, DISABLED]
+          example: DISABLED
+        remark:
+          type: string
+          maxLength: 255
+          example: broken chair
+
+    SeatBatchUpdateRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ENABLED, DISABLED]
+          example: DISABLED
+        remark:
+          type: string
+          maxLength: 255
+          example: under maintenance
+
+    SeatReservationCreateDTO:
+      type: object
+      required: [seat_id, start_time, end_time]
+      properties:
+        seat_id:
+          type: integer
+          format: int64
+          example: 118
+        start_time:
+          type: string
+          format: date-time
+          example: 2026-04-12T19:00:00
+        end_time:
+          type: string
+          format: date-time
+          example: 2026-04-12T21:00:00
+        reason:
+          type: string
+          maxLength: 255
+          example: self-study
+
+    ClassroomReservationCreateDTO:
+      type: object
+      required: [classroom_id, start_time, end_time]
+      properties:
+        classroom_id:
+          type: integer
+          format: int64
+          example: 6
+        start_time:
+          type: string
+          format: date-time
+          example: 2026-04-12T19:00:00
+        end_time:
+          type: string
+          format: date-time
+          example: 2026-04-12T21:00:00
+        reason:
+          type: string
+          maxLength: 255
+          example: class meeting
+
+    LoginVO:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiJ9.xxx.yyy
+        userInfo:
+          $ref: "#/components/schemas/UserInfoVO"
+
+    UserInfoVO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10004
+        username:
+          type: string
+          example: student01
+        nickname:
+          type: string
+          example: student01
+        email:
+          type: string
+          format: email
+          example: student01@example.com
+        role:
+          type: string
+          example: STUDENT
+
+    ClassroomVO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 6
+        roomNumber:
+          type: string
+          example: A101
+        building:
+          type: string
+          example: MainBuilding
+        seatRows:
+          type: integer
+          format: int32
+          example: 8
+        seatCols:
+          type: integer
+          format: int32
+          example: 10
+        capacity:
+          type: integer
+          format: int32
+          example: 80
+        status:
+          type: string
+          enum: [ENABLED, DISABLED]
+          example: ENABLED
+        remark:
+          type: string
+          example: floor-1
+
+    SeatVO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 118
+        classroomId:
+          type: integer
+          format: int64
+          example: 6
+        seatNumber:
+          type: string
+          example: 1-1
+        rowNumber:
+          type: integer
+          format: int32
+          example: 1
+        colNumber:
+          type: integer
+          format: int32
+          example: 1
+        status:
+          type: string
+          enum: [ENABLED, DISABLED]
+          example: ENABLED
+        remark:
+          type: string
+          example: near-window
+
+    ClassroomSeatLayoutVO:
+      type: object
+      properties:
+        classroomId:
+          type: integer
+          format: int64
+          example: 6
+        classroomBuilding:
+          type: string
+          example: MainBuilding
+        classroomNumber:
+          type: string
+          example: A101
+        seatRows:
+          type: integer
+          format: int32
+          example: 8
+        seatCols:
+          type: integer
+          format: int32
+          example: 10
+        seatVOS:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeatVO"
+
+    ReservationVO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 43
+        resourceType:
+          type: string
+          enum: [SEAT, CLASSROOM]
+          example: CLASSROOM
+        resourceId:
+          type: integer
+          format: int64
+          example: 6
+        resourceName:
+          type: string
+          example: MainBuilding A101 1-1
+        reserveDate:
+          type: string
+          format: date
+          example: 2026-04-12
+        startTime:
+          type: string
+          format: date-time
+          example: 2026-04-12T19:00:00
+        endTime:
+          type: string
+          format: date-time
+          example: 2026-04-12T21:00:00
+        reason:
+          type: string
+          example: self-study
+        status:
+          type: string
+          enum: [ACTIVE, CANCELLED, EXPIRED]
+          example: ACTIVE
+        createTime:
+          type: string
+          format: date-time
+          example: 2026-04-12T18:40:00

@@ -3,9 +3,7 @@ package org.campus.classroom.mapper;
 import org.apache.ibatis.annotations.*;
 import org.campus.classroom.entity.Reservation;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 public interface ReservationMapper {
@@ -47,7 +45,7 @@ public interface ReservationMapper {
               AND user_id = #{userId}
             """)
     @ResultMap("reservationResultMap")
-    Reservation selectByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
+    Reservation selectByReservationIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
 
     @Select("SELECT * FROM reservation ORDER BY create_time DESC")
     @ResultMap("reservationResultMap")
@@ -101,9 +99,10 @@ public interface ReservationMapper {
               AND status = 'ACTIVE'
               AND start_time < #{endTime}
               AND end_time > #{startTime}
+            FOR UPDATE
             """)
     @ResultMap("reservationResultMap")
-    List<Reservation> selectSeatConflicts(@Param("seatId") Long seatId,
+    List<Reservation> selectSeatConflictsForUpdate(@Param("seatId") Long seatId,
                                           @Param("startTime") LocalDateTime startTime,//开始时间必须在其他预约中的结束之前之后,否则冲突, end_time > #{startTime} 就冲突
                                           @Param("endTime") LocalDateTime endTime);//结束时间必须在其他预约中的开始时间之前,否则冲突, start_time < #{endTime} 就冲突
 

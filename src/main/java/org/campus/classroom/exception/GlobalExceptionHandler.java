@@ -13,12 +13,12 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.format.DateTimeParseException;
 
@@ -40,11 +40,18 @@ public class GlobalExceptionHandler {
         return Result.fail(ResultCode.BAD_REQUEST, e.getMessage());
     }
 
-    // 401 未登录
-    @ExceptionHandler(AuthenticationException.class)
-    public Result<String> handleAuthenticationException(AuthenticationException e) {
-        return Result.fail(ResultCode.UNAUTHORIZED, "未登录或Token无效");
+    // 处理：不支持的请求类型
+    @ExceptionHandler(NoResourceFoundException.class)
+    public Result<String> handleNoResourceFoundException(NoResourceFoundException e) {
+        log.error("请求的资源不存在: {}", e.getMessage());
+        return Result.fail(ResultCode.INTERNAL_ERROR, "请求的资源不存在");
     }
+
+//    // 401 未登录
+//    @ExceptionHandler(AuthenticationException.class)
+//    public Result<String> handleAuthenticationException(AuthenticationException e) {
+//        return Result.fail(ResultCode.UNAUTHORIZED, "未登录或Token无效");
+//    }
 
     // 403 权限不足
     @ExceptionHandler(AuthorizationDeniedException.class)

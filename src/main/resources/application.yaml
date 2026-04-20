@@ -4,5 +4,10 @@ spring:
     active: local
   application:
     name: campusClassroomReservationSystem
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    url: /openapi.yaml
+    disable-swagger-default-url: true
 server:
   port: 8080

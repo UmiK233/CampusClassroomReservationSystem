@@ -48,14 +48,26 @@ public class SecurityConfiguration {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login", "/auth/register").permitAll() //放行登录接口不走过滤
+                        .requestMatchers("/auth/login", "/auth/register", "/swagger-ui.html", "/swagger-ui/**", "/openapi.yaml","/v3/api-docs/**").permitAll() //放行登录接口不走过滤
                         .requestMatchers("/admin/**").hasRole("ADMIN") //只有ADMIN角色可以访问/admin接口
                         .anyRequest().authenticated()
                 )
                 //在UsernamePasswordAuthenticationFilter前添加jwtAuthenticationFilter，验证Token是否合法，如果合法就直接放行，不需要再走UsernamePasswordAuthenticationFilter了
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         //在过滤链拦截权限不足的请求，返回403错误和自定义的错误信息
         http.exceptionHandling(exception -> exception
+                // 401：未登录 / token 无效 / 认证失败
+                .authenticationEntryPoint((request, response, e) -> {
+                    log.error("Filter: 未认证或Token无效: {}", e.getMessage());
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    new ObjectMapper().writeValue(
+                            response.getWriter(),
+                            Result.fail(ResultCode.UNAUTHORIZED, "未登录或Token无效")
+                    );
+                })
+                // 403：已登录但权限不足
                 .accessDeniedHandler((request, response, e) -> {
                     log.error("Filter: 权限不足，无法访问: {}", e.getMessage());
                     response.setContentType("application/json;charset=UTF-8");
