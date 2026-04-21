@@ -7,11 +7,7 @@ import org.campus.classroom.dto.SeatReservationCreateDTO;
 import org.campus.classroom.entity.Classroom;
 import org.campus.classroom.entity.Reservation;
 import org.campus.classroom.entity.Seat;
-import org.campus.classroom.enums.ClassroomStatus;
-import org.campus.classroom.enums.ReservationStatus;
-import org.campus.classroom.enums.ResourceType;
-import org.campus.classroom.enums.ResultCode;
-import org.campus.classroom.enums.SeatStatus;
+import org.campus.classroom.enums.*;
 import org.campus.classroom.exception.BusinessException;
 import org.campus.classroom.mapper.ClassroomMapper;
 import org.campus.classroom.mapper.ReservationMapper;
@@ -22,6 +18,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -43,20 +41,15 @@ public class ReservationServiceImpl implements ReservationService {
     public Long createSeatReservation(Long currentUserId, SeatReservationCreateDTO request) {
         log.info("[座位预约开始] userId={}, request={}", currentUserId, request);
 
-        validateTime(request.getStartTime(), request.getEndTime());
+        LocalDateTime startTime = request.getStartTime();
+        LocalDateTime endTime = request.getEndTime();
+        //1.时间校验
+        validateTime(startTime, endTime);
+        //2.资源校验
+        Long classroomId = checkSeatReservableAndGetClassroomId(currentUserId, request);
+        //3.消耗使用配额
+        tryConsumeDailyUsageQuota(currentUserId, startTime, endTime);
 
-        int count = reservationMapper.selectStudentTimeConflictForUpdate(
-                currentUserId,
-                request.getStartTime(),
-                request.getEndTime()
-        );
-        if (count >= 1) {
-            log.warn("[预约冲突] 用户已有预约 userId={}, start={}, end={}",
-                    currentUserId, request.getStartTime(), request.getEndTime());
-            throw new BusinessException(ResultCode.CONFLICT, "同一时间段只能有一个预约");
-        }
-
-        Long classroomId = checkSeatReservableAndGetClassroomId(request);
         Reservation reservation = buildSeatReservation(currentUserId, request, classroomId);
         reservationMapper.insert(reservation);
 
@@ -70,14 +63,22 @@ public class ReservationServiceImpl implements ReservationService {
     public Long createClassroomReservation(Long currentUserId, ClassroomReservationCreateDTO request) {
         log.info("[教室预约开始] userId={}, request={}", currentUserId, request);
 
-        validateTime(request.getStartTime(), request.getEndTime());
-        checkClassroomReservable(request);
+        LocalDateTime startTime = request.getStartTime();
+        LocalDateTime endTime = request.getEndTime();
 
+        //1.时间校验
+        validateTime(startTime, endTime);
+        //2.资源校验
+        checkClassroomReservable(request);
+        //3.消耗使用配额
+        tryConsumeDailyUsageQuota(currentUserId, startTime, endTime);
+
+        //4.插入预约表
         Reservation reservation = buildClassroomReservation(currentUserId, request);
         reservationMapper.insert(reservation);
-
         log.info("[教室预约成功] userId={}, reservationId={}, classroomId={}",
                 currentUserId, reservation.getId(), request.getClassroomId());
+
         return reservation.getId();
     }
 
@@ -203,11 +204,17 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     private void validateTime(LocalDateTime startTime, LocalDateTime endTime) {
+        validateBasicTime(startTime, endTime);
+        validateDurationTime(startTime, endTime);
+    }
+
+    private void validateBasicTime(LocalDateTime startTime, LocalDateTime endTime) {
         if (startTime == null || endTime == null) {
             log.error("预约时间不能为空, start={}, end={}", startTime, endTime);
             throw new BusinessException(ResultCode.BAD_REQUEST, "预约时间不能为空");
         }
-        if (endTime.isBefore(startTime)) {
+        //endTime<=startTime
+        if (!endTime.isAfter(startTime)) {
             log.error("预约时间不合法, 结束时间必须晚于开始时间, start={}, end={}", startTime, endTime);
             throw new BusinessException(ResultCode.BAD_REQUEST, "结束时间必须晚于开始时间");
         }
@@ -215,12 +222,39 @@ public class ReservationServiceImpl implements ReservationService {
             log.error("预约时间不合法, 开始时间必须晚于当前时间, start={}, now={}", startTime, LocalDateTime.now());
             throw new BusinessException(ResultCode.BAD_REQUEST, "开始时间必须晚于当前时间");
         }
+        // 当前系统不支持跨天预约（业务策略限制）
+        if (!startTime.toLocalDate().equals(endTime.toLocalDate())) {
+            log.error("预约时间不合法, 预约不能跨天, start={}, end={}", startTime, endTime);
+            throw new BusinessException(ResultCode.BAD_REQUEST, "预约不能跨天");
+        }
     }
 
-    public Long checkSeatReservableAndGetClassroomId(SeatReservationCreateDTO request) {
+    private void validateDurationTime(LocalDateTime startTime, LocalDateTime endTime) {
+        long minutes = Duration.between(startTime, endTime).toMinutes();
+        if (minutes > 3 * 60) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "单次预约不能超过3小时");
+        }
+    }
+
+    public void tryConsumeDailyUsageQuota(Long currentUserId, LocalDateTime startTime, LocalDateTime endTime) {
+        LocalDate date = startTime.toLocalDate();
+        long addMinutes = Duration.between(startTime, endTime).toMinutes();
+
+        reservationMapper.initUsage(currentUserId, date);
+
+        int updatedRows = reservationMapper.tryAddUsage(currentUserId, date, addMinutes);
+
+        if (updatedRows == 0) {
+            log.warn("[预约失败] 超过每日预约限制 userId={}, date={}, addMinutes={}",
+                    currentUserId, date, addMinutes);
+            throw new BusinessException(ResultCode.BAD_REQUEST, "同一天预约总时长不能超过9小时");
+        }
+    }
+
+    public Long checkSeatReservableAndGetClassroomId(Long currentUserId, SeatReservationCreateDTO request) {
         log.info("[座位检查开始] seatId={}, start={}, end={}",
                 request.getSeatId(), request.getStartTime(), request.getEndTime());
-
+        //判断座位是否存在并为座位加行级锁
         Seat seat = seatMapper.selectByIdForUpdate(request.getSeatId());
         log.debug("[加锁座位] seatId={}", request.getSeatId());
         if (seat == null) {
@@ -231,7 +265,7 @@ public class ReservationServiceImpl implements ReservationService {
             log.error("座位不可用 seatId={}", request.getSeatId());
             throw new BusinessException(ResultCode.FORBIDDEN, "该座位不可用");
         }
-
+        //判断教室是否存在并为教室加行级锁
         Long classroomId = seat.getClassroomId();
         log.debug("[加锁教室] classroomId={}", classroomId);
         Classroom classroom = classroomMapper.selectByIdForUpdate(classroomId);
@@ -241,7 +275,7 @@ public class ReservationServiceImpl implements ReservationService {
         if (!ClassroomStatus.ENABLED.name().equals(classroom.getStatus())) {
             throw new BusinessException(ResultCode.FORBIDDEN, "教室不可预约");
         }
-
+        //判断座位是否被预约
         List<Reservation> seatConflicts = reservationMapper.selectSeatConflictsForUpdate(
                 request.getSeatId(),
                 request.getStartTime(),
@@ -252,7 +286,7 @@ public class ReservationServiceImpl implements ReservationService {
                     request.getSeatId(), request.getStartTime(), request.getEndTime());
             throw new BusinessException(ResultCode.CONFLICT, "该座位在当前时间段已被预约");
         }
-
+        //判断教室是否被预约
         boolean withClassroomConflict = !reservationMapper.selectClassroomConflictsForUpdate(
                 classroomId,
                 request.getStartTime(),
@@ -263,6 +297,17 @@ public class ReservationServiceImpl implements ReservationService {
                     classroomId, request.getStartTime(), request.getEndTime());
             throw new BusinessException(ResultCode.CONFLICT, "该教室在当前时间段已被预约");
         }
+        //判断同一时间段是否预约过座位
+        int conflictRows = reservationMapper.selectStudentTimeConflictForUpdate(
+                currentUserId,
+                request.getStartTime(),
+                request.getEndTime()
+        );
+        if (conflictRows >= 1) {
+            log.warn("[预约冲突] 用户已有预约 userId={}, start={}, end={}",
+                    currentUserId, request.getStartTime(), request.getEndTime());
+            throw new BusinessException(ResultCode.CONFLICT, "同一时间段只能有一个预约");
+        }
 
         return classroomId;
     }
@@ -270,7 +315,7 @@ public class ReservationServiceImpl implements ReservationService {
     private void checkClassroomReservable(ClassroomReservationCreateDTO request) {
         log.info("[教室预约检查] classroomId={}, start={}, end={}",
                 request.getClassroomId(), request.getStartTime(), request.getEndTime());
-
+        // 判断教室是否存在并上行级锁
         Classroom classroom = classroomMapper.selectByIdForUpdate(request.getClassroomId());
         if (classroom == null) {
             log.error("教室不存在 classroomId={}", request.getClassroomId());
@@ -281,6 +326,7 @@ public class ReservationServiceImpl implements ReservationService {
             throw new BusinessException(ResultCode.FORBIDDEN, "该教室不可用");
         }
 
+        //判断是否与其他教室预约冲突
         boolean withClassroomConflict = !reservationMapper.selectClassroomConflictsForUpdate(
                 request.getClassroomId(),
                 request.getStartTime(),
@@ -290,7 +336,7 @@ public class ReservationServiceImpl implements ReservationService {
             log.warn("[教室冲突] classroomId={}", request.getClassroomId());
             throw new BusinessException(ResultCode.CONFLICT, "该教室在当前时间段已被预约");
         }
-
+        //判断该教室下是否有座位冲突
         boolean withSeatConflict = !reservationMapper.selectSeatConflictsInClassroomForUpdate(
                 request.getClassroomId(),
                 request.getStartTime(),

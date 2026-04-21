@@ -2,7 +2,6 @@ package org.campus.classroom.campusclassroomreservationsystem;
 
 import org.campus.classroom.entity.Classroom;
 import org.campus.classroom.entity.Reservation;
-import org.campus.classroom.entity.Seat;
 import org.campus.classroom.enums.ResourceType;
 import org.campus.classroom.mapper.ClassroomMapper;
 import org.campus.classroom.mapper.ReservationMapper;
@@ -10,18 +9,17 @@ import org.campus.classroom.mapper.SeatMapper;
 import org.campus.classroom.service.ClassroomService;
 import org.campus.classroom.service.ReservationService;
 import org.campus.classroom.vo.ClassroomVO;
-import org.campus.classroom.vo.SeatVO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.Collections;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 class CampusClassroomReservationSystemApplicationTests {
@@ -46,31 +44,38 @@ class CampusClassroomReservationSystemApplicationTests {
 
     @Test
     void contextLoads() {
-        List<Reservation> reservationList = reservationMapper.selectByUserId(10004L);
-        // 1. 收集所有 classroomId
-        Set<Long> classroomIds = reservationList.stream()
-                .map(Reservation::getClassroomId)
-                .collect(Collectors.toSet());
+    }
 
-        // 2. 收集所有 seatId（只有座位预约时收集）
-        Set<Long> seatIds = reservationList.stream()
-                .filter(reservation -> ResourceType.SEAT.name().equals(reservation.getResourceType()))
-                .map(Reservation::getResourceId)
-                .collect(Collectors.toSet());
+    @Test
+    void shouldExceedDailyLimit() {
+        LocalDate date = LocalDate.of(2026, 4, 21);
 
-        // 3. 批量查 classroom
-        Map<Long, ClassroomVO> classroomVOMap = classroomIds.isEmpty()
-                ? Collections.emptyMap()
-                : classroomMapper.selectByIds(classroomIds).stream().map(this::classroomToClassroomVO)
-                .collect(Collectors.toMap(ClassroomVO::getId, Function.identity()));
-        System.out.println(classroomVOMap);
+        List<Reservation> todayReservations = List.of(
+                new Reservation(
+                        122L, 10004L, ResourceType.CLASSROOM.name(), 6L, 6L,
+                        LocalDateTime.of(2026, 4, 21, 9, 0),
+                        LocalDateTime.of(2026, 4, 21, 12, 0),
+                        "ACTIVE"
+                ),
+                new Reservation(
+                        2222L, 10004L, ResourceType.CLASSROOM.name(), 6L, 6L,
+                        LocalDateTime.of(2026, 4, 21, 13, 0),
+                        LocalDateTime.of(2026, 4, 21, 18, 0),
+                        "ACTIVE"
+                )
+        );
 
-//        // 4. 批量查 seat
-//        Map<Long, SeatVO> seatVOMap = seatIds.isEmpty()
-//                ? Collections.emptyMap()
-//                : seatMapper.selectByIds(seatIds).stream().map(this::seatToSeatVO)
-//                .collect(Collectors.toMap(SeatVO::getId, Function.identity()));
+        // 已有 8 小时
+        long totalMinutes = todayReservations.stream()
+                .mapToLong(r -> Duration.between(r.getStartTime(), r.getEndTime()).toMinutes())
+                .sum();
 
+        // 再加 2 小时
+        long addMinutes = 2 * 60;
+
+        boolean exceed = (totalMinutes + addMinutes > 9 * 60);
+
+        assertTrue(exceed);
     }
 
 }

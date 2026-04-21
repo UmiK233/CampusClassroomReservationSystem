@@ -1,12 +1,16 @@
 package org.campus.classroom.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Data
+@NoArgsConstructor
 public class Reservation {
     private Long id;
     private Long userId;
@@ -30,4 +34,15 @@ public class Reservation {
 
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+
+    public Reservation(Long id, Long userId, String resourceType, Long resourceId, Long classroomId, LocalDateTime startTime, LocalDateTime endTime, String status) {
+        this.id = id;
+        this.userId = userId;
+        this.resourceType = resourceType;
+        this.resourceId = resourceId;
+        this.classroomId = classroomId;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.status = status;
+    }
 }

@@ -21,7 +21,7 @@ public class ReservationController {
     private final ReservationService reservationService;
 
     @PostMapping("/seats")
-    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')") // 学生和教师都可以预约座位
+    @PreAuthorize("hasAnyRole('STUDENT')") // 只有学生可以预约座位
     public Result<Long> createSeatReservation(@RequestBody @Valid SeatReservationCreateDTO request,
                                               @AuthenticationPrincipal LoginUser loginUser) {
         Long reservationId = reservationService.createSeatReservation(loginUser.getId(), request);
@@ -36,14 +36,14 @@ public class ReservationController {
         return Result.success("预约教室成功", reservationId);
     }
 
-    @DeleteMapping("/{id}/cancel")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')")
     public Result<Void> cancelReservation(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
         reservationService.cancelReservation(loginUser.getId(), id);
         return Result.success("取消预约成功");
     }
 
-    @GetMapping("")
+    @GetMapping()
     @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')")
     public Result<List<ReservationVO>> listUserAvailableReservations(@AuthenticationPrincipal LoginUser loginUser) {
         List<ReservationVO> reservationVOList = reservationService.listUserAvailableReservations(loginUser.getId());

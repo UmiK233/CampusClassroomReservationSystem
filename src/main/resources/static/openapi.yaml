@@ -1,32 +1,43 @@
 openapi: 3.0.3
 info:
   title: Campus Classroom Reservation System API
-  description: >
-    API specification for the campus classroom reservation backend.
-    All endpoints require `Authorization: Bearer <JWT>` except `/auth/login` and `/auth/register`.
   version: 1.0.0
+  description: >
+    Campus classroom and seat reservation backend API.
+
+    Authentication uses JWT Bearer tokens. `/auth/login` and `/auth/register`
+    are public. Other endpoints require `Authorization: Bearer <token>`.
+
+    Role model:
+    - STUDENT: can self-register and reserve seats.
+    - TEACHER: managed by administrators; can reserve seats and classrooms.
+    - ADMIN: managed by administrators; manages classrooms, seats, and users.
+      Admins do not participate in normal reservation flows in this MVP.
+
 servers:
   - url: http://localhost:8080
+    description: Local development server
+
 tags:
   - name: Auth
-    description: Authentication and current user profile
+    description: Login, student registration, and current user profile
   - name: Classroom
-    description: Classroom and seat layout queries
+    description: Classroom and seat-layout query endpoints
   - name: Reservation
-    description: Reservation operations
+    description: Seat and classroom reservation endpoints
   - name: Admin
     description: Admin classroom and seat management
   - name: Seat
     description: Admin seat update endpoint
-  - name: Misc
-    description: Basic test endpoints
+
 security:
   - bearerAuth: []
+
 paths:
   /auth/login:
     post:
       tags: [Auth]
-      summary: User login
+      summary: Login
       operationId: login
       security: []
       requestBody:
@@ -42,16 +53,17 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ResultLoginVO"
-        "400":
-          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
 
   /auth/register:
     post:
       tags: [Auth]
-      summary: User register
-      operationId: register
+      summary: Register a student account
+      description: >
+        Public endpoint. This endpoint only creates STUDENT accounts.
+        TEACHER and ADMIN accounts are assigned by administrators.
+      operationId: registerStudent
       security: []
       requestBody:
         required: true
@@ -72,8 +84,8 @@ paths:
   /auth/me:
     get:
       tags: [Auth]
-      summary: Get current user info
-      operationId: getMe
+      summary: Get current user profile
+      operationId: getCurrentUser
       responses:
         "200":
           description: Success
@@ -81,6 +93,38 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ResultUserInfoVO"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /classrooms/available_list:
+    get:
+      tags: [Classroom]
+      summary: List available classrooms
+      operationId: listAvailableClassrooms
+      parameters:
+        - name: building
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Optional building filter
+        - name: min_capacity
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+          description: Minimum classroom capacity
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultClassroomVOList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -102,12 +146,14 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /classrooms/{id}/seats:
     get:
       tags: [Classroom]
       summary: Get classroom seat layout
-      operationId: getClassroomSeats
+      operationId: getClassroomSeatLayout
       parameters:
         - $ref: "#/components/parameters/ClassroomId"
       responses:
@@ -117,79 +163,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ResultClassroomSeatLayoutVO"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  /classrooms/available_list:
-    get:
-      tags: [Classroom]
-      summary: List available classrooms
-      operationId: listAvailableClassrooms
-      parameters:
-        - name: building
-          in: query
-          required: false
-          schema:
-            type: string
-          description: Building filter
-        - name: min_capacity
-          in: query
-          required: true
-          schema:
-            type: integer
-            format: int32
-            minimum: 1
-          description: Minimum room capacity
-      responses:
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ResultClassroomVOList"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
-
-  /seats/{id}:
-    put:
-      tags: [Seat]
-      summary: Update seat (admin)
-      description: Requires ADMIN role.
-      operationId: updateSeat
-      parameters:
-        - $ref: "#/components/parameters/SeatId"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SeatUpdateDTO"
-      responses:
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ResultSeatVO"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
 
-  /reservations/seat:
+  /reservations/seats:
     post:
       tags: [Reservation]
       summary: Create seat reservation
+      description: Requires STUDENT or TEACHER role.
       operationId: createSeatReservation
       requestBody:
         required: true
@@ -199,7 +184,7 @@ paths:
               $ref: "#/components/schemas/SeatReservationCreateDTO"
       responses:
         "200":
-          description: Success
+          description: Reservation created
           content:
             application/json:
               schema:
@@ -215,10 +200,11 @@ paths:
         "409":
           $ref: "#/components/responses/Conflict"
 
-  /reservations/classroom:
+  /reservations/classrooms:
     post:
       tags: [Reservation]
       summary: Create classroom reservation
+      description: Requires TEACHER role.
       operationId: createClassroomReservation
       requestBody:
         required: true
@@ -228,7 +214,7 @@ paths:
               $ref: "#/components/schemas/ClassroomReservationCreateDTO"
       responses:
         "200":
-          description: Success
+          description: Reservation created
           content:
             application/json:
               schema:
@@ -245,15 +231,18 @@ paths:
           $ref: "#/components/responses/Conflict"
 
   /reservations/{id}/cancel:
-    post:
+    delete:
       tags: [Reservation]
-      summary: Cancel reservation
+      summary: Cancel current user's reservation
+      description: >
+        Requires STUDENT or TEACHER role. Users can only cancel their own
+        active, non-expired reservations.
       operationId: cancelReservation
       parameters:
         - $ref: "#/components/parameters/ReservationId"
       responses:
         "200":
-          description: Success
+          description: Reservation cancelled
           content:
             application/json:
               schema:
@@ -262,13 +251,18 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
 
-  /reservations/list:
+  /reservations:
     get:
       tags: [Reservation]
-      summary: List active reservations for current user
+      summary: List current user's active reservations
+      description: Requires STUDENT or TEACHER role.
       operationId: listActiveReservations
       responses:
         "200":
@@ -279,11 +273,14 @@ paths:
                 $ref: "#/components/schemas/ResultReservationVOList"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
-  /reservations/list_history:
+  /reservations/history:
     get:
       tags: [Reservation]
-      summary: List historical reservations for current user
+      summary: List current user's historical reservations
+      description: Requires STUDENT or TEACHER role.
       operationId: listHistoryReservations
       responses:
         "200":
@@ -294,11 +291,13 @@ paths:
                 $ref: "#/components/schemas/ResultReservationVOList"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /admin/classrooms:
     post:
       tags: [Admin]
-      summary: Create classroom (admin)
+      summary: Create classroom
       description: Requires ADMIN role.
       operationId: adminCreateClassroom
       requestBody:
@@ -309,7 +308,7 @@ paths:
               $ref: "#/components/schemas/ClassroomCreateDTO"
       responses:
         "200":
-          description: Success
+          description: Classroom created
           content:
             application/json:
               schema:
@@ -323,94 +322,10 @@ paths:
         "409":
           $ref: "#/components/responses/Conflict"
 
-  /admin/classrooms/{id}:
-    put:
-      tags: [Admin]
-      summary: Update classroom (admin)
-      description: Requires ADMIN role.
-      operationId: adminUpdateClassroom
-      parameters:
-        - $ref: "#/components/parameters/ClassroomId"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ClassroomUpdateDTO"
-      responses:
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ResultClassroomVO"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  /admin/classrooms/{id}/seats/init:
-    post:
-      tags: [Admin]
-      summary: Initialize seats for classroom (admin)
-      description: Requires ADMIN role.
-      operationId: adminInitSeats
-      parameters:
-        - $ref: "#/components/parameters/ClassroomId"
-      responses:
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ResultVoid"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  /admin/classrooms/{id}/seats/status:
-    put:
-      tags: [Admin]
-      summary: Batch update seat status in classroom (admin)
-      description: Requires ADMIN role.
-      operationId: adminBatchUpdateSeatStatus
-      parameters:
-        - $ref: "#/components/parameters/ClassroomId"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SeatBatchUpdateRequest"
-      responses:
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ResultVoid"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
   /admin/classrooms/list:
     get:
       tags: [Admin]
-      summary: List classrooms (admin)
+      summary: List classrooms for admin
       description: Requires ADMIN role.
       operationId: adminListClassrooms
       parameters:
@@ -419,7 +334,6 @@ paths:
           required: true
           schema:
             type: string
-            maxLength: 50
         - name: min_capacity
           in: query
           required: true
@@ -446,6 +360,120 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+
+  /admin/classrooms/{id}:
+    put:
+      tags: [Admin]
+      summary: Update classroom
+      description: Requires ADMIN role.
+      operationId: adminUpdateClassroom
+      parameters:
+        - $ref: "#/components/parameters/ClassroomId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassroomUpdateDTO"
+      responses:
+        "200":
+          description: Classroom updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultClassroomVO"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /admin/classrooms/{id}/seats/init:
+    post:
+      tags: [Admin]
+      summary: Initialize seats for a classroom
+      description: Requires ADMIN role.
+      operationId: adminInitClassroomSeats
+      parameters:
+        - $ref: "#/components/parameters/ClassroomId"
+      responses:
+        "200":
+          description: Seats initialized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultVoid"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /admin/classrooms/{id}/seats/status:
+    put:
+      tags: [Admin]
+      summary: Batch update seat status in a classroom
+      description: Requires ADMIN role.
+      operationId: adminBatchUpdateSeatStatus
+      parameters:
+        - $ref: "#/components/parameters/ClassroomId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeatUpdateDTO"
+      responses:
+        "200":
+          description: Seat statuses updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultVoid"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /seats/{id}:
+    put:
+      tags: [Seat]
+      summary: Update single seat
+      description: Requires ADMIN role.
+      operationId: adminUpdateSeat
+      parameters:
+        - $ref: "#/components/parameters/SeatId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeatUpdateDTO"
+      responses:
+        "200":
+          description: Seat updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultSeatVO"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
 components:
   securitySchemes:
@@ -482,19 +510,19 @@ components:
 
   responses:
     BadRequest:
-      description: Invalid request
+      description: Invalid request parameter or business rule violation
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResult"
     Unauthorized:
-      description: Missing/invalid token
+      description: Missing, invalid, or expired token
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResult"
     Forbidden:
-      description: Permission denied or resource disabled
+      description: Permission denied
       content:
         application/json:
           schema:
@@ -506,7 +534,7 @@ components:
           schema:
             $ref: "#/components/schemas/ErrorResult"
     Conflict:
-      description: Resource conflict
+      description: Reservation conflict or concurrent state change
       content:
         application/json:
           schema:
@@ -568,14 +596,6 @@ components:
             data:
               $ref: "#/components/schemas/UserInfoVO"
 
-    ResultSeatVO:
-      allOf:
-        - $ref: "#/components/schemas/ResultBase"
-        - type: object
-          properties:
-            data:
-              $ref: "#/components/schemas/SeatVO"
-
     ResultClassroomVO:
       allOf:
         - $ref: "#/components/schemas/ResultBase"
@@ -601,6 +621,14 @@ components:
           properties:
             data:
               $ref: "#/components/schemas/ClassroomSeatLayoutVO"
+
+    ResultSeatVO:
+      allOf:
+        - $ref: "#/components/schemas/ResultBase"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/SeatVO"
 
     ResultReservationVOList:
       allOf:
@@ -646,7 +674,7 @@ components:
 
     ClassroomCreateDTO:
       type: object
-      required: [roomNumber, building, seatRows, seatCols]
+      required: [roomNumber, building]
       properties:
         roomNumber:
           type: string
@@ -655,7 +683,7 @@ components:
         building:
           type: string
           maxLength: 50
-          example: MainBuilding
+          example: Main Building
         seatRows:
           type: integer
           format: int32
@@ -675,7 +703,7 @@ components:
         remark:
           type: string
           maxLength: 255
-          example: floor-1
+          example: First floor
 
     ClassroomUpdateDTO:
       type: object
@@ -688,7 +716,7 @@ components:
         remark:
           type: string
           maxLength: 255
-          example: temporary maintenance
+          example: Under maintenance
 
     SeatUpdateDTO:
       type: object
@@ -700,20 +728,7 @@ components:
         remark:
           type: string
           maxLength: 255
-          example: broken chair
-
-    SeatBatchUpdateRequest:
-      type: object
-      required: [status]
-      properties:
-        status:
-          type: string
-          enum: [ENABLED, DISABLED]
-          example: DISABLED
-        remark:
-          type: string
-          maxLength: 255
-          example: under maintenance
+          example: Broken chair
 
     SeatReservationCreateDTO:
       type: object
@@ -726,11 +741,11 @@ components:
         start_time:
           type: string
           format: date-time
-          example: 2026-04-12T19:00:00
+          example: "2026-04-22T19:00:00"
         end_time:
           type: string
           format: date-time
-          example: 2026-04-12T21:00:00
+          example: "2026-04-22T21:00:00"
         reason:
           type: string
           maxLength: 255
@@ -747,11 +762,11 @@ components:
         start_time:
           type: string
           format: date-time
-          example: 2026-04-12T19:00:00
+          example: "2026-04-22T19:00:00"
         end_time:
           type: string
           format: date-time
-          example: 2026-04-12T21:00:00
+          example: "2026-04-22T21:00:00"
         reason:
           type: string
           maxLength: 255
@@ -785,6 +800,7 @@ components:
           example: student01@example.com
         role:
           type: string
+          enum: [STUDENT, TEACHER, ADMIN]
           example: STUDENT
 
     ClassroomVO:
@@ -799,7 +815,11 @@ components:
           example: A101
         building:
           type: string
-          example: MainBuilding
+          example: Main Building
+        capacity:
+          type: integer
+          format: int32
+          example: 80
         seatRows:
           type: integer
           format: int32
@@ -808,47 +828,13 @@ components:
           type: integer
           format: int32
           example: 10
-        capacity:
-          type: integer
-          format: int32
-          example: 80
         status:
           type: string
           enum: [ENABLED, DISABLED]
           example: ENABLED
         remark:
           type: string
-          example: floor-1
-
-    SeatVO:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-          example: 118
-        classroomId:
-          type: integer
-          format: int64
-          example: 6
-        seatNumber:
-          type: string
-          example: 1-1
-        rowNumber:
-          type: integer
-          format: int32
-          example: 1
-        colNumber:
-          type: integer
-          format: int32
-          example: 1
-        status:
-          type: string
-          enum: [ENABLED, DISABLED]
-          example: ENABLED
-        remark:
-          type: string
-          example: near-window
+          example: First floor
 
     ClassroomSeatLayoutVO:
       type: object
@@ -859,7 +845,7 @@ components:
           example: 6
         classroomBuilding:
           type: string
-          example: MainBuilding
+          example: Main Building
         classroomNumber:
           type: string
           example: A101
@@ -876,6 +862,36 @@ components:
           items:
             $ref: "#/components/schemas/SeatVO"
 
+    SeatVO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 118
+        classroomId:
+          type: integer
+          format: int64
+          example: 6
+        seatNumber:
+          type: string
+          example: "1-1"
+        rowNumber:
+          type: integer
+          format: int32
+          example: 1
+        colNumber:
+          type: integer
+          format: int32
+          example: 1
+        status:
+          type: string
+          enum: [ENABLED, DISABLED]
+          example: ENABLED
+        remark:
+          type: string
+          example: Near window
+
     ReservationVO:
       type: object
       properties:
@@ -886,26 +902,26 @@ components:
         resourceType:
           type: string
           enum: [SEAT, CLASSROOM]
-          example: CLASSROOM
+          example: SEAT
         resourceId:
           type: integer
           format: int64
-          example: 6
+          example: 118
         resourceName:
           type: string
-          example: MainBuilding A101 1-1
+          example: Main Building A101 1-1
         reserveDate:
           type: string
           format: date
-          example: 2026-04-12
+          example: "2026-04-22"
         startTime:
           type: string
           format: date-time
-          example: 2026-04-12T19:00:00
+          example: "2026-04-22T19:00:00"
         endTime:
           type: string
           format: date-time
-          example: 2026-04-12T21:00:00
+          example: "2026-04-22T21:00:00"
         reason:
           type: string
           example: self-study
@@ -916,4 +932,4 @@ components:
         createTime:
           type: string
           format: date-time
-          example: 2026-04-12T18:40:00
+          example: "2026-04-21T18:40:00"

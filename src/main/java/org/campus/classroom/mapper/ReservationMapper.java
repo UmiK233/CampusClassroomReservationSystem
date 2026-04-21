@@ -3,7 +3,9 @@ package org.campus.classroom.mapper;
 import org.apache.ibatis.annotations.*;
 import org.campus.classroom.entity.Reservation;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 public interface ReservationMapper {
@@ -47,6 +49,35 @@ public interface ReservationMapper {
     @ResultMap("reservationResultMap")
     Reservation selectByReservationIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
 
+    @Insert("""
+            INSERT INTO reservation_usage (user_id, date, used_minutes)
+            VALUES (#{userId}, #{date}, 0)
+            ON DUPLICATE KEY UPDATE used_minutes = used_minutes
+            """)
+    //ON DUPLICATE KEY UPDATE used_minutes = used_minutes 处理重复插入的异常
+    int initUsage(@Param("userId") Long userId, @Param("date") LocalDate date);
+
+    @Update("""
+            UPDATE reservation_usage
+            SET used_minutes = used_minutes + #{addMinutes}
+            WHERE user_id = #{userId}
+              AND date = #{date}
+              AND used_minutes + #{addMinutes} <= 9*60
+            """)
+    int tryAddUsage(@Param("userId") Long userId, @Param("date") LocalDate date, @Param("addMinutes") Long addMinutes);
+
+
+    @Select("""
+            SELECT *
+            FROM reservation
+            WHERE user_id = #{userId}
+              AND status = 'ACTIVE'
+              AND start_time >= #{startTime}
+              AND start_time < #{endTime}
+            """)
+    @ResultMap("reservationResultMap")
+    List<Reservation> selectByUserIdAndTimeRange(@Param("userId") Long userId, @Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
+
     @Select("SELECT * FROM reservation ORDER BY create_time DESC")
     @ResultMap("reservationResultMap")
     List<Reservation> selectAll();
@@ -89,7 +120,7 @@ public interface ReservationMapper {
             """)
     @ResultMap("reservationResultMap")
     List<Reservation> selectByUserIdAndNotStatus(@Param("userId") Long userId,
-                                              @Param("status") String status);
+                                                 @Param("status") String status);
 
     @Select("""
             SELECT *
@@ -103,8 +134,8 @@ public interface ReservationMapper {
             """)
     @ResultMap("reservationResultMap")
     List<Reservation> selectSeatConflictsForUpdate(@Param("seatId") Long seatId,
-                                          @Param("startTime") LocalDateTime startTime,//开始时间必须在其他预约中的结束之前之后,否则冲突, end_time > #{startTime} 就冲突
-                                          @Param("endTime") LocalDateTime endTime);//结束时间必须在其他预约中的开始时间之前,否则冲突, start_time < #{endTime} 就冲突
+                                                   @Param("startTime") LocalDateTime startTime,//开始时间必须在其他预约中的结束之前之后,否则冲突, end_time > #{startTime} 就冲突
+                                                   @Param("endTime") LocalDateTime endTime);//结束时间必须在其他预约中的开始时间之前,否则冲突, start_time < #{endTime} 就冲突
 
     @Select("""
             SELECT *
@@ -118,8 +149,8 @@ public interface ReservationMapper {
             """)
     @ResultMap("reservationResultMap")
     List<Reservation> selectClassroomConflictsForUpdate(@Param("classroomId") Long classroomId,
-                                               @Param("startTime") LocalDateTime startTime,
-                                               @Param("endTime") LocalDateTime endTime);
+                                                        @Param("startTime") LocalDateTime startTime,
+                                                        @Param("endTime") LocalDateTime endTime);
 
     //查询classroom预约时有无seat被预约
     @Select("""
@@ -134,8 +165,8 @@ public interface ReservationMapper {
             """)
     @ResultMap("reservationResultMap")
     List<Reservation> selectSeatConflictsInClassroomForUpdate(@Param("classroomId") Long classroomId,
-                                                     @Param("startTime") LocalDateTime startTime,
-                                                     @Param("endTime") LocalDateTime endTime);
+                                                              @Param("startTime") LocalDateTime startTime,
+                                                              @Param("endTime") LocalDateTime endTime);
 
     @Select("""
             SELECT count(*)
@@ -148,8 +179,8 @@ public interface ReservationMapper {
             FOR UPDATE
             """)
     int selectStudentTimeConflictForUpdate(@Param("userId") Long userId,
-                                      @Param("startTime") LocalDateTime startTime,
-                                      @Param("endTime") LocalDateTime endTime);
+                                           @Param("startTime") LocalDateTime startTime,
+                                           @Param("endTime") LocalDateTime endTime);
 
     @Select("""
             SELECT count(*)
