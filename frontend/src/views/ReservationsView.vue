@@ -29,6 +29,7 @@ async function loadData() {
 async function cancelReservation(row) {
   await ElMessageBox.confirm(`确认取消预约 ${row.resourceName}？`, '取消预约', { type: 'warning' })
   await reservationApi.cancel(row.id)
+  window.dispatchEvent(new CustomEvent('reservation-change'))
   ElMessage.success('已取消预约')
   loadData()
 }

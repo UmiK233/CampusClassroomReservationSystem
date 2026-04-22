@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Calendar, Grid, Search } from '@element-plus/icons-vue'
 import { classroomApi, reservationApi } from '../api'
@@ -197,6 +197,20 @@ async function loadReservedSeats() {
     ElMessage.warning('原座位在该时间段已被预约，请重新选择座位')
   }
 }
+
+async function refreshReservationState() {
+  if (!selectedClassroom.value || !hasReservationTime()) return
+  selectedSeat.value = null
+  await loadReservedSeats()
+}
+
+onMounted(() => {
+  window.addEventListener('reservation-change', refreshReservationState)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('reservation-change', refreshReservationState)
+})
 
 loadClassrooms()
 </script>
