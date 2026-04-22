@@ -4,6 +4,7 @@ import org.campus.classroom.dto.ClassroomReservationCreateDTO;
 import org.campus.classroom.dto.SeatReservationCreateDTO;
 import org.campus.classroom.vo.ReservationVO;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReservationService {
@@ -17,4 +18,6 @@ public interface ReservationService {
 
     List<ReservationVO> listUserAvailableReservations(Long currentUserId);
     List<ReservationVO> listUserHistoryReservations(Long currentUserId);
+
+    List<Long> listReservedSeatIds(Long classroomId, LocalDateTime startTime, LocalDateTime endTime);
 }

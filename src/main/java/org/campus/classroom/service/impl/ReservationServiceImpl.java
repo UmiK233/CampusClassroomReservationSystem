@@ -101,10 +101,18 @@ public class ReservationServiceImpl implements ReservationService {
             throw new BusinessException(ResultCode.BAD_REQUEST, "历史预约不能取消");
         }
 
-        int updatedRows = reservationMapper.cancelReservation(reservationId);
-        if (updatedRows != 1) {
+        int cancelReservationRows = reservationMapper.cancelReservation(reservationId);
+        if (cancelReservationRows != 1) {
             log.warn("[取消失败] 预约状态已变化 reservationId={}", reservationId);
             throw new BusinessException(ResultCode.CONFLICT, "预约状态已变化，请刷新后重试");
+        }
+
+        Long minusMinutes = Duration.between(reservation.getStartTime(), reservation.getEndTime()).toMinutes();
+
+        int minusUsageRows = reservationMapper.minusUsage(reservation.getUserId(), reservation.getReserveDate(), minusMinutes);
+        if (minusUsageRows != 1) {
+            log.error("[取消预约回滚失败] userId={}, date={}, minusMinutes={}", reservation.getUserId(), reservation.getReserveDate(), minusMinutes);
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "取消预约失败，请联系管理员");
         }
 
         log.info("[取消成功] reservationId={}", reservationId);
@@ -132,6 +140,28 @@ public class ReservationServiceImpl implements ReservationService {
                 ReservationStatus.ACTIVE.name()
         );
         return buildReservationVOList(reservationList);
+    }
+
+    @Override
+    public List<Long> listReservedSeatIds(Long classroomId, LocalDateTime startTime, LocalDateTime endTime) {
+        validateTime(startTime, endTime);
+
+        Classroom classroom = classroomMapper.selectById(classroomId);
+        if (classroom == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "教室不存在");
+        }
+        if (!ClassroomStatus.ENABLED.name().equals(classroom.getStatus())) {
+            throw new BusinessException(ResultCode.FORBIDDEN, "教室不可用");
+        }
+
+        if (reservationMapper.countClassroomConflicts(classroomId, startTime, endTime) > 0) {
+            return seatMapper.selectByClassroomId(classroomId)
+                    .stream()
+                    .map(Seat::getId)
+                    .toList();
+        }
+
+        return reservationMapper.selectReservedSeatIdsInClassroom(classroomId, startTime, endTime);
     }
 
     private Reservation buildSeatReservation(Long currentUserId, SeatReservationCreateDTO request, Long classroomId) {

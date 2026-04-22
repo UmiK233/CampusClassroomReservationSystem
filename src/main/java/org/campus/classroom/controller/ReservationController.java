@@ -10,8 +10,10 @@ import org.campus.classroom.service.ReservationService;
 import org.campus.classroom.vo.ReservationVO;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -55,5 +57,14 @@ public class ReservationController {
     public Result<List<ReservationVO>> listUserDisableReservations(@AuthenticationPrincipal LoginUser loginUser) {
         List<ReservationVO> reservationVOList = reservationService.listUserHistoryReservations(loginUser.getId());
         return Result.success("查询历史预约列表成功", reservationVOList);
+    }
+
+    @GetMapping("/classrooms/{classroomId}/reserved-seats")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')")
+    public Result<List<Long>> listReservedSeatIds(
+            @PathVariable Long classroomId,
+            @RequestParam("start_time") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+            @RequestParam("end_time") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime) {
+        return Result.success("查询已预约座位成功", reservationService.listReservedSeatIds(classroomId, startTime, endTime));
     }
 }

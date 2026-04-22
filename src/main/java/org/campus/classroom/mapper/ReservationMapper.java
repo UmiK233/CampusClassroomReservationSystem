@@ -66,6 +66,15 @@ public interface ReservationMapper {
             """)
     int tryAddUsage(@Param("userId") Long userId, @Param("date") LocalDate date, @Param("addMinutes") Long addMinutes);
 
+    @Update("""
+            UPDATE reservation_usage
+            SET used_minutes = used_minutes - #{minusMinutes}
+            WHERE user_id = #{userId}
+              AND date = #{date}
+              AND used_minutes - #{minusMinutes} >= 0
+            """)
+    int minusUsage(@Param("userId") Long userId, @Param("date") LocalDate date,@Param("minusMinutes") Long minusMinutes);
+
 
     @Select("""
             SELECT *
@@ -192,4 +201,30 @@ public interface ReservationMapper {
               AND end_time > #{startTime}
             """)
     long countActiveSeatConflict(Long seatId, LocalDateTime startTime, LocalDateTime endTime);
+
+    @Select("""
+            SELECT DISTINCT resource_id
+            FROM reservation
+            WHERE classroom_id = #{classroomId}
+              AND resource_type = 'SEAT'
+              AND status = 'ACTIVE'
+              AND start_time < #{endTime}
+              AND end_time > #{startTime}
+            """)
+    List<Long> selectReservedSeatIdsInClassroom(@Param("classroomId") Long classroomId,
+                                                @Param("startTime") LocalDateTime startTime,
+                                                @Param("endTime") LocalDateTime endTime);
+
+    @Select("""
+            SELECT count(*)
+            FROM reservation
+            WHERE resource_type = 'CLASSROOM'
+              AND resource_id = #{classroomId}
+              AND status = 'ACTIVE'
+              AND start_time < #{endTime}
+              AND end_time > #{startTime}
+            """)
+    int countClassroomConflicts(@Param("classroomId") Long classroomId,
+                                @Param("startTime") LocalDateTime startTime,
+                                @Param("endTime") LocalDateTime endTime);
 }
