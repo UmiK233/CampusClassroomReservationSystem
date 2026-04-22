@@ -32,7 +32,7 @@ async function submit() {
         password: form.value.password
       })
       setAuth(data.token, data.userInfo)
-      router.replace('/classrooms')
+      router.replace(data.userInfo?.role === 'ADMIN' ? '/admin' : '/dashboard')
       ElMessage.success('登录成功')
     } else {
       await authApi.register({

@@ -4,6 +4,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { CircleCheck, CircleClose, Edit, Grid, Plus, Search } from '@element-plus/icons-vue'
 import { adminApi, classroomApi } from '../api'
 import { buildingOptions } from '../config/buildings'
+import { enabledStatusText } from '../utils/dict'
 
 const loading = ref(false)
 const classrooms = ref([])
@@ -189,7 +190,7 @@ loadClassrooms()
       <el-table-column prop="seatCols" label="列" width="80" />
       <el-table-column prop="status" label="状态" width="110">
         <template #default="{ row }">
-          <el-tag :type="row.status === 'ENABLED' ? 'success' : 'danger'">{{ row.status }}</el-tag>
+          <el-tag :type="row.status === 'ENABLED' ? 'success' : 'danger'">{{ enabledStatusText(row.status) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />

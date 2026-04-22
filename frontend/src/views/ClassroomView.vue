@@ -5,6 +5,8 @@ import { Calendar, Grid, Search } from '@element-plus/icons-vue'
 import { classroomApi, reservationApi } from '../api'
 import { getUser } from '../stores/auth'
 import { buildingOptions } from '../config/buildings'
+import { formatDateTimeText } from '../utils/date'
+import { enabledStatusText } from '../utils/dict'
 
 const RESERVATION_TIME_KEY = 'campus_reservation_time'
 
@@ -38,6 +40,10 @@ const filters = ref({
 })
 const enabledClassrooms = computed(() => classrooms.value.filter(item => item.status === 'ENABLED').length)
 const totalCapacity = computed(() => classrooms.value.reduce((sum, item) => sum + (item.capacity || 0), 0))
+const pageActionLabel = computed(() => user.value?.role === 'TEACHER' ? '查看并预约教室' : '查看座位')
+const timeConfirmLabel = computed(() => user.value?.role === 'TEACHER' ? '确认并查看教室状态' : '确认并查看座位')
+const reservedSeatCount = computed(() => reservedSeatIds.value.size)
+const isClassroomUnavailableForTeacher = computed(() => user.value?.role === 'TEACHER' && reservedSeatCount.value > 0)
 const selectedTimeLabel = computed(() => {
   if (!hasReservationTime()) return ''
   const [start, end] = reserveForm.value.time
@@ -101,6 +107,7 @@ function seatStyle(seat) {
 }
 
 function chooseSeat(seat) {
+  if (user.value?.role !== 'STUDENT') return
   if (isSeatUnavailable(seat)) return
   selectedSeat.value = seat
 }
@@ -119,8 +126,7 @@ function formatDateTime(value) {
 }
 
 function formatDisplayDateTime(value) {
-  if (!value) return ''
-  return String(value).replace('T', ' ').slice(0, 16)
+  return formatDateTimeText(value)
 }
 
 async function submitReservation() {
@@ -218,8 +224,8 @@ loadClassrooms()
   <div class="panel">
     <div class="toolbar">
       <div>
-        <strong>教室检索</strong>
-        <div class="hint">按教学楼和容量筛选可预约空间</div>
+        <strong>{{ user?.role === 'TEACHER' ? '按时间查找空教室' : '按时间查找座位' }}</strong>
+        <div class="hint">先筛选教学楼和容量，再选择教室确认预约时间</div>
       </div>
       <div class="form-row">
         <el-form-item label="教学楼">
@@ -239,6 +245,24 @@ loadClassrooms()
       </div>
     </div>
 
+    <div class="classroom-card-grid">
+      <article v-for="room in classrooms" :key="room.id" class="classroom-card" @click="openSeats(room)">
+        <div class="classroom-card-head">
+          <div>
+            <strong>{{ room.building }}</strong>
+            <span>{{ room.roomNumber }}</span>
+          </div>
+          <el-tag :type="room.status === 'ENABLED' ? 'success' : 'danger'">{{ enabledStatusText(room.status) }}</el-tag>
+        </div>
+        <div class="classroom-card-meta">
+          <span>容量 {{ room.capacity }}</span>
+          <span>{{ room.seatRows }} 行 x {{ room.seatCols }} 列</span>
+        </div>
+        <p>{{ room.remark || '暂无备注' }}</p>
+        <el-button type="primary" plain :icon="Grid" @click.stop="openSeats(room)">{{ pageActionLabel }}</el-button>
+      </article>
+    </div>
+
     <el-table :data="classrooms" v-loading="loading" height="310" @row-click="openSeats">
       <el-table-column prop="building" label="教学楼" min-width="140" />
       <el-table-column prop="roomNumber" label="教室" width="120" />
@@ -247,13 +271,13 @@ loadClassrooms()
       <el-table-column prop="seatCols" label="列" width="80" />
       <el-table-column prop="status" label="状态" width="110">
         <template #default="{ row }">
-          <el-tag :type="row.status === 'ENABLED' ? 'success' : 'danger'">{{ row.status }}</el-tag>
+          <el-tag :type="row.status === 'ENABLED' ? 'success' : 'danger'">{{ enabledStatusText(row.status) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
       <el-table-column label="操作" width="150" fixed="right">
         <template #default="{ row }">
-          <el-button size="small" :icon="Grid" @click.stop="openSeats(row)">座位</el-button>
+          <el-button size="small" :icon="Grid" @click.stop="openSeats(row)">{{ pageActionLabel }}</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -262,9 +286,13 @@ loadClassrooms()
   <div class="panel seat-panel">
     <div class="toolbar">
       <div>
-        <strong>{{ selectedClassroom ? `${selectedClassroom.building} ${selectedClassroom.roomNumber}` : '座位布局' }}</strong>
+        <strong>{{ selectedClassroom ? `${selectedClassroom.building} ${selectedClassroom.roomNumber}` : user?.role === 'TEACHER' ? '教室预约状态' : '座位布局' }}</strong>
         <div class="hint">
-          {{ selectedSeat ? `已选择座位 ${selectedSeat.seatNumber}` : selectedClassroom ? '已按预约时间标记不可用座位' : '点击教室后先选择预约时间' }}
+          {{
+            user?.role === 'TEACHER'
+              ? selectedClassroom ? '按预约时间判断整间教室是否可预约' : '点击教室后先选择预约时间'
+              : selectedSeat ? `已选择座位 ${selectedSeat.seatNumber}` : selectedClassroom ? '已按预约时间标记不可用座位' : '点击教室后先选择预约时间'
+          }}
         </div>
       </div>
       <div class="form-row">
@@ -281,7 +309,7 @@ loadClassrooms()
           v-if="user?.role === 'TEACHER'"
           type="primary"
           :icon="Calendar"
-          :disabled="!selectedClassroom || !reserveForm.time?.length"
+          :disabled="!selectedClassroom || !reserveForm.time?.length || isClassroomUnavailableForTeacher"
           @click="openReserve('classroom')"
         >
           预约教室
@@ -297,7 +325,33 @@ loadClassrooms()
       <el-button text type="primary" :icon="Calendar" @click="openSeats(selectedClassroom)">修改时间</el-button>
     </div>
 
+    <div v-if="layout && user?.role !== 'TEACHER'" class="seat-legend">
+      <span><i class="legend-dot available"></i>可选</span>
+      <span><i class="legend-dot reserved"></i>已预约</span>
+      <span><i class="legend-dot disabled"></i>禁用</span>
+      <span><i class="legend-dot selected"></i>已选择</span>
+    </div>
+
     <div v-if="!layout" class="empty-block">请选择一间教室并确认预约时间</div>
+    <div v-else-if="user?.role === 'TEACHER'" class="teacher-status-card" :class="{ blocked: isClassroomUnavailableForTeacher }">
+      <div class="teacher-status-main">
+        <el-tag :type="isClassroomUnavailableForTeacher ? 'danger' : 'success'">
+          {{ isClassroomUnavailableForTeacher ? '当前时间不可预约' : '当前时间可预约' }}
+        </el-tag>
+        <h3>{{ selectedClassroom.building }} {{ selectedClassroom.roomNumber }}</h3>
+        <p>
+          {{
+            isClassroomUnavailableForTeacher
+              ? `该时间段已有 ${reservedSeatCount} 个座位被预约，或整间教室已被占用，不能预约整间教室。`
+              : '该时间段未检测到座位或整间教室冲突，可以提交整间教室预约。'
+          }}
+        </p>
+      </div>
+      <div class="teacher-status-meta">
+        <span>容量 {{ selectedClassroom.capacity }}</span>
+        <span>{{ selectedClassroom.seatRows }} 行 x {{ selectedClassroom.seatCols }} 列</span>
+      </div>
+    </div>
     <div
       v-else
       v-loading="seatLoading"
@@ -350,11 +404,11 @@ loadClassrooms()
           @change="handleReservationTimeChange"
         />
       </el-form-item>
-      <div class="hint">确认后会加载座位图，并自动标记该时间段已被预约的座位。</div>
+      <div class="hint">{{ user?.role === 'TEACHER' ? '确认后会判断该教室在当前时间段是否可整间预约。' : '确认后会加载座位图，并自动标记该时间段已被预约的座位。' }}</div>
     </el-form>
     <template #footer>
       <el-button @click="timeDialog = false">取消</el-button>
-      <el-button type="primary" @click="confirmReservationTime">确认并查看座位</el-button>
+      <el-button type="primary" @click="confirmReservationTime">{{ timeConfirmLabel }}</el-button>
     </template>
   </el-dialog>
 </template>
@@ -380,6 +434,107 @@ loadClassrooms()
 
 .dialog-alert {
   margin-bottom: 16px;
+}
+
+.classroom-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.classroom-card {
+  padding: 16px;
+  border: 1px solid #e4e8f0;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.classroom-card:hover {
+  transform: translateY(-1px);
+  border-color: #bfdbfe;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.08);
+}
+
+.classroom-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.classroom-card-head strong,
+.classroom-card-head span {
+  display: block;
+}
+
+.classroom-card-head span {
+  margin-top: 4px;
+  color: #667085;
+  font-size: 13px;
+}
+
+.classroom-card-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.classroom-card-meta span {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.classroom-card p {
+  min-height: 36px;
+  margin: 12px 0;
+  color: #667085;
+  font-size: 13px;
+}
+
+.seat-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  color: #475467;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.seat-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  border: 1px solid #d0d5dd;
+  background: #fff;
+}
+
+.legend-dot.reserved {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.legend-dot.disabled {
+  border-color: #fecdd3;
+  background: #fff1f2;
+}
+
+.legend-dot.selected {
+  border-color: #2563eb;
+  background: #2563eb;
 }
 
 .time-summary {
@@ -408,6 +563,52 @@ loadClassrooms()
   font-size: 15px;
 }
 
+.teacher-status-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 180px;
+  padding: 22px;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  background: #f0fdf4;
+}
+
+.teacher-status-card.blocked {
+  border-color: #fecaca;
+  background: #fff1f2;
+}
+
+.teacher-status-main h3 {
+  margin: 14px 0 8px;
+  color: #172033;
+  font-size: 24px;
+}
+
+.teacher-status-main p {
+  max-width: 680px;
+  margin: 0;
+  color: #475467;
+  line-height: 1.7;
+}
+
+.teacher-status-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.teacher-status-meta span {
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: #fff;
+  color: #475467;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 :deep(.seat-cell.is-reserved) {
   background: #fffbeb;
   color: #b45309;
@@ -430,5 +631,17 @@ loadClassrooms()
 :deep(.seat-cell.is-pending-time:hover) {
   transform: none;
   box-shadow: none;
+}
+
+@media (max-width: 1100px) {
+  .classroom-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .classroom-card-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

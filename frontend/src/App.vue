@@ -32,6 +32,9 @@ function logout() {
 
 const menuIndex = computed(() => route.path)
 const pageMeta = computed(() => {
+  if (route.path === '/dashboard') {
+    return { title: '工作台', subtitle: '汇总今日任务、常用操作和最近预约' }
+  }
   if (route.path === '/admin') {
     return { title: '后台管理', subtitle: '维护教室、座位和资源可用状态' }
   }
@@ -63,9 +66,13 @@ onUnmounted(() => window.removeEventListener('auth-change', syncUser))
         </div>
       </div>
       <el-menu :default-active="menuIndex" router class="side-menu">
-        <el-menu-item index="/classrooms">
+        <el-menu-item index="/dashboard">
+          <el-icon><DataBoard /></el-icon>
+          <span>工作台</span>
+        </el-menu-item>
+        <el-menu-item v-if="user?.role !== 'ADMIN'" index="/classrooms">
           <el-icon><OfficeBuilding /></el-icon>
-          <span>教室与座位</span>
+          <span>{{ user?.role === 'TEACHER' ? '找空教室' : '找座位' }}</span>
         </el-menu-item>
         <el-menu-item v-if="user?.role !== 'ADMIN'" index="/reservations">
           <el-icon><Tickets /></el-icon>
@@ -93,7 +100,12 @@ onUnmounted(() => window.removeEventListener('auth-change', syncUser))
         </div>
       </el-header>
       <el-main class="main">
-        <router-view />
+        <router-view v-slot="{ Component, route }">
+          <keep-alive>
+            <component :is="Component" v-if="route.meta.keepAlive" />
+          </keep-alive>
+          <component :is="Component" v-if="!route.meta.keepAlive" />
+        </router-view>
       </el-main>
     </el-container>
   </el-container>

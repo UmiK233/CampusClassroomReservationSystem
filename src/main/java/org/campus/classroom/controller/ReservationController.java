@@ -59,7 +59,7 @@ public class ReservationController {
         return Result.success("查询历史预约列表成功", reservationVOList);
     }
 
-    @GetMapping("/classrooms/{classroomId}/reserved-seats")
+    @GetMapping("/classrooms/{classroomId}/reserved_seats")
     @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')")
     public Result<List<Long>> listReservedSeatIds(
             @PathVariable Long classroomId,

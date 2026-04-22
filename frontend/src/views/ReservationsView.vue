@@ -3,6 +3,8 @@ import { computed, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Close, Refresh } from '@element-plus/icons-vue'
 import { reservationApi } from '../api'
+import { formatDateTimeText } from '../utils/date'
+import { reservationStatusText, resourceTypeText } from '../utils/dict'
 
 const active = ref([])
 const history = ref([])
@@ -62,18 +64,19 @@ loadData()
       </div>
       <el-button :icon="Refresh" @click="loadData">刷新</el-button>
     </div>
-    <el-table :data="active" v-loading="loading">
-      <el-table-column prop="resourceType" label="类型" width="110" />
-      <el-table-column prop="resourceName" label="资源" min-width="220" />
-      <el-table-column prop="startTime" label="开始时间" min-width="180" />
-      <el-table-column prop="endTime" label="结束时间" min-width="180" />
-      <el-table-column prop="reason" label="原因" min-width="160" show-overflow-tooltip />
-      <el-table-column label="操作" width="120" fixed="right">
-        <template #default="{ row }">
-          <el-button type="danger" size="small" :icon="Close" @click="cancelReservation(row)">取消</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <el-empty v-if="active.length === 0 && !loading" description="暂无有效预约" />
+    <div v-else class="active-card-grid">
+      <article v-for="item in active" :key="item.id" class="reservation-card">
+        <div class="reservation-card-head">
+          <el-tag :type="item.resourceType === 'SEAT' ? 'primary' : 'success'">{{ resourceTypeText(item.resourceType) }}</el-tag>
+          <el-button type="danger" size="small" :icon="Close" @click="cancelReservation(item)">取消</el-button>
+        </div>
+        <h3>{{ item.resourceName }}</h3>
+        <div class="reservation-time">{{ formatDateTimeText(item.startTime) }} - {{ formatDateTimeText(item.endTime) }}</div>
+        <p>{{ item.reason || '暂无预约原因' }}</p>
+      </article>
+    </div>
+
   </div>
 
   <div class="panel history-panel">
@@ -84,13 +87,24 @@ loadData()
       </div>
     </div>
     <el-table :data="history" v-loading="loading">
-      <el-table-column prop="resourceType" label="类型" width="110" />
+      <el-table-column label="类型" width="110">
+        <template #default="{ row }">{{ resourceTypeText(row.resourceType) }}</template>
+      </el-table-column>
       <el-table-column prop="resourceName" label="资源" min-width="220" />
-      <el-table-column prop="startTime" label="开始时间" min-width="180" />
-      <el-table-column prop="endTime" label="结束时间" min-width="180" />
-      <el-table-column prop="status" label="状态" width="120">
+      <el-table-column label="开始时间" min-width="220">
+        <template #default="{ row }">{{ formatDateTimeText(row.startTime) }}</template>
+      </el-table-column>
+      <el-table-column label="结束时间" min-width="220">
+        <template #default="{ row }">{{ formatDateTimeText(row.endTime) }}</template>
+      </el-table-column>
+      <el-table-column prop="status" width="120" class-name="status-column" label-class-name="status-column">
+        <template #header>
+          <div class="status-align">状态</div>
+        </template>
         <template #default="{ row }">
-          <el-tag :type="row.status === 'CANCELLED' ? 'warning' : 'info'">{{ row.status }}</el-tag>
+          <div class="status-align status-value-align">
+            <el-tag class="status-tag" :type="row.status === 'CANCELLED' ? 'warning' : 'info'">{{ reservationStatusText(row.status) }}</el-tag>
+          </div>
         </template>
       </el-table-column>
       <el-table-column prop="reason" label="原因" min-width="160" show-overflow-tooltip />
@@ -99,13 +113,94 @@ loadData()
 </template>
 
 <style scoped>
+.metric-row :deep(.metric) {
+  display: grid;
+  grid-template-columns: minmax(72px, 1fr) auto;
+  align-items: center;
+  column-gap: 14px;
+}
+
+.metric-row :deep(.metric-label) {
+  min-height: auto;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.metric-row :deep(.metric-value) {
+  min-height: auto;
+  margin-top: 0;
+  justify-self: end;
+  text-align: right;
+  line-height: 1;
+}
+
 .history-panel {
   margin-top: 16px;
+}
+
+.active-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.reservation-card {
+  padding: 16px;
+  border: 1px solid #e4e8f0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.reservation-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.reservation-card h3 {
+  margin: 16px 0 8px;
+  color: #172033;
+  font-size: 18px;
+}
+
+.reservation-time {
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.reservation-card p {
+  margin: 12px 0 0;
+  color: #667085;
+  font-size: 13px;
 }
 
 .hint {
   margin-top: 4px;
   color: #667085;
   font-size: 13px;
+}
+
+.status-align {
+  width: 72px;
+  margin-left: 12px;
+  text-align: left;
+}
+
+.status-value-align {
+  margin-left: 4px;
+}
+
+@media (max-width: 1080px) {
+  .active-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .active-card-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
