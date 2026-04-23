@@ -1,60 +1,208 @@
 <script setup>
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { Calendar, DataBoard, OfficeBuilding, Plus, Tickets } from '@element-plus/icons-vue'
-import { classroomApi, reservationApi } from '../api'
-import { useAuthStore } from '../stores/auth'
-import { formatDateTimeText } from '../utils/date'
-import { reservationStatusText, resourceTypeText } from '../utils/dict'
+import { computed, ref } from "vue";
+import { useRouter } from "vue-router";
+import {
+  Calendar,
+  DataBoard,
+  OfficeBuilding,
+  Plus,
+  Tickets,
+  TrendCharts,
+} from "@element-plus/icons-vue";
+import {
+  adminApi,
+  classroomApi,
+  notificationApi,
+  reservationApi,
+} from "../api";
+import { useAuthStore } from "../stores/auth";
+import { buildingOptions } from "../config/buildings";
+import { formatDateTimeText } from "../utils/date";
+import {
+  enabledStatusText,
+  notificationTypeText,
+  reservationStatusText,
+  resourceTypeText,
+} from "../utils/dict";
 
-const router = useRouter()
-const authStore = useAuthStore()
-const user = computed(() => authStore.user)
-const loading = ref(false)
-const classrooms = ref([])
-const activeReservations = ref([])
-const historyReservations = ref([])
+const router = useRouter();
+const authStore = useAuthStore();
+const user = computed(() => authStore.user);
+const loading = ref(false);
+const classrooms = ref([]);
+const activeReservations = ref([]);
+const historyReservations = ref([]);
+const notifications = ref([]);
+const unreadCount = ref(0);
 
-const today = new Date().toISOString().slice(0, 10)
-const todayReservations = computed(() => activeReservations.value.filter(item => item.reserveDate === today || item.startTime?.startsWith(today)))
-const enabledClassrooms = computed(() => classrooms.value.filter(item => item.status === 'ENABLED').length)
-const totalCapacity = computed(() => classrooms.value.reduce((sum, item) => sum + (item.capacity || 0), 0))
-const recentReservations = computed(() => [...activeReservations.value, ...historyReservations.value].slice(0, 5))
+const roleName = computed(() => {
+  const map = {
+    ADMIN: "管理员",
+    TEACHER: "教师",
+    STUDENT: "学生",
+  };
+  return map[user.value?.role] || "用户";
+});
+const isAdmin = computed(() => user.value?.role === "ADMIN");
+const today = new Date().toISOString().slice(0, 10);
+const enabledClassrooms = computed(
+  () => classrooms.value.filter((item) => item.status === "ENABLED").length
+);
+const disabledClassrooms = computed(
+  () => classrooms.value.filter((item) => item.status === "DISABLED").length
+);
+const totalCapacity = computed(() =>
+  classrooms.value.reduce((sum, item) => sum + (item.capacity || 0), 0)
+);
+const todayReservations = computed(() =>
+  activeReservations.value.filter((item) => isSameDay(item.startTime, today))
+);
+const sortedActiveReservations = computed(() =>
+  [...activeReservations.value].sort(
+    (a, b) => getTime(a.startTime) - getTime(b.startTime)
+  )
+);
+const currentReservation = computed(() =>
+  sortedActiveReservations.value.find(
+    (item) =>
+      getTime(item.startTime) <= Date.now() &&
+      getTime(item.endTime) >= Date.now()
+  )
+);
+const nextReservation = computed(
+  () =>
+    sortedActiveReservations.value.find(
+      (item) => getTime(item.startTime) >= Date.now()
+    ) || sortedActiveReservations.value[0]
+);
+const recentReservations = computed(() =>
+  [...activeReservations.value, ...historyReservations.value].slice(0, 5)
+);
+const recommendedClassrooms = computed(() =>
+  [...classrooms.value]
+    .filter((item) => item.status === "ENABLED")
+    .sort((a, b) => (b.capacity || 0) - (a.capacity || 0))
+    .slice(0, 4)
+);
+const buildingStats = computed(() => {
+  const stats = new Map();
+  classrooms.value.forEach((item) => {
+    const current = stats.get(item.building) || {
+      building: item.building,
+      count: 0,
+      capacity: 0,
+      enabled: 0,
+    };
+    current.count += 1;
+    current.capacity += item.capacity || 0;
+    if (item.status === "ENABLED") current.enabled += 1;
+    stats.set(item.building, current);
+  });
+  return [...stats.values()]
+    .sort((a, b) => b.capacity - a.capacity)
+    .slice(0, 5);
+});
 
 async function loadData() {
-  loading.value = true
+  loading.value = true;
   try {
+    const classroomTask = isAdmin.value
+      ? Promise.all(
+          buildingOptions.flatMap((building) => [
+            adminApi.classrooms({
+              building: building.value,
+              min_capacity: 1,
+              status: "ENABLED",
+            }),
+            adminApi.classrooms({
+              building: building.value,
+              min_capacity: 1,
+              status: "DISABLED",
+            }),
+          ])
+        ).then((results) => results.flatMap((item) => item || []))
+      : classroomApi.available({ min_capacity: 1 });
     const tasks = [
-      classroomApi.available({ min_capacity: 1 }),
-      user.value?.role !== 'ADMIN' ? reservationApi.list() : Promise.resolve([]),
-      user.value?.role !== 'ADMIN' ? reservationApi.history() : Promise.resolve([])
-    ]
-    const [classroomList, activeList, historyList] = await Promise.all(tasks)
-    classrooms.value = classroomList || []
-    activeReservations.value = activeList || []
-    historyReservations.value = historyList || []
+      classroomTask,
+      !isAdmin.value ? reservationApi.list() : Promise.resolve([]),
+      !isAdmin.value ? reservationApi.history() : Promise.resolve([]),
+      !isAdmin.value ? notificationApi.list({ limit: 4 }) : Promise.resolve([]),
+      !isAdmin.value
+        ? notificationApi.unreadCount()
+        : Promise.resolve({ count: 0 }),
+    ];
+    const [classroomList, activeList, historyList, notificationList, unread] =
+      await Promise.all(tasks);
+    classrooms.value = classroomList || [];
+    activeReservations.value = activeList || [];
+    historyReservations.value = historyList || [];
+    notifications.value = notificationList || [];
+    unreadCount.value = unread?.count || 0;
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
-function goPrimaryAction() {
-  router.push(user.value?.role === 'ADMIN' ? '/admin' : '/classrooms')
+async function markNotificationsRead() {
+  await notificationApi.markAllRead();
+  notifications.value = notifications.value.map((item) => ({
+    ...item,
+    isRead: 1,
+  }));
+  unreadCount.value = 0;
 }
 
-loadData()
+function getTime(value) {
+  if (!value) return 0;
+  return new Date(String(value).replace("T", " ")).getTime();
+}
+
+function isSameDay(value, day) {
+  return String(value || "").slice(0, 10) === day;
+}
+
+function goPrimaryAction() {
+  router.push(isAdmin.value ? "/admin" : "/classrooms");
+}
+
+loadData();
 </script>
 
 <template>
   <div v-loading="loading" class="dashboard">
     <section class="workbench-hero">
       <div>
-        <div class="hero-kicker">{{ user?.role || 'USER' }}</div>
-        <h2>{{ user?.role === 'ADMIN' ? '资源管理工作台' : user?.role === 'TEACHER' ? '教室预约工作台' : '座位预约工作台' }}</h2>
-        <p>{{ user?.role === 'ADMIN' ? '集中维护教室、座位和启用状态。' : '先选择时间和教学楼，再进入可预约空间完成预约。' }}</p>
+        <div class="hero-kicker">{{ roleName }} | Campus Reserve</div>
+        <h2>
+          {{
+            isAdmin
+              ? "后台运行总览"
+              : user?.role === "TEACHER"
+              ? "教室预约工作台"
+              : "座位预约工作台"
+          }}
+        </h2>
+        <p>
+          {{
+            isAdmin
+              ? "查看资源规模、启用状态和维护入口。"
+              : "查看当前安排、最近通知和常用预约入口。"
+          }}
+        </p>
       </div>
-      <el-button type="primary" size="large" :icon="Plus" @click="goPrimaryAction">
-        {{ user?.role === 'ADMIN' ? '进入后台管理' : user?.role === 'TEACHER' ? '查找空教室' : '查找座位' }}
+      <el-button
+        type="primary"
+        size="large"
+        :icon="Plus"
+        @click="goPrimaryAction"
+      >
+        {{
+          isAdmin
+            ? "进入后台管理"
+            : user?.role === "TEACHER"
+            ? "查找空教室"
+            : "查找座位"
+        }}
       </el-button>
     </section>
 
@@ -68,35 +216,151 @@ loadData()
         <div class="metric-value">{{ totalCapacity }}</div>
       </div>
       <div class="metric">
-        <div class="metric-label">有效预约</div>
-        <div class="metric-value">{{ activeReservations.length }}</div>
+        <div class="metric-label">{{ isAdmin ? "禁用教室" : "有效预约" }}</div>
+        <div class="metric-value">
+          {{ isAdmin ? disabledClassrooms : activeReservations.length }}
+        </div>
       </div>
       <div class="metric">
-        <div class="metric-label">今日预约</div>
-        <div class="metric-value">{{ todayReservations.length }}</div>
+        <div class="metric-label">{{ isAdmin ? "教学楼数" : "未读通知" }}</div>
+        <div class="metric-value">
+          {{ isAdmin ? buildingStats.length : unreadCount }}
+        </div>
       </div>
+    </div>
+
+    <div v-if="!isAdmin" class="dashboard-grid main-grid">
+      <section class="panel focus-panel">
+        <div class="toolbar">
+          <div>
+            <strong>{{
+              currentReservation ? "正在进行" : "下一条预约"
+            }}</strong>
+            <div class="hint">登录后优先显示当前或即将开始的预约安排</div>
+          </div>
+          <el-button text type="primary" @click="router.push('/reservations')"
+            >全部预约</el-button
+          >
+        </div>
+        <div v-if="currentReservation || nextReservation" class="next-card">
+          <el-tag :type="currentReservation ? 'success' : 'primary'">{{
+            currentReservation ? "进行中" : "即将开始"
+          }}</el-tag>
+          <h3>{{ (currentReservation || nextReservation).resourceName }}</h3>
+          <p>
+            {{
+              resourceTypeText(
+                (currentReservation || nextReservation).resourceType
+              )
+            }}
+            |
+            {{
+              formatDateTimeText(
+                (currentReservation || nextReservation).startTime
+              )
+            }}
+            -
+            {{
+              formatDateTimeText(
+                (currentReservation || nextReservation).endTime
+              )
+            }}
+          </p>
+          <div class="next-actions">
+            <el-button
+              type="primary"
+              :icon="OfficeBuilding"
+              @click="router.push('/classrooms')"
+              >继续预约</el-button
+            >
+            <el-button :icon="Tickets" @click="router.push('/reservations')"
+              >管理预约</el-button
+            >
+          </div>
+        </div>
+        <el-empty v-else description="暂无有效预约" />
+      </section>
+
+      <section class="panel">
+        <div class="toolbar">
+          <div>
+            <strong>最新通知</strong>
+            <div class="hint">
+              管理员对您的账号或预约有操作后，会在这里看到提醒
+            </div>
+          </div>
+          <el-button
+            text
+            type="primary"
+            :disabled="unreadCount === 0"
+            @click="markNotificationsRead"
+            >全部已读</el-button
+          >
+        </div>
+        <el-empty v-if="notifications.length === 0" description="暂无通知" />
+        <div v-else class="notification-list">
+          <div
+            v-for="item in notifications"
+            :key="item.id"
+            class="notification-item"
+            :class="{ unread: item.isRead === 0 }"
+          >
+            <div class="notification-meta">
+              <el-tag :type="item.isRead === 0 ? 'danger' : 'info'">{{
+                notificationTypeText(item.type)
+              }}</el-tag>
+              <span>{{ formatDateTimeText(item.createTime) }}</span>
+            </div>
+            <strong>{{ item.title }}</strong>
+            <p>{{ item.content }}</p>
+          </div>
+        </div>
+      </section>
     </div>
 
     <div class="dashboard-grid">
       <section class="panel">
         <div class="toolbar">
           <div>
-            <strong>快捷操作</strong>
-            <div class="hint">按当前角色进入最常用流程</div>
+            <strong>{{ isAdmin ? "管理入口" : "快捷操作" }}</strong>
+            <div class="hint">
+              {{
+                isAdmin
+                  ? "进入教室、用户和预约维护界面"
+                  : "快速进入最常用的预约流程"
+              }}
+            </div>
           </div>
         </div>
         <div class="quick-actions">
-          <button class="quick-action" @click="router.push('/classrooms')">
+          <button
+            class="quick-action"
+            @click="router.push(isAdmin ? '/admin' : '/classrooms')"
+          >
             <el-icon><OfficeBuilding /></el-icon>
-            <span>{{ user?.role === 'TEACHER' ? '按时间找空教室' : '按时间找座位' }}</span>
+            <span>{{
+              isAdmin
+                ? "维护资源与用户"
+                : user?.role === "TEACHER"
+                ? "按时间找空教室"
+                : "按时间找座位"
+            }}</span>
           </button>
-          <button v-if="user?.role !== 'ADMIN'" class="quick-action" @click="router.push('/reservations')">
+          <button
+            v-if="!isAdmin"
+            class="quick-action"
+            @click="router.push('/reservations')"
+          >
             <el-icon><Tickets /></el-icon>
-            <span>查看我的预约</span>
+            <span>查看我的预约与通知</span>
           </button>
-          <button v-if="user?.role === 'ADMIN'" class="quick-action" @click="router.push('/admin')">
+          <button
+            v-if="isAdmin"
+            class="quick-action"
+            @click="router.push('/admin')"
+          >
             <el-icon><DataBoard /></el-icon>
-            <span>维护教室座位</span>
+            <span>封禁用户或取消预约</span>
           </button>
         </div>
       </section>
@@ -104,24 +368,135 @@ loadData()
       <section class="panel">
         <div class="toolbar">
           <div>
-            <strong>最近预约</strong>
-            <div class="hint">有效和历史记录的最近 5 条</div>
+            <strong>{{ isAdmin ? "教学楼概览" : "最近预约" }}</strong>
+            <div class="hint">
+              {{
+                isAdmin ? "按容量统计主要教学楼" : "最近 5 条有效或历史预约记录"
+              }}
+            </div>
           </div>
-          <el-button v-if="user?.role !== 'ADMIN'" text type="primary" @click="router.push('/reservations')">全部</el-button>
+          <el-button
+            v-if="!isAdmin"
+            text
+            type="primary"
+            @click="router.push('/reservations')"
+            >全部</el-button
+          >
         </div>
-        <el-empty v-if="recentReservations.length === 0" description="暂无预约记录" />
+        <div v-if="isAdmin" class="building-list">
+          <div
+            v-for="item in buildingStats"
+            :key="item.building"
+            class="building-item"
+          >
+            <div>
+              <strong>{{ item.building }}</strong>
+              <span>{{ item.enabled }}/{{ item.count }} 间启用</span>
+            </div>
+            <el-progress
+              :percentage="
+                totalCapacity
+                  ? Math.round((item.capacity / totalCapacity) * 100)
+                  : 0
+              "
+            />
+          </div>
+        </div>
+        <el-empty
+          v-else-if="recentReservations.length === 0"
+          description="暂无预约记录"
+        />
         <div v-else class="reservation-list">
-          <div v-for="item in recentReservations" :key="item.id" class="reservation-item">
+          <div
+            v-for="item in recentReservations"
+            :key="item.id"
+            class="reservation-item"
+          >
             <el-icon><Calendar /></el-icon>
             <div>
-              <strong>{{ item.resourceName || '预约资源' }}</strong>
-              <span>{{ resourceTypeText(item.resourceType) }} · {{ formatDateTimeText(item.startTime) }} - {{ formatDateTimeText(item.endTime) }}</span>
+              <strong>{{ item.resourceName || "预约资源" }}</strong>
+              <span
+                >{{ resourceTypeText(item.resourceType) }} |
+                {{ formatDateTimeText(item.startTime) }} -
+                {{ formatDateTimeText(item.endTime) }}</span
+              >
             </div>
-            <el-tag :type="item.status === 'ACTIVE' ? 'success' : 'info'">{{ reservationStatusText(item.status) }}</el-tag>
+            <el-tag :type="item.status === 'ACTIVE' ? 'success' : 'info'">{{
+              reservationStatusText(item.status)
+            }}</el-tag>
           </div>
         </div>
       </section>
     </div>
+
+    <section class="panel">
+      <div class="toolbar">
+        <div>
+          <strong>{{ isAdmin ? "容量较大的教室" : "推荐可用空间" }}</strong>
+          <div class="hint">
+            {{
+              isAdmin
+                ? "优先关注大教室资源的启用状态"
+                : "按容量优先展示，便于快速选择"
+            }}
+          </div>
+        </div>
+        <el-button
+          text
+          type="primary"
+          :icon="TrendCharts"
+          @click="goPrimaryAction"
+          >{{ isAdmin ? "进入管理" : "去预约" }}</el-button
+        >
+      </div>
+      <div class="recommend-grid">
+        <article
+          v-for="room in recommendedClassrooms"
+          :key="room.id"
+          class="recommend-card"
+        >
+          <div>
+            <strong>{{ room.building }} {{ room.roomNumber }}</strong>
+            <span
+              >总容量 {{ room.capacity }} | {{ room.seatRows }} 行 x
+              {{ room.seatCols }} 列</span
+            >
+          </div>
+          <el-tag :type="room.status === 'ENABLED' ? 'success' : 'danger'">{{
+            enabledStatusText(room.status)
+          }}</el-tag>
+        </article>
+      </div>
+    </section>
+
+    <section v-if="!isAdmin" class="panel">
+      <div class="toolbar">
+        <div>
+          <strong>今日日程</strong>
+          <div class="hint">今天生效的预约会集中显示在这里</div>
+        </div>
+      </div>
+      <el-empty
+        v-if="todayReservations.length === 0"
+        description="今天暂无预约"
+      />
+      <div v-else class="timeline-list">
+        <div
+          v-for="item in todayReservations"
+          :key="item.id"
+          class="timeline-item"
+        >
+          <span>{{ String(item.startTime).slice(11, 16) }}</span>
+          <div>
+            <strong>{{ item.resourceName }}</strong>
+            <p>
+              {{ formatDateTimeText(item.startTime) }} -
+              {{ formatDateTimeText(item.endTime) }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -141,8 +516,11 @@ loadData()
   padding: 28px;
   border: 1px solid rgba(228, 232, 240, 0.92);
   border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(15, 118, 110, 0.08)),
+  background: linear-gradient(
+      135deg,
+      rgba(37, 99, 235, 0.12),
+      rgba(15, 118, 110, 0.08)
+    ),
     #fff;
   box-shadow: 0 18px 42px rgba(16, 24, 40, 0.06);
 }
@@ -162,7 +540,6 @@ loadData()
   margin: 0;
   color: #172033;
   font-size: 32px;
-  letter-spacing: 0;
 }
 
 .workbench-hero p {
@@ -176,7 +553,43 @@ loadData()
   gap: 16px;
 }
 
-.quick-actions {
+.main-grid {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+}
+
+.focus-panel {
+  min-height: 260px;
+}
+
+.next-card {
+  padding: 18px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+}
+
+.next-card h3 {
+  margin: 14px 0 8px;
+  color: #172033;
+  font-size: 24px;
+}
+
+.next-card p,
+.notification-item p {
+  margin: 0;
+  color: #475467;
+  white-space: pre-line;
+}
+
+.next-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.quick-actions,
+.recommend-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
@@ -203,28 +616,74 @@ loadData()
   font-size: 24px;
 }
 
-.reservation-list {
+.reservation-list,
+.timeline-list,
+.building-list,
+.notification-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.reservation-item {
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
+.reservation-item,
+.timeline-item,
+.building-item,
+.recommend-card,
+.notification-item {
   padding: 12px;
   border: 1px solid #e4e8f0;
   border-radius: 8px;
   background: #fff;
 }
 
-.reservation-item span {
+.reservation-item,
+.building-item,
+.recommend-card {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.building-item,
+.recommend-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.timeline-item {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.notification-item.unread {
+  border-color: #fecaca;
+  background: #fff7f7;
+}
+
+.notification-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.notification-meta span,
+.reservation-item span,
+.recommend-card span,
+.building-item span,
+.timeline-item p {
   display: block;
   margin-top: 4px;
   color: #667085;
   font-size: 13px;
+}
+
+.timeline-item > span {
+  color: #2563eb;
+  font-weight: 800;
 }
 
 .hint {
@@ -242,6 +701,13 @@ loadData()
   .workbench-hero {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 680px) {
+  .quick-actions,
+  .recommend-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

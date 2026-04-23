@@ -2,6 +2,7 @@ package org.campus.classroom.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.campus.classroom.dto.SeatCreateDTO;
 import org.campus.classroom.dto.SeatUpdateDTO;
 import org.campus.classroom.entity.Classroom;
 import org.campus.classroom.entity.Seat;
@@ -10,15 +11,19 @@ import org.campus.classroom.enums.ResultCode;
 import org.campus.classroom.enums.SeatStatus;
 import org.campus.classroom.exception.BusinessException;
 import org.campus.classroom.mapper.ClassroomMapper;
+import org.campus.classroom.mapper.ReservationMapper;
 import org.campus.classroom.mapper.SeatMapper;
 import org.campus.classroom.service.SeatService;
 import org.campus.classroom.vo.ClassroomSeatLayoutVO;
 import org.campus.classroom.vo.SeatVO;
 import org.springframework.beans.BeanUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -26,82 +31,108 @@ import java.util.List;
 public class SeatServiceImpl implements SeatService {
     private final SeatMapper seatMapper;
     private final ClassroomMapper classroomMapper;
+    private final ReservationMapper reservationMapper;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void initSeats(Long classroomId) {
         log.info("[座位初始化开始] classroomId={}", classroomId);
-        //1.验证教室是否存在且可用
-        validateClassroom(classroomId);
-        //2.判断教室是否已经初始化过座位
-        int count = seatMapper.countByClassroomId(classroomId);
-        if (count > 0) {
-            log.warn("[座位初始化失败] classroomId={}, reason=already initialized, seatCount={}", classroomId, count);
-            throw new BusinessException(ResultCode.BAD_REQUEST, "座位已经初始化过了");
+        Classroom classroom = validateClassroom(classroomId);
+
+        List<Seat> existingSeats = seatMapper.selectByClassroomId(classroomId);
+        Set<String> existingPositionKeys = new HashSet<>();
+        for (Seat seat : existingSeats) {
+            existingPositionKeys.add(buildSeatPositionKey(seat.getRowNumber(), seat.getColNumber()));
         }
-        Classroom classroom = classroomMapper.selectById(classroomId);
-        //初始化座位
-        for (int i = 1; i <= classroom.getSeatRows(); i++) {
-            for (int j = 1; j <= classroom.getSeatCols(); j++) {
+
+        int createdCount = 0;
+        for (int row = 1; row <= classroom.getSeatRows(); row++) {
+            for (int col = 1; col <= classroom.getSeatCols(); col++) {
+                if (existingPositionKeys.contains(buildSeatPositionKey(row, col))) {
+                    continue;
+                }
                 Seat seat = new Seat();
                 seat.setClassroomId(classroom.getId());
-                seat.setSeatNumber(i + "-" + j);
-                seat.setRowNumber(i);
-                seat.setColNumber(j);
+                seat.setSeatNumber(row + "-" + col);
+                seat.setRowNumber(row);
+                seat.setColNumber(col);
                 seat.setStatus(SeatStatus.ENABLED.name());
                 seatMapper.insert(seat);
+                createdCount += 1;
             }
         }
-        log.info("[座位初始化成功] classroomId={}, seatCount={}",
-                classroomId, classroom.getSeatRows() * classroom.getSeatCols());
+
+        log.info("[座位初始化完成] classroomId={}, existingSeatCount={}, createdSeatCount={}, targetSeatCount={}",
+                classroomId, existingSeats.size(), createdCount, classroom.getSeatRows() * classroom.getSeatCols());
     }
 
     @Override
     public SeatVO getSeatById(Long id) {
-        log.info("[座位查询] seatId={}", id);
         Seat seat = seatMapper.selectById(id);
         if (seat == null) {
-            log.warn("[座位查询失败] seatId={}, reason=not found", id);
             throw new BusinessException(ResultCode.NOT_FOUND, "座位不存在");
         }
-        SeatVO seatVO = seatToSeatVO(seat);
-        log.info("[座位查询成功] seatId={}", id);
-        return seatVO;
+        return seatToSeatVO(seat);
     }
 
     @Override
     public ClassroomSeatLayoutVO getSeatLayout(Long classroomId) {
-        log.info("[教室座位布局查询开始] classroomId={}", classroomId);
-        //1.验证教室是否存在且可用
-        validateClassroom(classroomId);
-        //2.查询座位列表并转换为VO
-        List<SeatVO> seatVOS = seatMapper.selectByClassroomId(classroomId).stream().map(this::seatToSeatVO).toList();
-        Classroom classroom = classroomMapper.selectById(classroomId);
-        ClassroomSeatLayoutVO classroomSeatLayoutVO = new ClassroomSeatLayoutVO();
-        classroomSeatLayoutVO.setClassroomId(classroomId);
-        classroomSeatLayoutVO.setClassroomBuilding(classroom.getBuilding());
-        classroomSeatLayoutVO.setClassroomNumber(classroom.getRoomNumber());
-        classroomSeatLayoutVO.setSeatCols(classroom.getSeatCols());
-        classroomSeatLayoutVO.setSeatRows(classroom.getSeatRows());
-        classroomSeatLayoutVO.setSeatVOS(seatVOS);
-        log.info("[教室座位布局查询成功] classroomId={}, seatCount={}", classroomId, seatVOS.size());
-        return classroomSeatLayoutVO;
+        Classroom classroom = validateClassroom(classroomId);
+        List<SeatVO> seatVOS = seatMapper.selectByClassroomId(classroomId).stream()
+                .map(this::seatToSeatVO)
+                .toList();
+
+        ClassroomSeatLayoutVO layoutVO = new ClassroomSeatLayoutVO();
+        layoutVO.setClassroomId(classroomId);
+        layoutVO.setClassroomBuilding(classroom.getBuilding());
+        layoutVO.setClassroomNumber(classroom.getRoomNumber());
+        layoutVO.setSeatCols(classroom.getSeatCols());
+        layoutVO.setSeatRows(classroom.getSeatRows());
+        layoutVO.setSeatVOS(seatVOS);
+        return layoutVO;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public SeatVO create(Long classroomId, SeatCreateDTO request) {
+        Classroom classroom = validateClassroom(classroomId);
+        validateSeatPosition(classroom, request.getRowNumber(), request.getColNumber());
+
+        String status = request.getStatus();
+        if (status == null || status.trim().isEmpty()) {
+            status = SeatStatus.ENABLED.name();
+        }
+        status = status.trim();
+        validateStatus(status);
+
+        Seat seat = new Seat();
+        seat.setClassroomId(classroomId);
+        seat.setSeatNumber(request.getSeatNumber().trim());
+        seat.setRowNumber(request.getRowNumber());
+        seat.setColNumber(request.getColNumber());
+        seat.setStatus(status);
+        seat.setRemark(request.getRemark());
+
+        try {
+            seatMapper.insert(seat);
+        } catch (DuplicateKeyException e) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "该教室下座位位置或编号已存在");
+        }
+
+        return getSeatById(seat.getId());
     }
 
     @Override
     public Boolean update(Long id, SeatUpdateDTO request) {
-        log.info("[座位更新开始] seatId={}, request={}", id, request);
-        //1.查询座位是否存在
         Seat existing = seatMapper.selectById(id);
         if (existing == null) {
-            log.warn("[座位更新失败] seatId={}, reason=not found", id);
             throw new BusinessException(ResultCode.NOT_FOUND, "座位不存在");
         }
-        //2. 检验DTO的status参数,若不存在则默认为之前的,若存在则判断是否合法后使用
+
         String status = request.getStatus();
         if (status == null || status.trim().isEmpty()) {
             status = existing.getStatus();
         }
-
         status = status.trim();
         validateStatus(status);
 
@@ -114,57 +145,91 @@ public class SeatServiceImpl implements SeatService {
         seat.setStatus(status);
         seat.setRemark(request.getRemark());
         seatMapper.updateById(seat);
-        log.info("[座位更新成功] seatId={}, status={}", id, status);
         return true;
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public Boolean delete(Long id) {
+        Seat existing = seatMapper.selectById(id);
+        if (existing == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "座位不存在");
+        }
+        validateClassroom(existing.getClassroomId());
+
+        int activeReservationCount = reservationMapper.countActiveReservationsBySeatId(id);
+        if (activeReservationCount > 0) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "该座位存在有效预约，不能删除");
+        }
+
+        int rows = seatMapper.deleteById(id);
+        if (rows <= 0) {
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "座位删除失败");
+        }
+        return true;
+    }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public Boolean batchUpdateSeatStatus(Long classroomId, SeatUpdateDTO request) {
-        log.info("[座位批量更新开始] classroomId={}, request={}", classroomId, request);
-        //1.验证教室是否存在且可用
+    public Boolean batchUpdateSeats(Long classroomId, SeatUpdateDTO request) {
         validateClassroom(classroomId);
-        //2.检验status参数,若不存在则直接抛出错误,因为该接口就是用来批量更新状态的,若存在则判断是否合法后使用
-        String status = request.getStatus();
 
+        String status = request.getStatus();
         if (status == null || status.trim().isEmpty()) {
-            log.warn("[座位批量更新失败] classroomId={}, reason=empty status", classroomId);
             throw new BusinessException(ResultCode.BAD_REQUEST, "状态不能为空");
         }
         status = status.trim();
         validateStatus(status);
-        //3.批量更新座位状态
+
         int rows = seatMapper.batchUpdateByClassroomId(classroomId, status, request.getRemark());
-        if (rows <= 0) {
-            log.error("[座位批量更新失败] classroomId={}, status={}, reason=no seat updated", classroomId, status);
+        if (rows < 1) {
             throw new BusinessException(ResultCode.INTERNAL_ERROR, "未更新到任何座位");
         }
-        log.info("[座位批量更新成功] classroomId={}, status={}, updatedRows={}", classroomId, status, rows);
         return true;
+    }
 
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public Boolean batchDeleteSeats(Long classroomId) {
+        validateClassroom(classroomId);
+
+        int rows = seatMapper.batchDeleteByClassroomId(classroomId);
+        if (rows <= 0) {
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "未删除任何座位");
+        }
+        return true;
     }
 
     private void validateStatus(String status) {
         if (!SeatStatus.ENABLED.name().equals(status)
                 && !SeatStatus.DISABLED.name().equals(status)) {
-            log.warn("[座位状态非法] status={}", status);
             throw new BusinessException(ResultCode.BAD_REQUEST, "状态只能是 ENABLED 或 DISABLED");
         }
     }
 
-    private void validateClassroom(Long classroomId) {
-        //1.查询教室是否存在
+    private Classroom validateClassroom(Long classroomId) {
         Classroom classroom = classroomMapper.selectById(classroomId);
         if (classroom == null) {
-            log.warn("[教室校验失败] classroomId={}, reason=not found", classroomId);
             throw new BusinessException(ResultCode.NOT_FOUND, "教室不存在");
         }
-        //2.查询教室是否可用
         if (!ClassroomStatus.ENABLED.name().equals(classroom.getStatus())) {
-            log.warn("[教室校验失败] classroomId={}, reason=disabled, status={}", classroomId, classroom.getStatus());
             throw new BusinessException(ResultCode.FORBIDDEN, "教室不可用");
         }
+        return classroom;
+    }
+
+    private void validateSeatPosition(Classroom classroom, Integer rowNumber, Integer colNumber) {
+        if (rowNumber == null || colNumber == null) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "座位行号和列号不能为空");
+        }
+        if (rowNumber < 1 || rowNumber > classroom.getSeatRows()
+                || colNumber < 1 || colNumber > classroom.getSeatCols()) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "座位行列超出教室布局范围");
+        }
+    }
+
+    private String buildSeatPositionKey(Integer rowNumber, Integer colNumber) {
+        return rowNumber + "-" + colNumber;
     }
 
     private SeatVO seatToSeatVO(Seat seat) {

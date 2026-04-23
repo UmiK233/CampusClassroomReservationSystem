@@ -1,6 +1,7 @@
 package org.campus.classroom.service;
 
 import org.campus.classroom.dto.SeatUpdateDTO;
+import org.campus.classroom.dto.SeatCreateDTO;
 import org.campus.classroom.vo.ClassroomSeatLayoutVO;
 import org.campus.classroom.vo.SeatVO;
 
@@ -11,7 +12,13 @@ public interface SeatService {
 
     ClassroomSeatLayoutVO getSeatLayout(Long classroomId);
 
+    SeatVO create(Long classroomId, SeatCreateDTO request);
+
     Boolean update(Long id, SeatUpdateDTO request);
 
-    Boolean batchUpdateSeatStatus(Long classroomId, SeatUpdateDTO request);
+    Boolean delete(Long id);
+
+    Boolean batchUpdateSeats(Long classroomId, SeatUpdateDTO request);
+
+    Boolean batchDeleteSeats(Long classroomId);
 }

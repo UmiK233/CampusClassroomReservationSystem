@@ -62,19 +62,39 @@ public interface SeatMapper {
             """)
     int countByClassroomId(Long classroomId);
 
+    @Select("""
+            select coalesce(max(`row_number`), 0)
+            from seat
+            where classroom_id = #{classroomId}
+            """)
+    int selectMaxRowNumberByClassroomId(Long classroomId);
+
+    @Select("""
+            select coalesce(max(col_number), 0)
+            from seat
+            where classroom_id = #{classroomId}
+            """)
+    int selectMaxColNumberByClassroomId(Long classroomId);
+
     @Insert("""
-            insert into seat (classroom_id, seat_number, `row_number`, col_number, status)
-            values (#{classroomId}, #{seatNumber}, #{rowNumber}, #{colNumber}, #{status})
+            insert into seat (classroom_id, seat_number, `row_number`, col_number, status, remark)
+            values (#{classroomId}, #{seatNumber}, #{rowNumber}, #{colNumber}, #{status}, #{remark})
             """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(Seat seat);
+
+    @Delete("""
+            delete from seat
+            where id = #{id}
+            """)
+    int deleteById(Long id);
 
 
     @Delete("""
             delete from seat
             where classroom_id = #{classroomId}
             """)
-    int deleteByClassroomId(Long classroomId);
+    int batchDeleteByClassroomId(Long classroomId);
 
     @Update("update seat set status = #{status} , remark= #{remark} where id = #{id}")
     int updateById(Seat seat);

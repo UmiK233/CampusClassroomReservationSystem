@@ -8,7 +8,7 @@ export function resourceTypeText(type) {
 
 export function reservationStatusText(status) {
   const map = {
-    ACTIVE: '正在使用',
+    ACTIVE: '进行中',
     CANCELLED: '已取消',
     EXPIRED: '已过期'
   }
@@ -21,4 +21,29 @@ export function enabledStatusText(status) {
     DISABLED: '已禁用'
   }
   return map[status] || status || '-'
+}
+
+export function userStatusText(status) {
+  const map = {
+    1: '正常',
+    0: '已封禁'
+  }
+  return map[status] ?? status ?? '-'
+}
+
+export function userRoleText(role) {
+  const map = {
+    ADMIN: '管理员',
+    TEACHER: '教师',
+    STUDENT: '学生'
+  }
+  return map[role] || role || '-'
+}
+
+export function notificationTypeText(type) {
+  const map = {
+    USER_STATUS: '账号通知',
+    RESERVATION_CANCELLED: '预约通知'
+  }
+  return map[type] || type || '系统通知'
 }

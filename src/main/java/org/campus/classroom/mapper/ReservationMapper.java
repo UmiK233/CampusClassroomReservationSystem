@@ -2,10 +2,10 @@ package org.campus.classroom.mapper;
 
 import org.apache.ibatis.annotations.*;
 import org.campus.classroom.entity.Reservation;
+import org.campus.classroom.vo.BuildingPreferenceVO;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
 public interface ReservationMapper {
@@ -91,6 +91,43 @@ public interface ReservationMapper {
     @ResultMap("reservationResultMap")
     List<Reservation> selectAll();
 
+    @Select("""
+            SELECT c.building AS building, count(*) AS reservation_count
+            FROM reservation r
+            JOIN classroom c ON r.classroom_id = c.id
+            WHERE r.user_id = #{userId}
+            GROUP BY c.building
+            ORDER BY reservation_count DESC, c.building ASC
+            """)
+    @Results(id = "buildingPreferenceResultMap", value = {
+            @Result(column = "building", property = "building"),
+            @Result(column = "reservation_count", property = "reservationCount")
+    })
+    List<BuildingPreferenceVO> selectPreferredBuildingsByUserId(@Param("userId") Long userId);
+
+    @Select("""
+            <script>
+            SELECT *
+            FROM reservation
+            <where>
+                <if test="status != null and status != ''">
+                    AND status = #{status}
+                </if>
+                <if test="keyword != null and keyword != ''">
+                    AND (
+                        CAST(user_id AS CHAR) LIKE CONCAT('%', #{keyword}, '%')
+                        OR CAST(resource_id AS CHAR) LIKE CONCAT('%', #{keyword}, '%')
+                        OR reason LIKE CONCAT('%', #{keyword}, '%')
+                    )
+                </if>
+            </where>
+            ORDER BY create_time DESC, id DESC
+            </script>
+            """)
+    @ResultMap("reservationResultMap")
+    List<Reservation> selectAdminList(@Param("keyword") String keyword,
+                                      @Param("status") String status);
+
     @Update("""
             UPDATE reservation
             SET status = 'CANCELLED'
@@ -99,6 +136,14 @@ public interface ReservationMapper {
               AND end_time >= current_timestamp()
             """)
     int cancelReservation(@Param("id") Long id);
+
+    @Update("""
+            UPDATE reservation
+            SET status = 'CANCELLED'
+            WHERE id = #{id}
+              AND status = 'ACTIVE'
+            """)
+    int adminCancelReservation(@Param("id") Long id);
 
     @Update("""
             UPDATE reservation
@@ -227,4 +272,13 @@ public interface ReservationMapper {
     int countClassroomConflicts(@Param("classroomId") Long classroomId,
                                 @Param("startTime") LocalDateTime startTime,
                                 @Param("endTime") LocalDateTime endTime);
+
+    @Select("""
+            SELECT count(*)
+            FROM reservation
+            WHERE resource_type = 'SEAT'
+              AND resource_id = #{seatId}
+              AND status = 'ACTIVE'
+            """)
+    int countActiveReservationsBySeatId(Long seatId);
 }

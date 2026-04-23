@@ -48,7 +48,16 @@ public interface ClassroomMapper {
     @ResultMap("classroomResultMap")
     Classroom selectByBuildingAndNumber(@Param("building") String building, @Param("room_number") String roomNumber);
 
-    @Update("update classroom set status = #{status},remark = #{remark} where id = #{id}")
+    @Update("""
+            update classroom
+            set room_number = #{roomNumber},
+                building = #{building},
+                seat_rows = #{seatRows},
+                seat_cols = #{seatCols},
+                status = #{status},
+                remark = #{remark}
+            where id = #{id}
+            """)
     int updateById(Classroom classroom);
 
     @Delete("delete from classroom where id = #{id}")

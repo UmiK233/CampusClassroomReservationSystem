@@ -58,13 +58,4 @@ public class ReservationController {
         List<ReservationVO> reservationVOList = reservationService.listUserHistoryReservations(loginUser.getId());
         return Result.success("查询历史预约列表成功", reservationVOList);
     }
-
-    @GetMapping("/classrooms/{classroomId}/reserved_seats")
-    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')")
-    public Result<List<Long>> listReservedSeatIds(
-            @PathVariable Long classroomId,
-            @RequestParam("start_time") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
-            @RequestParam("end_time") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime) {
-        return Result.success("查询已预约座位成功", reservationService.listReservedSeatIds(classroomId, startTime, endTime));
-    }
 }

@@ -10,10 +10,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/seats")
+@RequestMapping("/admin/seats")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
-public class SeatController {
+public class AdminSeatController {
     private final SeatService seatService;
 
     @PutMapping("/{id}")
@@ -21,4 +21,11 @@ public class SeatController {
         seatService.update(id, request);
         return Result.success("座位信息更新成功",seatService.getSeatById(id));
     }
+
+    @DeleteMapping("/{id}")
+    public Result<Void> delete(@PathVariable @NotNull Long id) {
+        seatService.delete(id);
+        return Result.success("座位删除成功");
+    }
+
 }

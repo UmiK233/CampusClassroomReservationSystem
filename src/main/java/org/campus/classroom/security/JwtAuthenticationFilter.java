@@ -61,6 +61,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
             String username = jwtUtil.parseToken(token).get("username").toString();
 
+            //做用户存在/账号密码是否正确/状态校验
             UserDetails loginUser = jwtUserDetailsService.loadUserByUsername(username);
 
             UsernamePasswordAuthenticationToken authentication =

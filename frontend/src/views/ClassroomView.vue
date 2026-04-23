@@ -8,32 +8,28 @@ import { useAuthStore } from '../stores/auth'
 import { useReservationStore } from '../stores/reservation'
 import { buildingOptions } from '../config/buildings'
 import { formatDateTimeText } from '../utils/date'
-import { enabledStatusText } from '../utils/dict'
 
 const RESERVATION_TIME_KEY = 'campus_reservation_time'
+
+function getEmptyReservationTime() {
+  return {
+    date: todayText(),
+    startTime: '',
+    endTime: ''
+  }
+}
 
 function getSavedReservationTime() {
   try {
     const saved = JSON.parse(sessionStorage.getItem(RESERVATION_TIME_KEY) || 'null')
-    if (Array.isArray(saved) && saved.length === 2) {
-      const [start, end] = saved
-      return {
-        date: getDatePart(start),
-        startTime: getTimePart(start),
-        endTime: getTimePart(end)
-      }
+    if (!saved) return getEmptyReservationTime()
+    return {
+      date: saved.date || getDatePart(saved.start) || todayText(),
+      startTime: saved.startTime || getTimePart(saved.start) || '',
+      endTime: saved.endTime || getTimePart(saved.end) || ''
     }
-    return saved || getEmptyReservationTime()
   } catch {
     return getEmptyReservationTime()
-  }
-}
-
-function getEmptyReservationTime() {
-  return {
-    date: '',
-    startTime: '',
-    endTime: ''
   }
 }
 
@@ -45,91 +41,193 @@ function getTimePart(value) {
   return typeof value === 'string' ? value.slice(11, 19) : ''
 }
 
+function todayText() {
+  const date = new Date()
+  const pad = n => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+function currentClockTime() {
+  const date = new Date()
+  const pad = n => String(n).padStart(2, '0')
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+}
+
+function formatApiDateTime(date, time) {
+  return `${date}T${time}`
+}
+
 const authStore = useAuthStore()
 const reservationStore = useReservationStore()
 const { changeVersion } = storeToRefs(reservationStore)
 const user = computed(() => authStore.user)
+
 const loading = ref(false)
 const seatLoading = ref(false)
+const capacityLoading = ref(false)
+const viewMode = ref('card')
 const classrooms = ref([])
+const classroomCapacityMap = ref({})
 const selectedClassroom = ref(null)
 const layout = ref(null)
 const selectedSeat = ref(null)
 const reserveDialog = ref(false)
-const timeDialog = ref(false)
-const pendingClassroom = ref(null)
 const reserveType = ref('seat')
 const reservedSeatIds = ref(new Set())
+const buildingPreferenceCount = ref({})
+
 const reserveForm = ref({
   time: getSavedReservationTime(),
   reason: ''
 })
+
 const filters = ref({
-  building: '',
+  building: buildingOptions[0]?.value || '',
   min_capacity: 1
 })
+
+const datePickerOptions = {
+  disabledDate: date => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return date.getTime() < today.getTime()
+  }
+}
+
 const enabledClassrooms = computed(() => classrooms.value.filter(item => item.status === 'ENABLED').length)
 const totalCapacity = computed(() => classrooms.value.reduce((sum, item) => sum + (item.capacity || 0), 0))
-const pageActionLabel = computed(() => user.value?.role === 'TEACHER' ? '查看并预约教室' : '查看座位')
-const timeConfirmLabel = computed(() => user.value?.role === 'TEACHER' ? '确认并查看教室状态' : '确认并查看座位')
 const reservedSeatCount = computed(() => reservedSeatIds.value.size)
+const disabledSeatCount = computed(() => layout.value?.seatVOS?.filter(item => item.status === 'DISABLED').length || 0)
+const availableSeatCount = computed(() => Math.max((layout.value?.seatVOS?.length || 0) - reservedSeatCount.value - disabledSeatCount.value, 0))
+const capacityMetricLabel = computed(() => selectedClassroom.value && layout.value ? '剩余容量' : '总座位')
+const capacityMetricValue = computed(() => selectedClassroom.value && layout.value ? availableSeatCount.value : totalCapacity.value)
 const isClassroomUnavailableForTeacher = computed(() => user.value?.role === 'TEACHER' && reservedSeatCount.value > 0)
+const pageActionLabel = computed(() => user.value?.role === 'TEACHER' ? '查看并预约教室' : '查看座位')
+const startMinTime = computed(() => isSelectedDateToday() ? currentClockTime() : '')
 const selectedTimeLabel = computed(() => {
   if (!hasReservationTime()) return ''
   const { start, end } = getReservationDateTimes()
-  return `${formatDisplayDateTime(start)} 至 ${formatDisplayDateTime(end)}`
+  return `${formatDateTimeText(start)} 至 ${formatDateTimeText(end)}`
 })
 
+const orderedBuildingOptions = computed(() => {
+  return [...buildingOptions].sort((a, b) => {
+    const diff = (buildingPreferenceCount.value[b.value] || 0) - (buildingPreferenceCount.value[a.value] || 0)
+    if (diff !== 0) return diff
+    return buildingOptions.findIndex(item => item.value === a.value) - buildingOptions.findIndex(item => item.value === b.value)
+  })
+})
+
+const sortedClassrooms = computed(() => {
+  const buildingOrder = new Map(orderedBuildingOptions.value.map((item, index) => [item.value, index]))
+  return [...classrooms.value].sort((a, b) => {
+    const buildingDiff = (buildingOrder.get(a.building) ?? 999) - (buildingOrder.get(b.building) ?? 999)
+    if (buildingDiff !== 0) return buildingDiff
+    const remainingDiff = (getRoomRemainingCapacity(b) ?? -1) - (getRoomRemainingCapacity(a) ?? -1)
+    if (remainingDiff !== 0) return remainingDiff
+    return (b.capacity || 0) - (a.capacity || 0)
+  })
+})
+
+const preferredClassrooms = computed(() => sortedClassrooms.value.slice(0, 3))
+
+const viewModeOptions = [
+  { label: '卡片', value: 'card' },
+  { label: '列表', value: 'list' }
+]
+
+async function loadBuildingPreferences() {
+  try {
+    const counts = {}
+    const data = await classroomApi.preferredBuildings()
+    ;(data || []).forEach(item => {
+      const building = item.building
+      if (building) {
+        counts[building] = Number(item.reservationCount || 0)
+      }
+    })
+    buildingPreferenceCount.value = counts
+    const preferredBuilding = orderedBuildingOptions.value[0]?.value
+    if (preferredBuilding) {
+      filters.value.building = preferredBuilding
+    }
+  } catch {
+    filters.value.building = buildingOptions[0]?.value || ''
+  }
+}
+
 async function loadClassrooms() {
+  if (!canQueryAvailability()) {
+    ElMessage.warning('请先选择有效的预约时间')
+    return
+  }
   loading.value = true
   try {
-    classrooms.value = await classroomApi.available({
+    const data = await classroomApi.available({
       building: filters.value.building || undefined,
       min_capacity: filters.value.min_capacity || 1
     })
+    classrooms.value = data || []
+    await loadClassroomCapacityStats()
   } finally {
     loading.value = false
   }
 }
 
-async function openSeats(row) {
-  if (user.value?.role !== 'ADMIN') {
-    pendingClassroom.value = row
-    timeDialog.value = true
+async function loadClassroomCapacityStats() {
+  if (!canQueryAvailability()) {
+    classroomCapacityMap.value = {}
     return
   }
-  await loadSeatsForClassroom(row)
+
+  capacityLoading.value = true
+  try {
+    const entries = await Promise.all(classrooms.value.map(async room => {
+      try {
+        const stats = await getClassroomCapacityStats(room)
+        return [room.id, stats]
+      } catch {
+        return [room.id, { remaining: null, total: room.capacity || 0 }]
+      }
+    }))
+    classroomCapacityMap.value = Object.fromEntries(entries)
+  } finally {
+    capacityLoading.value = false
+  }
 }
 
-async function loadSeatsForClassroom(row) {
-  selectedClassroom.value = row
+async function getClassroomCapacityStats(room) {
+  const [seatLayout, reservedIds] = await Promise.all([
+    classroomApi.seats(room.id),
+    reservationApi.reservedSeats(room.id, getAvailabilityParams())
+  ])
+  const seats = seatLayout?.seatVOS || []
+  const disabled = seats.filter(item => item.status === 'DISABLED').length
+  const reserved = Array.isArray(reservedIds) ? reservedIds.length : 0
+  const total = seats.length || room.capacity || 0
+  return {
+    remaining: Math.max(total - disabled - reserved, 0),
+    total
+  }
+}
+
+async function openSeats(room) {
+  if (!canQueryAvailability()) {
+    ElMessage.warning('请先选择预约时间，再查看楼内教室和座位')
+    return
+  }
+  await loadSeatsForClassroom(room)
+}
+
+async function loadSeatsForClassroom(room) {
+  selectedClassroom.value = room
   selectedSeat.value = null
   seatLoading.value = true
   try {
-    layout.value = await classroomApi.seats(row.id)
-    if (hasReservationTime()) {
-      await loadReservedSeats()
-    } else {
-      reservedSeatIds.value = new Set()
-    }
+    layout.value = await classroomApi.seats(room.id)
+    await loadReservedSeats()
   } finally {
     seatLoading.value = false
-  }
-}
-
-async function confirmReservationTime() {
-  if (!hasReservationTime()) {
-    ElMessage.warning('请选择预约时间')
-    return
-  }
-  if (!isEndAfterStart()) {
-    ElMessage.warning('结束时间应晚于开始时间')
-    return
-  }
-  sessionStorage.setItem(RESERVATION_TIME_KEY, JSON.stringify(reserveForm.value.time))
-  timeDialog.value = false
-  if (pendingClassroom.value) {
-    await loadSeatsForClassroom(pendingClassroom.value)
   }
 }
 
@@ -159,16 +257,29 @@ function formatDateTime(value) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
 }
 
-function formatDisplayDateTime(value) {
-  return formatDateTimeText(value)
+function isSelectedDateToday() {
+  return reserveForm.value.time?.date === todayText()
 }
 
 function getReservationDateTimes() {
   const { date, startTime, endTime } = reserveForm.value.time || {}
   return {
-    start: `${date}T${startTime}`,
-    end: `${date}T${endTime}`
+    start: formatApiDateTime(date, startTime),
+    end: formatApiDateTime(date, endTime)
   }
+}
+
+function getAvailabilityParams() {
+  const { start, end } = getReservationDateTimes()
+  return {
+    start_time: formatDateTime(start),
+    end_time: formatDateTime(end)
+  }
+}
+
+function hasReservationTime() {
+  const time = reserveForm.value.time || {}
+  return Boolean(time.date && time.startTime && time.endTime)
 }
 
 function isEndAfterStart() {
@@ -177,13 +288,29 @@ function isEndAfterStart() {
   return new Date(end).getTime() > new Date(start).getTime()
 }
 
-async function submitReservation() {
-  if (!hasReservationTime()) {
-    ElMessage.warning('请选择预约时间')
-    return
+function isStartAfterNow() {
+  if (!hasReservationTime()) return false
+  const { start } = getReservationDateTimes()
+  return new Date(start).getTime() > Date.now()
+}
+
+function canQueryAvailability() {
+  return hasReservationTime() && isEndAfterStart() && isStartAfterNow()
+}
+
+function handleReservationTimeChange() {
+  selectedSeat.value = null
+  reservedSeatIds.value = new Set()
+  if (hasReservationTime()) {
+    sessionStorage.setItem(RESERVATION_TIME_KEY, JSON.stringify(reserveForm.value.time))
+  } else {
+    sessionStorage.removeItem(RESERVATION_TIME_KEY)
   }
-  if (!isEndAfterStart()) {
-    ElMessage.warning('结束时间应晚于开始时间')
+}
+
+async function submitReservation() {
+  if (!canQueryAvailability()) {
+    ElMessage.warning('请先选择有效的预约时间')
     return
   }
   const { start, end } = getReservationDateTimes()
@@ -207,59 +334,72 @@ async function submitReservation() {
   await loadReservedSeats()
 }
 
+async function loadReservedSeats() {
+  if (!selectedClassroom.value || !canQueryAvailability()) {
+    reservedSeatIds.value = new Set()
+    return
+  }
+
+  const data = await reservationApi.reservedSeats(selectedClassroom.value.id, getAvailabilityParams())
+  reservedSeatIds.value = new Set(data || [])
+  classroomCapacityMap.value = {
+    ...classroomCapacityMap.value,
+    [selectedClassroom.value.id]: {
+      remaining: availableSeatCount.value,
+      total: layout.value?.seatVOS?.length || selectedClassroom.value.capacity || 0
+    }
+  }
+
+  if (selectedSeat.value && reservedSeatIds.value.has(selectedSeat.value.id)) {
+    selectedSeat.value = null
+    ElMessage.warning('原座位在该时间段已被预约，请重新选择')
+  }
+}
+
 function isSeatReserved(seat) {
   return reservedSeatIds.value.has(seat.id)
 }
 
-function hasReservationTime() {
-  const time = reserveForm.value.time || {}
-  return Boolean(time.date && time.startTime && time.endTime)
-}
-
 function isSeatWaitingForTime() {
-  return user.value?.role === 'STUDENT' && !hasReservationTime()
+  return user.value?.role === 'STUDENT' && !canQueryAvailability()
 }
 
 function isSeatUnavailable(seat) {
   return seat.status === 'DISABLED' || isSeatReserved(seat) || isSeatWaitingForTime()
 }
 
-function handleReservationTimeChange(value) {
-  selectedSeat.value = null
-  if (value && hasReservationTime()) {
-    sessionStorage.setItem(RESERVATION_TIME_KEY, JSON.stringify(reserveForm.value.time))
-  } else {
-    sessionStorage.removeItem(RESERVATION_TIME_KEY)
-  }
+function getRoomRemainingCapacity(room) {
+  return classroomCapacityMap.value[room.id]?.remaining
 }
 
-async function loadReservedSeats() {
-  if (!selectedClassroom.value || !hasReservationTime()) {
-    reservedSeatIds.value = new Set()
-    return
-  }
-
-  const { start, end } = getReservationDateTimes()
-  const data = await reservationApi.reservedSeats(selectedClassroom.value.id, {
-    start_time: formatDateTime(start),
-    end_time: formatDateTime(end)
-  })
-  reservedSeatIds.value = new Set(data || [])
-  if (selectedSeat.value && reservedSeatIds.value.has(selectedSeat.value.id)) {
-    selectedSeat.value = null
-    ElMessage.warning('原座位在该时间段已被预约，请重新选择座位')
-  }
+function formatRoomRemainingCapacity(room) {
+  const remaining = getRoomRemainingCapacity(room)
+  if (capacityLoading.value) return '计算中'
+  return Number.isFinite(remaining) ? remaining : '--'
 }
 
 async function refreshReservationState() {
-  if (!selectedClassroom.value || !hasReservationTime()) return
+  if (!selectedClassroom.value || !canQueryAvailability()) return
   selectedSeat.value = null
   await loadReservedSeats()
 }
 
 watch(changeVersion, refreshReservationState)
 
-loadClassrooms()
+watch(
+  () => filters.value.building,
+  () => {
+    selectedClassroom.value = null
+    selectedSeat.value = null
+    layout.value = null
+  }
+)
+
+loadBuildingPreferences().then(() => {
+  if (canQueryAvailability()) {
+    loadClassrooms()
+  }
+})
 </script>
 
 <template>
@@ -273,8 +413,8 @@ loadClassrooms()
       <div class="metric-value">{{ enabledClassrooms }}</div>
     </div>
     <div class="metric">
-      <div class="metric-label">总容量</div>
-      <div class="metric-value">{{ totalCapacity }}</div>
+      <div class="metric-label">{{ capacityMetricLabel }}</div>
+      <div class="metric-value">{{ capacityMetricValue }}</div>
     </div>
     <div class="metric">
       <div class="metric-label">当前选择</div>
@@ -285,38 +425,109 @@ loadClassrooms()
   <div class="panel">
     <div class="toolbar">
       <div>
-        <strong>{{ user?.role === 'TEACHER' ? '按时间查找空教室' : '按时间查找座位' }}</strong>
-        <div class="hint">先筛选教学楼和容量，再选择教室确认预约时间</div>
+        <strong>{{ user?.role === 'TEACHER' ? '先选时间，再看可预约教室' : '先选时间，再看可预约座位' }}</strong>
+        <div class="hint">系统会默认选中你更常预约的教学楼，并按历史偏好优先展示楼内教室</div>
+      </div>
+      <el-segmented v-model="viewMode" :options="viewModeOptions" />
+    </div>
+
+    <div class="time-filter-card">
+      <div class="time-picker-grid">
+        <el-date-picker
+          v-model="reserveForm.time.date"
+          type="date"
+          placeholder="选择日期"
+          value-format="YYYY-MM-DD"
+          :disabled-date="datePickerOptions.disabledDate"
+          style="width: 100%"
+          @change="handleReservationTimeChange"
+        />
+        <el-time-select
+          v-model="reserveForm.time.startTime"
+          start="07:00"
+          step="00:30"
+          end="22:00"
+          :min-time="startMinTime"
+          :max-time="reserveForm.time.endTime"
+          placeholder="开始时间"
+          value-format="HH:mm:ss"
+          style="width: 100%"
+          @change="handleReservationTimeChange"
+        />
+        <el-time-select
+          v-model="reserveForm.time.endTime"
+          start="07:30"
+          step="00:30"
+          end="22:30"
+          :min-time="reserveForm.time.startTime"
+          placeholder="结束时间"
+          value-format="HH:mm:ss"
+          style="width: 100%"
+          @change="handleReservationTimeChange"
+        />
+      </div>
+      <div class="time-filter-footer">
+        <div>
+          <strong>当前时间段</strong>
+          <span>{{ selectedTimeLabel || '请先选择日期、开始时间和结束时间' }}</span>
+        </div>
+        <el-button type="primary" :icon="Search" :loading="loading" @click="loadClassrooms">查询可用教室</el-button>
+      </div>
+    </div>
+
+    <div class="toolbar section-toolbar">
+      <div>
+        <strong>教学楼筛选</strong>
+        <div class="hint">默认按你的历史预约偏好排序，并自动选中最常预约的教学楼</div>
       </div>
       <div class="form-row">
         <el-form-item label="教学楼">
-          <el-select v-model="filters.building" clearable filterable placeholder="全部教学楼" style="width: 180px">
+          <el-select v-model="filters.building" filterable placeholder="请选择教学楼" style="width: 180px">
             <el-option
-              v-for="building in buildingOptions"
+              v-for="building in orderedBuildingOptions"
               :key="building.value"
               :label="building.label"
               :value="building.value"
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="最低容量">
+        <el-form-item label="最低总座位">
           <el-input-number v-model="filters.min_capacity" :min="1" />
         </el-form-item>
-        <el-button type="primary" :icon="Search" :loading="loading" @click="loadClassrooms">查询</el-button>
+        <el-button type="primary" :icon="Search" :loading="loading" @click="loadClassrooms">刷新当前楼</el-button>
       </div>
     </div>
 
-    <div class="classroom-card-grid">
-      <article v-for="room in classrooms" :key="room.id" class="classroom-card" @click="openSeats(room)">
+    <section class="recommend-strip">
+      <div class="recommend-copy">
+        <strong>{{ user?.role === 'TEACHER' ? '优先推荐的可用教室' : '优先推荐的座位空间' }}</strong>
+        <span>
+          {{
+            canQueryAvailability()
+              ? '已带入当前预约时间，教室列表会优先展示你常用教学楼中剩余容量更高的教室。'
+              : '先完成时间选择，再查询楼内教室和座位占用情况。'
+          }}
+        </span>
+      </div>
+      <div class="recommend-list">
+        <button v-for="room in preferredClassrooms" :key="room.id" class="recommend-room" @click="openSeats(room)">
+          <strong>{{ room.building }} {{ room.roomNumber }}</strong>
+          <span>剩余容量 {{ formatRoomRemainingCapacity(room) }} | 总座位 {{ room.capacity }}</span>
+        </button>
+      </div>
+    </section>
+
+    <div v-if="viewMode === 'card'" v-loading="loading || capacityLoading" class="classroom-card-grid">
+      <article v-for="room in sortedClassrooms" :key="room.id" class="classroom-card" @click="openSeats(room)">
         <div class="classroom-card-head">
           <div>
             <strong>{{ room.building }}</strong>
             <span>{{ room.roomNumber }}</span>
           </div>
-          <el-tag :type="room.status === 'ENABLED' ? 'success' : 'danger'">{{ enabledStatusText(room.status) }}</el-tag>
         </div>
         <div class="classroom-card-meta">
-          <span>容量 {{ room.capacity }}</span>
+          <span>剩余容量 {{ formatRoomRemainingCapacity(room) }}</span>
+          <span>总座位 {{ room.capacity }}</span>
           <span>{{ room.seatRows }} 行 x {{ room.seatCols }} 列</span>
         </div>
         <p>{{ room.remark || '暂无备注' }}</p>
@@ -324,17 +535,17 @@ loadClassrooms()
       </article>
     </div>
 
-    <el-table :data="classrooms" v-loading="loading" height="310" @row-click="openSeats">
+    <el-table v-else :data="sortedClassrooms" v-loading="loading || capacityLoading" height="310" @row-click="openSeats">
       <el-table-column prop="building" label="教学楼" min-width="140" />
       <el-table-column prop="roomNumber" label="教室" width="120" />
-      <el-table-column prop="capacity" label="容量" width="100" />
-      <el-table-column prop="seatRows" label="行" width="80" />
-      <el-table-column prop="seatCols" label="列" width="80" />
-      <el-table-column prop="status" label="状态" width="110">
+      <el-table-column label="剩余容量" width="110">
         <template #default="{ row }">
-          <el-tag :type="row.status === 'ENABLED' ? 'success' : 'danger'">{{ enabledStatusText(row.status) }}</el-tag>
+          {{ formatRoomRemainingCapacity(row) }}
         </template>
       </el-table-column>
+      <el-table-column prop="capacity" label="总座位" width="100" />
+      <el-table-column prop="seatRows" label="行" width="80" />
+      <el-table-column prop="seatCols" label="列" width="80" />
       <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
       <el-table-column label="操作" width="150" fixed="right">
         <template #default="{ row }">
@@ -351,8 +562,8 @@ loadClassrooms()
         <div class="hint">
           {{
             user?.role === 'TEACHER'
-              ? selectedClassroom ? '按预约时间判断整间教室是否可预约' : '点击教室后先选择预约时间'
-              : selectedSeat ? `已选择座位 ${selectedSeat.seatNumber}` : selectedClassroom ? '已按预约时间标记不可用座位' : '点击教室后先选择预约时间'
+              ? selectedClassroom ? '系统会按当前时间段判断整间教室是否可预约。' : '先选择时间和教学楼，再查看具体教室。'
+              : selectedSeat ? `已选择座位 ${selectedSeat.seatNumber}` : selectedClassroom ? '已按当前预约时间标记不可用座位。' : '先选择时间和教学楼，再查看具体教室。'
           }}
         </div>
       </div>
@@ -361,7 +572,7 @@ loadClassrooms()
           v-if="user?.role === 'STUDENT'"
           type="primary"
           :icon="Calendar"
-          :disabled="!selectedSeat || !hasReservationTime()"
+          :disabled="!selectedSeat || !canQueryAvailability()"
           @click="openReserve('seat')"
         >
           预约座位
@@ -370,7 +581,7 @@ loadClassrooms()
           v-if="user?.role === 'TEACHER'"
           type="primary"
           :icon="Calendar"
-          :disabled="!selectedClassroom || !hasReservationTime() || isClassroomUnavailableForTeacher"
+          :disabled="!selectedClassroom || !canQueryAvailability() || isClassroomUnavailableForTeacher"
           @click="openReserve('classroom')"
         >
           预约教室
@@ -383,33 +594,52 @@ loadClassrooms()
         <span>当前预约时间</span>
         <strong>{{ selectedTimeLabel }}</strong>
       </div>
-      <el-button text type="primary" :icon="Calendar" @click="openSeats(selectedClassroom)">修改时间</el-button>
+    </div>
+
+    <div v-if="layout" class="seat-status-grid">
+      <div class="seat-status">
+        <span>剩余容量</span>
+        <strong>{{ availableSeatCount }}</strong>
+      </div>
+      <div class="seat-status">
+        <span>已预约</span>
+        <strong>{{ reservedSeatCount }}</strong>
+      </div>
+      <div class="seat-status">
+        <span>禁用</span>
+        <strong>{{ disabledSeatCount }}</strong>
+      </div>
+      <div class="seat-status">
+        <span>总座位</span>
+        <strong>{{ layout.seatVOS?.length || 0 }}</strong>
+      </div>
     </div>
 
     <div v-if="layout && user?.role !== 'TEACHER'" class="seat-legend">
       <span><i class="legend-dot available"></i>可选</span>
       <span><i class="legend-dot reserved"></i>已预约</span>
       <span><i class="legend-dot disabled"></i>禁用</span>
-      <span><i class="legend-dot selected"></i>已选择</span>
+      <span><i class="legend-dot selected"></i>已选中</span>
     </div>
 
-    <div v-if="!layout" class="empty-block">请选择一间教室并确认预约时间</div>
+    <div v-if="!layout" class="empty-block">请先选择时间、教学楼和教室</div>
     <div v-else-if="user?.role === 'TEACHER'" class="teacher-status-card" :class="{ blocked: isClassroomUnavailableForTeacher }">
       <div class="teacher-status-main">
         <el-tag :type="isClassroomUnavailableForTeacher ? 'danger' : 'success'">
-          {{ isClassroomUnavailableForTeacher ? '当前时间不可预约' : '当前时间可预约' }}
+          {{ isClassroomUnavailableForTeacher ? '当前时间不可整间预约' : '当前时间可预约' }}
         </el-tag>
         <h3>{{ selectedClassroom.building }} {{ selectedClassroom.roomNumber }}</h3>
         <p>
           {{
             isClassroomUnavailableForTeacher
-              ? `该时间段已有 ${reservedSeatCount} 个座位被预约，或整间教室已被占用，不能预约整间教室。`
+              ? `该时间段已有 ${reservedSeatCount} 个座位被预约，或整间教室存在冲突，不能提交整间教室预约。`
               : '该时间段未检测到座位或整间教室冲突，可以提交整间教室预约。'
           }}
         </p>
       </div>
       <div class="teacher-status-meta">
-        <span>容量 {{ selectedClassroom.capacity }}</span>
+        <span>剩余容量 {{ availableSeatCount }}</span>
+        <span>总座位 {{ selectedClassroom.capacity }}</span>
         <span>{{ selectedClassroom.seatRows }} 行 x {{ selectedClassroom.seatCols }} 列</span>
       </div>
     </div>
@@ -437,7 +667,7 @@ loadClassrooms()
     <el-form label-position="top">
       <el-alert
         :title="`预约时间：${selectedTimeLabel}`"
-        description="如需调整请关闭弹窗后点击“修改时间”。"
+        description="如需调整时间，请先关闭弹窗，到页面顶部重新选择时间并刷新教室列表。"
         type="info"
         :closable="false"
         class="dialog-alert"
@@ -449,50 +679,6 @@ loadClassrooms()
     <template #footer>
       <el-button @click="reserveDialog = false">取消</el-button>
       <el-button type="primary" @click="submitReservation">提交</el-button>
-    </template>
-  </el-dialog>
-
-  <el-dialog v-model="timeDialog" title="选择预约时间" width="520px" :close-on-click-modal="false">
-    <el-form label-position="top">
-      <el-form-item :label="pendingClassroom ? `${pendingClassroom.building} ${pendingClassroom.roomNumber}` : '预约教室'">
-        <div class="time-picker-grid">
-          <el-date-picker
-            v-model="reserveForm.time.date"
-            type="date"
-            placeholder="选择日期"
-            value-format="YYYY-MM-DD"
-            style="width: 100%"
-            @change="handleReservationTimeChange"
-          />
-          <el-time-select
-            v-model="reserveForm.time.startTime"
-            start="07:00"
-            step="00:30"
-            end="22:00"
-            :max-time="reserveForm.time.endTime"
-            placeholder="开始时间"
-            value-format="HH:mm:ss"
-            style="width: 100%"
-            @change="handleReservationTimeChange"
-          />
-          <el-time-select
-            v-model="reserveForm.time.endTime"
-            start="07:30"
-            step="00:30"
-            end="22:30"
-            :min-time="reserveForm.time.startTime"
-            placeholder="结束时间"
-            value-format="HH:mm:ss"
-            style="width: 100%"
-            @change="handleReservationTimeChange"
-          />
-        </div>
-      </el-form-item>
-      <div class="hint">{{ user?.role === 'TEACHER' ? '确认后会判断该教室在当前时间段是否可整间预约。' : '确认后会加载座位图，并自动标记该时间段已被预约的座位。' }}</div>
-    </el-form>
-    <template #footer>
-      <el-button @click="timeDialog = false">取消</el-button>
-      <el-button type="primary" @click="confirmReservationTime">{{ timeConfirmLabel }}</el-button>
     </template>
   </el-dialog>
 </template>
@@ -520,11 +706,96 @@ loadClassrooms()
   margin-bottom: 16px;
 }
 
+.time-filter-card {
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+}
+
 .time-picker-grid {
   width: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: 10px;
+}
+
+.time-filter-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.time-filter-footer strong,
+.time-filter-footer span {
+  display: block;
+}
+
+.time-filter-footer span {
+  margin-top: 4px;
+  color: #475467;
+  font-size: 13px;
+}
+
+.section-toolbar {
+  margin-bottom: 12px;
+}
+
+.recommend-strip {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.55fr) minmax(0, 1.45fr);
+  gap: 12px;
+  align-items: stretch;
+  margin-bottom: 16px;
+}
+
+.recommend-copy {
+  padding: 14px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+}
+
+.recommend-copy strong,
+.recommend-copy span {
+  display: block;
+}
+
+.recommend-copy span {
+  margin-top: 6px;
+  color: #475467;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.recommend-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.recommend-room {
+  padding: 14px;
+  border: 1px solid #e4e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #172033;
+  cursor: pointer;
+  text-align: left;
+}
+
+.recommend-room strong,
+.recommend-room span {
+  display: block;
+}
+
+.recommend-room span {
+  margin-top: 6px;
+  color: #667085;
+  font-size: 13px;
 }
 
 .classroom-card-grid {
@@ -552,12 +823,25 @@ loadClassrooms()
 .classroom-card-head {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 12px;
+}
+
+.classroom-card-head > div {
+  min-width: 0;
 }
 
 .classroom-card-head strong,
 .classroom-card-head span {
   display: block;
+}
+
+.classroom-card-head strong {
+  overflow: hidden;
+  color: #172033;
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .classroom-card-head span {
@@ -654,6 +938,37 @@ loadClassrooms()
   font-size: 15px;
 }
 
+.seat-status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.seat-status {
+  padding: 12px;
+  border: 1px solid #e4e8f0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.seat-status span,
+.seat-status strong {
+  display: block;
+}
+
+.seat-status span {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.seat-status strong {
+  margin-top: 6px;
+  color: #172033;
+  font-size: 22px;
+}
+
 .teacher-status-card {
   display: flex;
   align-items: center;
@@ -728,11 +1043,32 @@ loadClassrooms()
   .classroom-card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .recommend-strip,
+  .recommend-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .time-picker-grid,
+  .time-filter-footer {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .time-filter-footer {
+    align-items: stretch;
+  }
 }
 
 @media (max-width: 680px) {
   .classroom-card-grid {
     grid-template-columns: 1fr;
+  }
+
+  .seat-status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .time-picker-grid {

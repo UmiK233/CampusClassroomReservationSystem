@@ -12,7 +12,6 @@ import org.campus.classroom.service.AuthService;
 import org.campus.classroom.utils.JwtUtil;
 import org.campus.classroom.vo.LoginVO;
 import org.campus.classroom.vo.UserInfoVO;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -57,6 +56,11 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginVO login(LoginUser user) {
         log.info("[登录开始] userId={}, username={}", user.getId(), user.getUsername());
+/*
+//          已经被SpringSecurity接管
+//          ① 查用户 UserDetailsService
+//          ② 校验密码 PasswordEncoder
+//          ③ 状态校验 UserDetails 的属性
 //        // 1. 查用户
 //        User user = userMapper.selectByUsername(request.getUsername());
 //        if (user == null) {
@@ -70,6 +74,7 @@ public class AuthServiceImpl implements AuthService {
 //        if (!Objects.equals(user.getPassword(), request.getPassword())) {
 //            throw new BusinessException(401, "用户名或密码错误");
 //        }
+ */
         // 4. 生成 token
         String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
         // 5. 生成UserInfo
