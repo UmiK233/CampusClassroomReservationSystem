@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-import { clearAuth, getToken } from '../stores/auth'
+import pinia from '../stores'
+import { useAuthStore } from '../stores/auth'
 import router from '../router'
 
 const http = axios.create({
@@ -9,7 +10,8 @@ const http = axios.create({
 })
 
 http.interceptors.request.use(config => {
-  const token = getToken()
+  const authStore = useAuthStore(pinia)
+  const token = authStore.token
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -23,7 +25,8 @@ http.interceptors.response.use(
       const message = body.message || '请求失败'
       ElMessage.error(message)
       if (body.code === 401) {
-        clearAuth()
+        const authStore = useAuthStore(pinia)
+        authStore.clearAuth()
         router.replace('/login')
       }
       return Promise.reject(new Error(message))
@@ -34,7 +37,8 @@ http.interceptors.response.use(
     const status = error.response?.status
     const message = error.response?.data?.message || error.message || '网络请求失败'
     if (status === 401) {
-      clearAuth()
+      const authStore = useAuthStore(pinia)
+      authStore.clearAuth()
       router.replace('/login')
     }
     ElMessage.error(message)

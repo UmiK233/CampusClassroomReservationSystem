@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { getToken, getUser } from '../stores/auth'
+import pinia from '../stores'
+import { useAuthStore } from '../stores/auth'
 import LoginView from '../views/LoginView.vue'
 import DashboardView from '../views/DashboardView.vue'
 import ClassroomView from '../views/ClassroomView.vue'
@@ -21,13 +22,14 @@ const router = createRouter({
 })
 
 router.beforeEach(to => {
+  const authStore = useAuthStore(pinia)
   if (to.meta.public) {
     return true
   }
-  if (!getToken()) {
+  if (!authStore.token) {
     return '/login'
   }
-  const role = getUser()?.role
+  const role = authStore.role
   if (to.meta.role && role !== to.meta.role) {
     return '/classrooms'
   }

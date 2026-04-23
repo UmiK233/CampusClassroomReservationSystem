@@ -1,9 +1,11 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { ElMessage } from 'element-plus'
 import { Calendar, Grid, Search } from '@element-plus/icons-vue'
 import { classroomApi, reservationApi } from '../api'
-import { getUser } from '../stores/auth'
+import { useAuthStore } from '../stores/auth'
+import { useReservationStore } from '../stores/reservation'
 import { buildingOptions } from '../config/buildings'
 import { formatDateTimeText } from '../utils/date'
 import { enabledStatusText } from '../utils/dict'
@@ -12,13 +14,41 @@ const RESERVATION_TIME_KEY = 'campus_reservation_time'
 
 function getSavedReservationTime() {
   try {
-    return JSON.parse(sessionStorage.getItem(RESERVATION_TIME_KEY) || '[]')
+    const saved = JSON.parse(sessionStorage.getItem(RESERVATION_TIME_KEY) || 'null')
+    if (Array.isArray(saved) && saved.length === 2) {
+      const [start, end] = saved
+      return {
+        date: getDatePart(start),
+        startTime: getTimePart(start),
+        endTime: getTimePart(end)
+      }
+    }
+    return saved || getEmptyReservationTime()
   } catch {
-    return []
+    return getEmptyReservationTime()
   }
 }
 
-const user = computed(() => getUser())
+function getEmptyReservationTime() {
+  return {
+    date: '',
+    startTime: '',
+    endTime: ''
+  }
+}
+
+function getDatePart(value) {
+  return typeof value === 'string' ? value.slice(0, 10) : ''
+}
+
+function getTimePart(value) {
+  return typeof value === 'string' ? value.slice(11, 19) : ''
+}
+
+const authStore = useAuthStore()
+const reservationStore = useReservationStore()
+const { changeVersion } = storeToRefs(reservationStore)
+const user = computed(() => authStore.user)
 const loading = ref(false)
 const seatLoading = ref(false)
 const classrooms = ref([])
@@ -46,7 +76,7 @@ const reservedSeatCount = computed(() => reservedSeatIds.value.size)
 const isClassroomUnavailableForTeacher = computed(() => user.value?.role === 'TEACHER' && reservedSeatCount.value > 0)
 const selectedTimeLabel = computed(() => {
   if (!hasReservationTime()) return ''
-  const [start, end] = reserveForm.value.time
+  const { start, end } = getReservationDateTimes()
   return `${formatDisplayDateTime(start)} 至 ${formatDisplayDateTime(end)}`
 })
 
@@ -92,6 +122,10 @@ async function confirmReservationTime() {
     ElMessage.warning('请选择预约时间')
     return
   }
+  if (!isEndAfterStart()) {
+    ElMessage.warning('结束时间应晚于开始时间')
+    return
+  }
   sessionStorage.setItem(RESERVATION_TIME_KEY, JSON.stringify(reserveForm.value.time))
   timeDialog.value = false
   if (pendingClassroom.value) {
@@ -129,12 +163,30 @@ function formatDisplayDateTime(value) {
   return formatDateTimeText(value)
 }
 
+function getReservationDateTimes() {
+  const { date, startTime, endTime } = reserveForm.value.time || {}
+  return {
+    start: `${date}T${startTime}`,
+    end: `${date}T${endTime}`
+  }
+}
+
+function isEndAfterStart() {
+  if (!hasReservationTime()) return false
+  const { start, end } = getReservationDateTimes()
+  return new Date(end).getTime() > new Date(start).getTime()
+}
+
 async function submitReservation() {
-  if (!reserveForm.value.time?.length) {
+  if (!hasReservationTime()) {
     ElMessage.warning('请选择预约时间')
     return
   }
-  const [start, end] = reserveForm.value.time
+  if (!isEndAfterStart()) {
+    ElMessage.warning('结束时间应晚于开始时间')
+    return
+  }
+  const { start, end } = getReservationDateTimes()
   const payload = {
     start_time: formatDateTime(start),
     end_time: formatDateTime(end),
@@ -160,7 +212,8 @@ function isSeatReserved(seat) {
 }
 
 function hasReservationTime() {
-  return Array.isArray(reserveForm.value.time) && reserveForm.value.time.length === 2
+  const time = reserveForm.value.time || {}
+  return Boolean(time.date && time.startTime && time.endTime)
 }
 
 function isSeatWaitingForTime() {
@@ -173,8 +226,8 @@ function isSeatUnavailable(seat) {
 
 function handleReservationTimeChange(value) {
   selectedSeat.value = null
-  if (Array.isArray(value) && value.length === 2) {
-    sessionStorage.setItem(RESERVATION_TIME_KEY, JSON.stringify(value))
+  if (value && hasReservationTime()) {
+    sessionStorage.setItem(RESERVATION_TIME_KEY, JSON.stringify(reserveForm.value.time))
   } else {
     sessionStorage.removeItem(RESERVATION_TIME_KEY)
   }
@@ -186,7 +239,7 @@ async function loadReservedSeats() {
     return
   }
 
-  const [start, end] = reserveForm.value.time
+  const { start, end } = getReservationDateTimes()
   const data = await reservationApi.reservedSeats(selectedClassroom.value.id, {
     start_time: formatDateTime(start),
     end_time: formatDateTime(end)
@@ -204,13 +257,7 @@ async function refreshReservationState() {
   await loadReservedSeats()
 }
 
-onMounted(() => {
-  window.addEventListener('reservation-change', refreshReservationState)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('reservation-change', refreshReservationState)
-})
+watch(changeVersion, refreshReservationState)
 
 loadClassrooms()
 </script>
@@ -314,7 +361,7 @@ loadClassrooms()
           v-if="user?.role === 'STUDENT'"
           type="primary"
           :icon="Calendar"
-          :disabled="!selectedSeat || !reserveForm.time?.length"
+          :disabled="!selectedSeat || !hasReservationTime()"
           @click="openReserve('seat')"
         >
           预约座位
@@ -323,7 +370,7 @@ loadClassrooms()
           v-if="user?.role === 'TEACHER'"
           type="primary"
           :icon="Calendar"
-          :disabled="!selectedClassroom || !reserveForm.time?.length || isClassroomUnavailableForTeacher"
+          :disabled="!selectedClassroom || !hasReservationTime() || isClassroomUnavailableForTeacher"
           @click="openReserve('classroom')"
         >
           预约教室
@@ -408,15 +455,38 @@ loadClassrooms()
   <el-dialog v-model="timeDialog" title="选择预约时间" width="520px" :close-on-click-modal="false">
     <el-form label-position="top">
       <el-form-item :label="pendingClassroom ? `${pendingClassroom.building} ${pendingClassroom.roomNumber}` : '预约教室'">
-        <el-date-picker
-          v-model="reserveForm.time"
-          type="datetimerange"
-          start-placeholder="开始时间"
-          end-placeholder="结束时间"
-          value-format="YYYY-MM-DDTHH:mm:ss"
-          style="width: 100%"
-          @change="handleReservationTimeChange"
-        />
+        <div class="time-picker-grid">
+          <el-date-picker
+            v-model="reserveForm.time.date"
+            type="date"
+            placeholder="选择日期"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
+            @change="handleReservationTimeChange"
+          />
+          <el-time-select
+            v-model="reserveForm.time.startTime"
+            start="07:00"
+            step="00:30"
+            end="22:00"
+            :max-time="reserveForm.time.endTime"
+            placeholder="开始时间"
+            value-format="HH:mm:ss"
+            style="width: 100%"
+            @change="handleReservationTimeChange"
+          />
+          <el-time-select
+            v-model="reserveForm.time.endTime"
+            start="07:30"
+            step="00:30"
+            end="22:30"
+            :min-time="reserveForm.time.startTime"
+            placeholder="结束时间"
+            value-format="HH:mm:ss"
+            style="width: 100%"
+            @change="handleReservationTimeChange"
+          />
+        </div>
       </el-form-item>
       <div class="hint">{{ user?.role === 'TEACHER' ? '确认后会判断该教室在当前时间段是否可整间预约。' : '确认后会加载座位图，并自动标记该时间段已被预约的座位。' }}</div>
     </el-form>
@@ -448,6 +518,13 @@ loadClassrooms()
 
 .dialog-alert {
   margin-bottom: 16px;
+}
+
+.time-picker-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
 }
 
 .classroom-card-grid {
@@ -655,6 +732,10 @@ loadClassrooms()
 
 @media (max-width: 680px) {
   .classroom-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .time-picker-grid {
     grid-template-columns: 1fr;
   }
 }

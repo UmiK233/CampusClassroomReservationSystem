@@ -3,12 +3,13 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Calendar, DataBoard, OfficeBuilding, Plus, Tickets } from '@element-plus/icons-vue'
 import { classroomApi, reservationApi } from '../api'
-import { getUser } from '../stores/auth'
+import { useAuthStore } from '../stores/auth'
 import { formatDateTimeText } from '../utils/date'
 import { reservationStatusText, resourceTypeText } from '../utils/dict'
 
 const router = useRouter()
-const user = computed(() => getUser())
+const authStore = useAuthStore()
+const user = computed(() => authStore.user)
 const loading = ref(false)
 const classrooms = ref([])
 const activeReservations = ref([])

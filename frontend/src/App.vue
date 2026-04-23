@@ -1,32 +1,27 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { SwitchButton, UserFilled } from '@element-plus/icons-vue'
-import { clearAuth, getUser, setUser } from './stores/auth'
+import { useAuthStore } from './stores/auth'
 import { authApi } from './api'
 
 const router = useRouter()
 const route = useRoute()
-const user = ref(getUser())
-
-function syncUser() {
-  user.value = getUser()
-}
+const authStore = useAuthStore()
+const user = computed(() => authStore.user)
 
 async function refreshUser() {
   if (!user.value) return
   try {
     const data = await authApi.me()
-    setUser(data)
-    user.value = data
+    authStore.setUser(data)
   } catch {
-    clearAuth()
+    authStore.clearAuth()
   }
 }
 
 function logout() {
-  clearAuth()
-  user.value = null
+  authStore.clearAuth()
   router.replace('/login')
 }
 
@@ -45,11 +40,8 @@ const pageMeta = computed(() => {
 })
 
 onMounted(() => {
-  window.addEventListener('auth-change', syncUser)
   refreshUser()
 })
-
-onUnmounted(() => window.removeEventListener('auth-change', syncUser))
 </script>
 
 <template>

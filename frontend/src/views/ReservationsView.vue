@@ -3,9 +3,11 @@ import { computed, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Close, Refresh } from '@element-plus/icons-vue'
 import { reservationApi } from '../api'
+import { useReservationStore } from '../stores/reservation'
 import { formatDateTimeText } from '../utils/date'
 import { reservationStatusText, resourceTypeText } from '../utils/dict'
 
+const reservationStore = useReservationStore()
 const active = ref([])
 const history = ref([])
 const loading = ref(false)
@@ -29,7 +31,7 @@ async function loadData() {
 async function cancelReservation(row) {
   await ElMessageBox.confirm(`确认取消预约 ${row.resourceName}？`, '取消预约', { type: 'warning' })
   await reservationApi.cancel(row.id)
-  window.dispatchEvent(new CustomEvent('reservation-change'))
+  reservationStore.markChanged()
   ElMessage.success('已取消预约')
   loadData()
 }

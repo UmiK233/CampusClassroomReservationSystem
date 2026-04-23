@@ -4,9 +4,10 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Lock, Message, School, User } from '@element-plus/icons-vue'
 import { authApi } from '../api'
-import { setAuth } from '../stores/auth'
+import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const mode = ref('login')
 const loading = ref(false)
 const formRef = ref()
@@ -31,7 +32,7 @@ async function submit() {
         username: form.value.username,
         password: form.value.password
       })
-      setAuth(data.token, data.userInfo)
+      authStore.setAuth(data.token, data.userInfo)
       router.replace(data.userInfo?.role === 'ADMIN' ? '/admin' : '/dashboard')
       ElMessage.success('登录成功')
     } else {
