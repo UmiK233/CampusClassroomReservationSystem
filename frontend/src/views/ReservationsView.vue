@@ -4,7 +4,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Bell, Close, Refresh } from '@element-plus/icons-vue'
 import { notificationApi, reservationApi } from '../api'
 import { useReservationStore } from '../stores/reservation'
-import { formatDateTimeText } from '../utils/date'
+import { formatDateTimeText, parseUtcTime } from '../utils/date'
 import { notificationTypeText, reservationStatusText, resourceTypeText } from '../utils/dict'
 
 const reservationStore = useReservationStore()
@@ -55,8 +55,7 @@ async function markNotificationsRead() {
 }
 
 function getTime(value) {
-  if (!value) return 0
-  return new Date(String(value).replace('T', ' ')).getTime()
+  return parseUtcTime(value)
 }
 
 loadData()

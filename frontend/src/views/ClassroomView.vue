@@ -7,7 +7,7 @@ import { classroomApi, reservationApi } from '../api'
 import { useAuthStore } from '../stores/auth'
 import { useReservationStore } from '../stores/reservation'
 import { buildingOptions } from '../config/buildings'
-import { formatDateTimeText } from '../utils/date'
+import { formatLocalDateTimeText, toUtcIsoString } from '../utils/date'
 
 const RESERVATION_TIME_KEY = 'campus_reservation_time'
 
@@ -107,7 +107,7 @@ const startMinTime = computed(() => isSelectedDateToday() ? currentClockTime() :
 const selectedTimeLabel = computed(() => {
   if (!hasReservationTime()) return ''
   const { start, end } = getReservationDateTimes()
-  return `${formatDateTimeText(start)} 至 ${formatDateTimeText(end)}`
+  return `${formatLocalDateTimeText(start)} 至 ${formatLocalDateTimeText(end)}`
 })
 
 const orderedBuildingOptions = computed(() => {
@@ -250,13 +250,6 @@ function openReserve(type) {
   reserveDialog.value = true
 }
 
-function formatDateTime(value) {
-  if (!value) return ''
-  const date = new Date(value)
-  const pad = n => String(n).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
-}
-
 function isSelectedDateToday() {
   return reserveForm.value.time?.date === todayText()
 }
@@ -272,8 +265,8 @@ function getReservationDateTimes() {
 function getAvailabilityParams() {
   const { start, end } = getReservationDateTimes()
   return {
-    start_time: formatDateTime(start),
-    end_time: formatDateTime(end)
+    start_time: toUtcIsoString(start),
+    end_time: toUtcIsoString(end)
   }
 }
 
@@ -315,8 +308,8 @@ async function submitReservation() {
   }
   const { start, end } = getReservationDateTimes()
   const payload = {
-    start_time: formatDateTime(start),
-    end_time: formatDateTime(end),
+    start_time: toUtcIsoString(start),
+    end_time: toUtcIsoString(end),
     reason: reserveForm.value.reason
   }
   if (reserveType.value === 'seat') {

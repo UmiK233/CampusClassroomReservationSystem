@@ -17,7 +17,7 @@ import {
 } from "../api";
 import { useAuthStore } from "../stores/auth";
 import { buildingOptions } from "../config/buildings";
-import { formatDateTimeText } from "../utils/date";
+import { formatBeijingClock, formatBeijingDate, formatDateTimeText, parseUtcTime } from "../utils/date";
 import {
   enabledStatusText,
   notificationTypeText,
@@ -44,7 +44,7 @@ const roleName = computed(() => {
   return map[user.value?.role] || "用户";
 });
 const isAdmin = computed(() => user.value?.role === "ADMIN");
-const today = new Date().toISOString().slice(0, 10);
+const today = formatBeijingDate();
 const enabledClassrooms = computed(
   () => classrooms.value.filter((item) => item.status === "ENABLED").length
 );
@@ -153,12 +153,11 @@ async function markNotificationsRead() {
 }
 
 function getTime(value) {
-  if (!value) return 0;
-  return new Date(String(value).replace("T", " ")).getTime();
+  return parseUtcTime(value);
 }
 
 function isSameDay(value, day) {
-  return String(value || "").slice(0, 10) === day;
+  return formatBeijingDate(value) === day;
 }
 
 function goPrimaryAction() {
@@ -486,7 +485,7 @@ loadData();
           :key="item.id"
           class="timeline-item"
         >
-          <span>{{ String(item.startTime).slice(11, 16) }}</span>
+          <span>{{ formatBeijingClock(item.startTime) }}</span>
           <div>
             <strong>{{ item.resourceName }}</strong>
             <p>
