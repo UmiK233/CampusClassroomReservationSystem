@@ -30,6 +30,7 @@ export const reservationApi = {
 }
 
 export const adminApi = {
+  analytics: params => http.get('/admin/analytics', { params }),
   classrooms: params => http.get('/admin/classrooms/list', { params }),
   createClassroom: data => http.post('/admin/classrooms', data),
   updateClassroom: (id, data) => http.put(`/admin/classrooms/${id}`, data),

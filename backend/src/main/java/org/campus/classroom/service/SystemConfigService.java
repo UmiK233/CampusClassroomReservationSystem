@@ -2,6 +2,7 @@ package org.campus.classroom.service;
 
 import org.campus.classroom.vo.SystemConfigVO;
 
+import java.time.LocalTime;
 import java.util.List;
 
 public interface SystemConfigService {
@@ -22,4 +23,8 @@ public interface SystemConfigService {
     int getNoShowDeductionScore();
 
     int getSeatReservationAdvanceHours(Integer creditScore);
+
+    LocalTime getReservationStartTime();
+
+    LocalTime getReservationEndTime();
 }

@@ -10,6 +10,7 @@ import {
   Refresh,
   Search
 } from '@element-plus/icons-vue'
+import AdminAnalyticsPanel from '../components/AdminAnalyticsPanel.vue'
 import { adminApi, classroomApi } from '../api'
 import { buildingOptions } from '../config/buildings'
 import {
@@ -330,10 +331,6 @@ async function saveConfig(row) {
   }
 }
 
-function resetConfigEditValue(row) {
-  row.editValue = row.configValue
-}
-
 function configCategoryText(category) {
   return configCategoryOptions.find(item => item.value === category)?.label || category || '-'
 }
@@ -378,6 +375,10 @@ loadClassrooms()
 
   <div class="panel">
     <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+      <el-tab-pane label="统计分析" name="analytics">
+        <AdminAnalyticsPanel />
+      </el-tab-pane>
+
       <el-tab-pane label="教室与座位" name="classrooms">
         <div class="toolbar admin-toolbar">
           <div>
@@ -651,7 +652,6 @@ loadClassrooms()
                 >
                   保存
                 </el-button>
-                <el-button size="small" @click="resetConfigEditValue(row)">重置</el-button>
               </div>
               <span v-else>-</span>
             </template>

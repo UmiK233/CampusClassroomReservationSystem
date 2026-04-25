@@ -1,5 +1,6 @@
 package org.campus.classroom.service;
 
+import org.campus.classroom.vo.AdminAnalyticsVO;
 import org.campus.classroom.vo.AdminReservationVO;
 import org.campus.classroom.vo.AdminUserVO;
 
@@ -13,4 +14,6 @@ public interface AdminService {
     List<AdminReservationVO> listReservations(String keyword, String status);
 
     void cancelReservation(Long adminUserId, Long reservationId, String reason);
+
+    AdminAnalyticsVO getAnalytics(Integer days);
 }

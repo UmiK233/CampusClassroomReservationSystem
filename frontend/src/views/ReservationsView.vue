@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { Bell, CircleCheck, Close, Refresh } from '@element-plus/icons-vue'
 import { authApi, notificationApi, reservationApi } from '../api'
 import { useAuthStore } from '../stores/auth'
@@ -15,6 +15,9 @@ const history = ref([])
 const notifications = ref([])
 const unreadCount = ref(0)
 const loading = ref(false)
+const cancelDialogVisible = ref(false)
+const canceling = ref(false)
+const pendingCancelReservation = ref(null)
 
 const sortedActive = computed(() => [...active.value].sort((a, b) => getTime(a.startTime) - getTime(b.startTime)))
 const currentReservations = computed(() => sortedActive.value.filter(item => getTime(item.startTime) <= Date.now() && getTime(item.endTime) >= Date.now()))
@@ -41,12 +44,36 @@ async function loadData() {
   }
 }
 
-async function cancelReservation(row) {
-  await ElMessageBox.confirm(`确认取消预约 ${row.resourceName}？`, '取消预约', { type: 'warning' })
-  await reservationApi.cancel(row.id)
-  reservationStore.markChanged()
-  ElMessage.success('预约已取消')
-  await loadData()
+function openCancelDialog(row) {
+  pendingCancelReservation.value = row
+  cancelDialogVisible.value = true
+}
+
+function closeCancelDialog() {
+  cancelDialogVisible.value = false
+  pendingCancelReservation.value = null
+}
+
+async function confirmCancelReservation() {
+  if (!pendingCancelReservation.value) return
+
+  canceling.value = true
+  const reservation = pendingCancelReservation.value
+
+  try {
+    await reservationApi.cancel(reservation.id)
+    reservationStore.markChanged()
+    ElMessage.success('预约已取消')
+    closeCancelDialog()
+    await loadData()
+  } finally {
+    canceling.value = false
+  }
+}
+
+function reservationPeriodText(row) {
+  if (!row) return ''
+  return `${formatDateTimeText(row.startTime)} - ${formatDateTimeText(row.endTime)}`
 }
 
 async function checkInReservation(row) {
@@ -131,7 +158,7 @@ onMounted(() => {
           >
             签到
           </el-button>
-          <el-button type="danger" plain :icon="Close" @click="cancelReservation(nextReservation)">取消预约</el-button>
+          <el-button type="danger" plain :icon="Close" @click="openCancelDialog(nextReservation)">取消预约</el-button>
         </div>
       </div>
       <el-empty v-else description="暂无有效预约" />
@@ -184,7 +211,7 @@ onMounted(() => {
             >
               签到
             </el-button>
-            <el-button type="danger" size="small" :icon="Close" @click="cancelReservation(item)">取消</el-button>
+            <el-button type="danger" size="small" :icon="Close" @click="openCancelDialog(item)">取消</el-button>
           </div>
         </div>
         <h3>{{ item.resourceName }}</h3>
@@ -227,6 +254,26 @@ onMounted(() => {
       <el-table-column prop="reason" label="原因" min-width="150" show-overflow-tooltip />
     </el-table>
   </div>
+
+  <el-dialog
+    v-model="cancelDialogVisible"
+    title="取消预约"
+    width="460px"
+    @closed="closeCancelDialog"
+  >
+    <div class="cancel-dialog-body">
+      <p class="cancel-dialog-text">确认取消当前预约？取消后需要重新抢占该时段资源。</p>
+      <div v-if="pendingCancelReservation" class="cancel-dialog-card">
+        <strong>{{ pendingCancelReservation.resourceName }}</strong>
+        <span>{{ resourceTypeText(pendingCancelReservation.resourceType) }}</span>
+        <span>{{ reservationPeriodText(pendingCancelReservation) }}</span>
+      </div>
+    </div>
+    <template #footer>
+      <el-button :disabled="canceling" @click="closeCancelDialog">返回</el-button>
+      <el-button type="danger" :loading="canceling" @click="confirmCancelReservation">确认取消</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <style scoped>
@@ -365,6 +412,35 @@ onMounted(() => {
 
 .hint {
   margin-top: 4px;
+  color: #667085;
+  font-size: 13px;
+}
+
+.cancel-dialog-body {
+  display: grid;
+  gap: 12px;
+}
+
+.cancel-dialog-text {
+  margin: 0;
+  color: #475467;
+  line-height: 1.6;
+}
+
+.cancel-dialog-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fff7f7;
+}
+
+.cancel-dialog-card strong {
+  color: #172033;
+}
+
+.cancel-dialog-card span {
   color: #667085;
   font-size: 13px;
 }

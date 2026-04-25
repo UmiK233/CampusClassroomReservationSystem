@@ -1,6 +1,11 @@
 # Help / generated docs
 HELP.md
 
+# Start script
+node_modules/
+package.json
+package-lock.json
+
 # Local IDE files
 .idea/
 .vscode/

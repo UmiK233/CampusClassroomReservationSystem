@@ -36,6 +36,8 @@ public class SystemConfigServiceImpl implements SystemConfigService {
     private static final String CREDIT_LEVEL_A_ADVANCE_HOURS = "credit.level_a_advance_hours";
     private static final String CREDIT_LEVEL_B_ADVANCE_HOURS = "credit.level_b_advance_hours";
     private static final String CREDIT_LEVEL_C_ADVANCE_HOURS = "credit.level_c_advance_hours";
+    private static final String UI_RESERVATION_START_TIME = "ui.reservation_start_time";
+    private static final String UI_RESERVATION_END_TIME = "ui.reservation_end_time";
 
     private final SystemConfigMapper systemConfigMapper;
 
@@ -119,8 +121,32 @@ public class SystemConfigServiceImpl implements SystemConfigService {
         return levelCAdvanceHours;
     }
 
+    @Override
+    public LocalTime getReservationStartTime() {
+        return getTimeConfig(UI_RESERVATION_START_TIME, LocalTime.of(7, 0));
+    }
+
+    @Override
+    public LocalTime getReservationEndTime() {
+        return getTimeConfig(UI_RESERVATION_END_TIME, LocalTime.of(22, 30));
+    }
+
     private int getIntConfig(String key, int defaultValue) {
         return getIntValue(systemConfigMapper.selectByKey(key), defaultValue, key);
+    }
+
+    private LocalTime getTimeConfig(String key, LocalTime defaultValue) {
+        SystemConfig config = systemConfigMapper.selectByKey(key);
+        if (config == null || !StringUtils.hasText(config.getConfigValue())) {
+            return defaultValue;
+        }
+        try {
+            return LocalTime.parse(config.getConfigValue().trim());
+        } catch (Exception ex) {
+            log.warn("[系统配置读取失败] configKey={}, configValue={}, 使用默认值={}",
+                    key, config.getConfigValue(), defaultValue);
+            return defaultValue;
+        }
     }
 
     private int getIntValue(SystemConfig config, int defaultValue, String key) {

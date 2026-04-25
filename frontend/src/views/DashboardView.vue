@@ -16,7 +16,6 @@ import {
   reservationApi,
 } from "../api";
 import { useAuthStore } from "../stores/auth";
-import { buildingOptions } from "../config/buildings";
 import { formatBeijingClock, formatBeijingDate, formatDateTimeText, parseUtcTime } from "../utils/date";
 import {
   enabledStatusText,
@@ -108,20 +107,12 @@ function getClassroomTask() {
     return classroomApi.available({ min_capacity: 1 });
   }
 
-  return Promise.all(
-    buildingOptions.flatMap((building) => [
-      adminApi.classrooms({
-        building: building.value,
-        min_capacity: 1,
-        status: "ENABLED",
-      }),
-      adminApi.classrooms({
-        building: building.value,
-        min_capacity: 1,
-        status: "DISABLED",
-      }),
-    ])
-  ).then((results) => results.flatMap((item) => item || []));
+  return adminApi.analytics().then((analytics) =>
+    (analytics?.classroomUtilizationList || []).map((item) => ({
+      ...item,
+      id: item.classroomId,
+    }))
+  );
 }
 
 async function loadPrimaryData() {
@@ -482,8 +473,11 @@ onMounted(() => {
           <div>
             <strong>{{ room.building }} {{ room.roomNumber }}</strong>
             <span
-              >总容量 {{ room.capacity }} | {{ room.seatRows }} 行 x
-              {{ room.seatCols }} 列</span
+              >{{
+                isAdmin
+                  ? `总容量 ${room.capacity} | 利用率 ${Number(room.utilizationRate || 0).toFixed(1)}%`
+                  : `总容量 ${room.capacity} | ${room.seatRows} 行 x ${room.seatCols} 列`
+              }}</span
             >
           </div>
           <el-tag :type="room.status === 'ENABLED' ? 'success' : 'danger'">{{
