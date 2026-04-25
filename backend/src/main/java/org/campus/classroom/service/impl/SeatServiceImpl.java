@@ -36,7 +36,7 @@ public class SeatServiceImpl implements SeatService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void initSeats(Long classroomId) {
-        log.info("[座位初始化开始] classroomId={}", classroomId);
+        log.info("[开始初始化座位] 教室ID={}", classroomId);
         Classroom classroom = validateClassroom(classroomId);
 
         List<Seat> existingSeats = seatMapper.selectByClassroomId(classroomId);
@@ -62,7 +62,7 @@ public class SeatServiceImpl implements SeatService {
             }
         }
 
-        log.info("[座位初始化完成] classroomId={}, existingSeatCount={}, createdSeatCount={}, targetSeatCount={}",
+        log.info("[座位初始化完成] 教室ID={}, 已有座位数={}, 新增座位数={}, 目标座位数={}",
                 classroomId, existingSeats.size(), createdCount, classroom.getSeatRows() * classroom.getSeatCols());
     }
 
@@ -203,7 +203,7 @@ public class SeatServiceImpl implements SeatService {
     private void validateStatus(String status) {
         if (!SeatStatus.ENABLED.name().equals(status)
                 && !SeatStatus.DISABLED.name().equals(status)) {
-            throw new BusinessException(ResultCode.BAD_REQUEST, "状态只能是 ENABLED 或 DISABLED");
+            throw new BusinessException(ResultCode.BAD_REQUEST, "状态只能是启用或禁用");
         }
     }
 

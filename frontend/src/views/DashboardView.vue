@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import {
   Calendar,
@@ -103,44 +103,65 @@ const buildingStats = computed(() => {
     .slice(0, 5);
 });
 
+function getClassroomTask() {
+  if (!isAdmin.value) {
+    return classroomApi.available({ min_capacity: 1 });
+  }
+
+  return Promise.all(
+    buildingOptions.flatMap((building) => [
+      adminApi.classrooms({
+        building: building.value,
+        min_capacity: 1,
+        status: "ENABLED",
+      }),
+      adminApi.classrooms({
+        building: building.value,
+        min_capacity: 1,
+        status: "DISABLED",
+      }),
+    ])
+  ).then((results) => results.flatMap((item) => item || []));
+}
+
+async function loadPrimaryData() {
+  const [classroomList, activeList, unread] = await Promise.all([
+    getClassroomTask(),
+    !isAdmin.value ? reservationApi.list() : Promise.resolve([]),
+    !isAdmin.value ? notificationApi.unreadCount() : Promise.resolve({ count: 0 }),
+  ]);
+
+  classrooms.value = classroomList || [];
+  activeReservations.value = activeList || [];
+  unreadCount.value = unread?.count || 0;
+}
+
+async function loadSecondaryData() {
+  if (isAdmin.value) {
+    return;
+  }
+
+  try {
+    const [historyList, notificationList] = await Promise.all([
+      reservationApi.history(),
+      notificationApi.list({ limit: 4 }),
+    ]);
+    historyReservations.value = historyList || [];
+    notifications.value = notificationList || [];
+  } catch {
+    // Keep the dashboard interactive even if secondary data loads fail.
+  }
+}
+
 async function loadData() {
   loading.value = true;
   try {
-    const classroomTask = isAdmin.value
-      ? Promise.all(
-          buildingOptions.flatMap((building) => [
-            adminApi.classrooms({
-              building: building.value,
-              min_capacity: 1,
-              status: "ENABLED",
-            }),
-            adminApi.classrooms({
-              building: building.value,
-              min_capacity: 1,
-              status: "DISABLED",
-            }),
-          ])
-        ).then((results) => results.flatMap((item) => item || []))
-      : classroomApi.available({ min_capacity: 1 });
-    const tasks = [
-      classroomTask,
-      !isAdmin.value ? reservationApi.list() : Promise.resolve([]),
-      !isAdmin.value ? reservationApi.history() : Promise.resolve([]),
-      !isAdmin.value ? notificationApi.list({ limit: 4 }) : Promise.resolve([]),
-      !isAdmin.value
-        ? notificationApi.unreadCount()
-        : Promise.resolve({ count: 0 }),
-    ];
-    const [classroomList, activeList, historyList, notificationList, unread] =
-      await Promise.all(tasks);
-    classrooms.value = classroomList || [];
-    activeReservations.value = activeList || [];
-    historyReservations.value = historyList || [];
-    notifications.value = notificationList || [];
-    unreadCount.value = unread?.count || 0;
+    await loadPrimaryData();
   } finally {
     loading.value = false;
   }
+
+  void loadSecondaryData();
 }
 
 async function markNotificationsRead() {
@@ -164,14 +185,16 @@ function goPrimaryAction() {
   router.push(isAdmin.value ? "/admin" : "/classrooms");
 }
 
-loadData();
+onMounted(() => {
+  void loadData();
+});
 </script>
 
 <template>
   <div v-loading="loading" class="dashboard">
     <section class="workbench-hero">
       <div>
-        <div class="hero-kicker">{{ roleName }} | Campus Reserve</div>
+        <div class="hero-kicker">{{ roleName }} | 校园预约平台</div>
         <h2>
           {{
             isAdmin
@@ -185,6 +208,8 @@ loadData();
           {{
             isAdmin
               ? "查看资源规模、启用状态和维护入口。"
+              : user?.role === "STUDENT"
+              ? "查看当前安排、最近通知和常用预约入口。系统会结合近期使用情况动态调整后续预约范围。"
               : "查看当前安排、最近通知和常用预约入口。"
           }}
         </p>

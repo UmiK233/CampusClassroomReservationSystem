@@ -35,7 +35,7 @@ public class ClassroomServiceImpl implements ClassroomService {
     @Transactional
     @Override
     public Long create(ClassroomCreateDTO request) {
-        log.info("[教室创建开始] building={}, roomNumber={}, seatRows={}, seatCols={}",
+        log.info("[开始创建教室] 教学楼={}, 教室号={}, 座位行数={}, 座位列数={}",
                 request.getBuilding(), request.getRoomNumber(), request.getSeatRows(), request.getSeatCols());
         Classroom existing = classroomMapper.selectByBuildingAndNumber(request.getBuilding().trim(), request.getRoomNumber().trim());
         if (existing != null) {
@@ -162,7 +162,7 @@ public class ClassroomServiceImpl implements ClassroomService {
     private void validateStatus(String status) {
         if (!ClassroomStatus.ENABLED.name().equals(status)
                 && !ClassroomStatus.DISABLED.name().equals(status)) {
-            throw new BusinessException(ResultCode.BAD_REQUEST, "状态只能是 ENABLED 或 DISABLED");
+            throw new BusinessException(ResultCode.BAD_REQUEST, "状态只能是启用或禁用");
         }
     }
 

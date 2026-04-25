@@ -40,6 +40,10 @@ const reservations = ref([])
 const reservationDialog = ref(false)
 const editingReservation = ref(null)
 
+const configs = ref([])
+const configCategory = ref('')
+const savingConfigKey = ref('')
+
 const classroomFilters = ref({
   building: buildingOptions[0]?.value || '',
   min_capacity: 1,
@@ -86,6 +90,14 @@ const userForm = ref({
 const reservationForm = ref({
   reason: ''
 })
+
+const configCategoryOptions = [
+  { label: '全部分类', value: '' },
+  { label: '预约规则', value: 'RESERVATION' },
+  { label: '签到规则', value: 'ATTENDANCE' },
+  { label: '信誉规则', value: 'CREDIT' },
+  { label: '前端展示', value: 'UI' }
+]
 
 const generatedSeatNumber = computed(() => `${createSeatForm.value.rowNumber}-${createSeatForm.value.colNumber}`)
 const enabledClassrooms = computed(() => classrooms.value.filter(item => item.status === 'ENABLED').length)
@@ -139,6 +151,21 @@ async function loadReservations() {
   }
 }
 
+async function loadConfigs() {
+  loading.value = true
+  try {
+    const data = await adminApi.configs({
+      category: configCategory.value || undefined
+    })
+    configs.value = (data || []).map(item => ({
+      ...item,
+      editValue: item.configValue
+    }))
+  } finally {
+    loading.value = false
+  }
+}
+
 function openCreate() {
   classroomForm.value = {
     roomNumber: '',
@@ -186,7 +213,9 @@ async function saveClassroom() {
 }
 
 async function initSeats(row) {
-  await ElMessageBox.confirm(`确认初始化 ${row.building} ${row.roomNumber} 的座位布局？`, '初始化座位', { type: 'warning' })
+  await ElMessageBox.confirm(`确认初始化 ${row.building} ${row.roomNumber} 的座位布局吗？`, '初始化座位', {
+    type: 'warning'
+  })
   await adminApi.initSeats(row.id)
   ElMessage.success('座位布局已初始化')
   await loadSeats(row)
@@ -232,7 +261,9 @@ async function saveCreatedSeat() {
 
 async function deleteSeat() {
   if (!editingSeat.value) return
-  await ElMessageBox.confirm(`确认删除座位 ${editingSeat.value.seatNumber}？`, '删除座位', { type: 'warning' })
+  await ElMessageBox.confirm(`确认删除座位 ${editingSeat.value.seatNumber} 吗？`, '删除座位', {
+    type: 'warning'
+  })
   await adminApi.deleteSeat(editingSeat.value.id)
   ElMessage.success('座位已删除')
   seatDialog.value = false
@@ -284,6 +315,29 @@ async function cancelReservation() {
   await loadReservations()
 }
 
+async function saveConfig(row) {
+  if (!row?.configKey || row.editable !== 1) return
+  savingConfigKey.value = row.configKey
+  try {
+    const data = await adminApi.updateConfig(row.configKey, {
+      configValue: row.editValue
+    })
+    row.configValue = data.configValue
+    row.editValue = data.configValue
+    ElMessage.success('规则配置已更新')
+  } finally {
+    savingConfigKey.value = ''
+  }
+}
+
+function resetConfigEditValue(row) {
+  row.editValue = row.configValue
+}
+
+function configCategoryText(category) {
+  return configCategoryOptions.find(item => item.value === category)?.label || category || '-'
+}
+
 function handleTabChange(tab) {
   if (tab === 'classrooms' && classrooms.value.length === 0) {
     loadClassrooms()
@@ -293,6 +347,9 @@ function handleTabChange(tab) {
   }
   if (tab === 'reservations' && reservations.value.length === 0) {
     loadReservations()
+  }
+  if (tab === 'configs' && configs.value.length === 0) {
+    loadConfigs()
   }
 }
 
@@ -325,7 +382,7 @@ loadClassrooms()
         <div class="toolbar admin-toolbar">
           <div>
             <strong>教室资源管理</strong>
-            <div class="hint">维护教室状态、座位布局和单座位可用性</div>
+            <div class="hint">维护教室状态、座位布局和单个座位可用性。</div>
           </div>
           <div class="form-row">
             <el-select v-model="classroomFilters.building" filterable placeholder="教学楼" style="width: 160px">
@@ -359,7 +416,9 @@ loadClassrooms()
               <el-table-column prop="capacity" label="容量" width="90" />
               <el-table-column prop="status" label="状态" width="110">
                 <template #default="{ row }">
-                  <el-tag :type="row.status === 'ENABLED' ? 'success' : 'danger'">{{ enabledStatusText(row.status) }}</el-tag>
+                  <el-tag :type="row.status === 'ENABLED' ? 'success' : 'danger'">
+                    {{ enabledStatusText(row.status) }}
+                  </el-tag>
                 </template>
               </el-table-column>
               <el-table-column prop="remark" label="备注" min-width="140" show-overflow-tooltip />
@@ -376,7 +435,7 @@ loadClassrooms()
             <div class="toolbar">
               <div>
                 <strong>{{ selected ? `${selected.building} ${selected.roomNumber}` : '座位维护' }}</strong>
-                <div class="hint">点击座位修改状态，支持整间教室批量启用或禁用</div>
+                <div class="hint">点击座位可修改状态，支持整间教室批量启用或禁用。</div>
               </div>
               <div class="form-row">
                 <el-button :disabled="!selected" type="primary" plain :icon="Plus" @click="openCreateSeat">新增座位</el-button>
@@ -384,6 +443,7 @@ loadClassrooms()
                 <el-button :disabled="!selected" :icon="CircleClose" @click="batchDisable('DISABLED')">全部禁用</el-button>
               </div>
             </div>
+
             <div v-if="layout" class="seat-admin-summary">
               <div>
                 <span>启用座位</span>
@@ -398,6 +458,7 @@ loadClassrooms()
                 <strong>{{ layout.seatVOS.length }}</strong>
               </div>
             </div>
+
             <el-empty v-if="!layout" description="请选择左侧教室查看座位布局" />
             <div
               v-else
@@ -423,7 +484,7 @@ loadClassrooms()
         <div class="toolbar admin-toolbar">
           <div>
             <strong>用户管理</strong>
-            <div class="hint">管理员可按角色和状态筛选用户，并执行封禁或恢复</div>
+            <div class="hint">按角色和状态筛选用户，并执行封禁或恢复。</div>
           </div>
           <div class="form-row">
             <el-input v-model="userFilters.keyword" placeholder="用户名 / 昵称 / 邮箱" clearable style="width: 220px" />
@@ -454,7 +515,9 @@ loadClassrooms()
           </el-table-column>
           <el-table-column prop="status" label="状态" width="110">
             <template #default="{ row }">
-              <el-tag :type="row.status === 1 ? 'success' : 'danger'">{{ userStatusText(row.status) }}</el-tag>
+              <el-tag :type="row.status === 1 ? 'success' : 'danger'">
+                {{ userStatusText(row.status) }}
+              </el-tag>
             </template>
           </el-table-column>
           <el-table-column label="创建时间" min-width="180">
@@ -474,7 +537,7 @@ loadClassrooms()
         <div class="toolbar admin-toolbar">
           <div>
             <strong>预约管理</strong>
-            <div class="hint">可按预约状态和关键字检索，管理员取消预约后将给用户发站内通知</div>
+            <div class="hint">按预约状态和关键字检索，取消后会给用户发送站内通知。</div>
           </div>
           <div class="form-row">
             <el-input v-model="reservationFilters.keyword" placeholder="用户 / 资源 / 原因 / 预约ID" clearable style="width: 260px" />
@@ -518,7 +581,79 @@ loadClassrooms()
           <el-table-column prop="reason" label="原因" min-width="160" show-overflow-tooltip />
           <el-table-column label="操作" width="140" fixed="right">
             <template #default="{ row }">
-              <el-button size="small" type="danger" :disabled="row.status !== 'ACTIVE'" @click="openReservationDialog(row)">取消预约</el-button>
+              <el-button size="small" type="danger" :disabled="row.status !== 'ACTIVE'" @click="openReservationDialog(row)">
+                取消预约
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-tab-pane>
+
+      <el-tab-pane label="规则配置" name="configs">
+        <div class="toolbar admin-toolbar">
+          <div>
+            <strong>规则配置</strong>
+            <div class="hint">统一维护预约、签到和信誉规则，修改后后端会按最新配置立即生效。</div>
+          </div>
+          <div class="form-row">
+            <el-select v-model="configCategory" style="width: 150px" @change="loadConfigs">
+              <el-option
+                v-for="item in configCategoryOptions"
+                :key="item.value || 'ALL'"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+            <el-button type="primary" :icon="Search" @click="loadConfigs">查询</el-button>
+            <el-button :icon="Refresh" @click="loadConfigs">刷新</el-button>
+          </div>
+        </div>
+
+        <div class="mini-stats">
+          <span>配置项 {{ configs.length }}</span>
+          <span>当前分类 {{ configCategoryText(configCategory) }}</span>
+        </div>
+
+        <el-table :data="configs" v-loading="loading">
+          <el-table-column prop="configName" label="名称" min-width="180" />
+          <el-table-column prop="configKey" label="配置键" min-width="240" show-overflow-tooltip />
+          <el-table-column label="分类" width="120">
+            <template #default="{ row }">{{ configCategoryText(row.category) }}</template>
+          </el-table-column>
+          <el-table-column prop="valueType" label="类型" width="100" />
+          <el-table-column label="当前值" min-width="200">
+            <template #default="{ row }">
+              <el-input
+                v-if="row.editable === 1"
+                v-model="row.editValue"
+                class="config-value-input"
+                maxlength="255"
+              />
+              <span v-else>{{ row.configValue }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="description" label="说明" min-width="220" show-overflow-tooltip />
+          <el-table-column label="可编辑" width="90">
+            <template #default="{ row }">
+              <el-tag :type="row.editable === 1 ? 'success' : 'info'">
+                {{ row.editable === 1 ? '是' : '否' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="180" fixed="right">
+            <template #default="{ row }">
+              <div v-if="row.editable === 1" class="config-actions">
+                <el-button
+                  size="small"
+                  type="primary"
+                  :loading="savingConfigKey === row.configKey"
+                  @click="saveConfig(row)"
+                >
+                  保存
+                </el-button>
+                <el-button size="small" @click="resetConfigEditValue(row)">重置</el-button>
+              </div>
+              <span v-else>-</span>
             </template>
           </el-table-column>
         </el-table>
@@ -580,7 +715,7 @@ loadClassrooms()
     <template #footer>
       <div class="dialog-footer-split">
         <el-button type="danger" plain @click="deleteSeat">删除座位</el-button>
-        <div>
+        <div class="dialog-footer-actions">
           <el-button @click="seatDialog = false">取消</el-button>
           <el-button type="primary" @click="saveSeat">保存</el-button>
         </div>
@@ -632,7 +767,7 @@ loadClassrooms()
           :rows="3"
           maxlength="255"
           show-word-limit
-          placeholder="可选。将发送给该用户作为通知说明"
+          placeholder="可选，将发送给该用户作为通知说明"
         />
       </el-form-item>
     </el-form>
@@ -651,7 +786,7 @@ loadClassrooms()
           :rows="3"
           maxlength="255"
           show-word-limit
-          placeholder="可选。将写入用户收到的取消通知"
+          placeholder="可选，将写入用户收到的取消通知"
         />
       </el-form-item>
     </el-form>
@@ -768,6 +903,22 @@ loadClassrooms()
   width: 100%;
 }
 
+.dialog-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.config-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.config-value-input {
+  width: 100%;
+}
+
 @media (max-width: 960px) {
   .admin-grid {
     grid-template-columns: 1fr;
@@ -778,6 +929,11 @@ loadClassrooms()
   .dialog-grid,
   .seat-admin-summary {
     grid-template-columns: 1fr;
+  }
+
+  .dialog-footer-split {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 </style>

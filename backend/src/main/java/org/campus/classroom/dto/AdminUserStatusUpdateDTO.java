@@ -8,9 +8,9 @@ import lombok.Data;
 
 @Data
 public class AdminUserStatusUpdateDTO {
-    @NotNull(message = "status不能为空")
-    @Min(value = 0, message = "status只能为0或1")
-    @Max(value = 1, message = "status只能为0或1")
+    @NotNull(message = "状态不能为空")
+    @Min(value = 0, message = "状态只能为0或1")
+    @Max(value = 1, message = "状态只能为0或1")
     private Integer status;
 
     @Size(max = 255, message = "通知内容不能超过255个字符")

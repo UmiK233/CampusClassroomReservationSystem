@@ -3,7 +3,7 @@ FROM node:23 AS build
 
 WORKDIR /app
 COPY . .
-RUN npm install
+RUN npm ci
 RUN npm run build
 
 # 运行阶段

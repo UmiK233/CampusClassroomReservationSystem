@@ -21,7 +21,7 @@ public class ClassroomCreateDTO {
     @Max(value = 100, message = "座位列数不能超过100")
     private Integer seatCols;
 
-    @Pattern(regexp = "ENABLED|DISABLED", message = "状态只能是 ENABLED 或 DISABLED")
+    @Pattern(regexp = "ENABLED|DISABLED", message = "状态只能是启用或禁用")
     private String status;
 
     @Size(max = 255, message = "教室描述长度不能超过255")

@@ -1,8 +1,6 @@
 package org.campus.classroom.entity;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +13,7 @@ public class User {
     private String email;
     private String role;
     private Integer status;
+    private Integer creditScore;
     //插入自动生成,取出时需要对应
     private LocalDateTime createTime;
 }

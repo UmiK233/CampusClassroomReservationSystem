@@ -2,6 +2,7 @@ package org.campus.classroom.campusclassroomreservationsystem;
 
 import org.campus.classroom.dto.ClassroomReservationCreateDTO;
 import org.campus.classroom.dto.SeatReservationCreateDTO;
+import org.campus.classroom.entity.User;
 import org.campus.classroom.entity.Classroom;
 import org.campus.classroom.entity.Reservation;
 import org.campus.classroom.entity.Seat;
@@ -11,9 +12,12 @@ import org.campus.classroom.enums.ReservationStatus;
 import org.campus.classroom.enums.ResultCode;
 import org.campus.classroom.enums.SeatStatus;
 import org.campus.classroom.exception.BusinessException;
+import org.campus.classroom.mapper.AttendanceMapper;
 import org.campus.classroom.mapper.ClassroomMapper;
 import org.campus.classroom.mapper.ReservationMapper;
 import org.campus.classroom.mapper.SeatMapper;
+import org.campus.classroom.mapper.UserMapper;
+import org.campus.classroom.service.SystemConfigService;
 import org.campus.classroom.service.impl.ReservationServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -44,6 +49,12 @@ class ReservationServiceImplTest {
     private SeatMapper seatMapper;
     @Mock
     private ClassroomMapper classroomMapper;
+    @Mock
+    private AttendanceMapper attendanceMapper;
+    @Mock
+    private UserMapper userMapper;
+    @Mock
+    private SystemConfigService systemConfigService;
 
     @InjectMocks
     private ReservationServiceImpl reservationService;
@@ -56,6 +67,8 @@ class ReservationServiceImplTest {
         LocalDateTime startTime = LocalDateTime.now().plusHours(1);
         LocalDateTime endTime = startTime.plusHours(2);
         SeatReservationCreateDTO request = buildSeatRequest(seatId, startTime, endTime, "self-study");
+        mockDefaultReservationConfig();
+        mockStudent(userId);
 
         when(reservationMapper.selectStudentTimeConflictForUpdate(userId, startTime, endTime)).thenReturn(0);
 
@@ -73,7 +86,8 @@ class ReservationServiceImplTest {
         when(reservationMapper.selectSeatConflictsForUpdate(seatId, startTime, endTime)).thenReturn(Collections.emptyList());
         when(reservationMapper.selectClassroomConflictsForUpdate(classroomId, startTime, endTime))
                 .thenReturn(Collections.emptyList());
-        when(reservationMapper.tryAddUsage(any(Long.class), any(java.time.LocalDate.class), any(Long.class))).thenReturn(1);
+        when(reservationMapper.tryAddUsage(any(Long.class), any(java.time.LocalDate.class), any(Long.class), any(Integer.class)))
+                .thenReturn(1);
 
         doAnswer(invocation -> {
             Reservation reservation = invocation.getArgument(0);
@@ -93,7 +107,7 @@ class ReservationServiceImplTest {
         assertEquals(ResourceType.SEAT.name(), created.getResourceType());
         assertEquals(seatId, created.getResourceId());
         assertEquals(classroomId, created.getClassroomId());
-        assertEquals(startTime.toLocalDate(), created.getReserveDate());
+        assertEquals(request.getStartTime().withOffsetSameInstant(ZoneOffset.ofHours(8)).toLocalDate(), created.getReserveDate());
         assertEquals(startTime, created.getStartTime());
         assertEquals(endTime, created.getEndTime());
         assertEquals("self-study", created.getReason());
@@ -106,6 +120,8 @@ class ReservationServiceImplTest {
         LocalDateTime startTime = LocalDateTime.now().plusHours(1);
         LocalDateTime endTime = startTime.plusHours(2);
         SeatReservationCreateDTO request = buildSeatRequest(11L, startTime, endTime, "self-study");
+        mockDefaultReservationConfig();
+        mockStudent(userId);
 
         Seat seat = new Seat();
         seat.setId(11L);
@@ -137,6 +153,8 @@ class ReservationServiceImplTest {
         LocalDateTime startTime = LocalDateTime.now().plusHours(1);
         LocalDateTime endTime = startTime.plusHours(2);
         SeatReservationCreateDTO request = buildSeatRequest(seatId, startTime, endTime, "self-study");
+        mockDefaultReservationConfig();
+        mockStudent(userId);
 
         Seat seat = new Seat();
         seat.setId(seatId);
@@ -158,6 +176,7 @@ class ReservationServiceImplTest {
         LocalDateTime startTime = LocalDateTime.now().plusHours(1);
         LocalDateTime endTime = startTime.plusHours(2);
         ClassroomReservationCreateDTO request = buildClassroomRequest(classroomId, startTime, endTime, "class meeting");
+        mockDefaultReservationConfig();
 
         Classroom classroom = new Classroom();
         classroom.setId(classroomId);
@@ -168,7 +187,8 @@ class ReservationServiceImplTest {
                 .thenReturn(Collections.emptyList());
         when(reservationMapper.selectSeatConflictsInClassroomForUpdate(classroomId, startTime, endTime))
                 .thenReturn(Collections.emptyList());
-        when(reservationMapper.tryAddUsage(any(Long.class), any(java.time.LocalDate.class), any(Long.class))).thenReturn(1);
+        when(reservationMapper.tryAddUsage(any(Long.class), any(java.time.LocalDate.class), any(Long.class), any(Integer.class)))
+                .thenReturn(1);
 
         doAnswer(invocation -> {
             Reservation reservation = invocation.getArgument(0);
@@ -188,7 +208,7 @@ class ReservationServiceImplTest {
         assertEquals(ResourceType.CLASSROOM.name(), created.getResourceType());
         assertEquals(classroomId, created.getResourceId());
         assertEquals(classroomId, created.getClassroomId());
-        assertEquals(startTime.toLocalDate(), created.getReserveDate());
+        assertEquals(request.getStartTime().withOffsetSameInstant(ZoneOffset.ofHours(8)).toLocalDate(), created.getReserveDate());
         assertEquals(startTime, created.getStartTime());
         assertEquals(endTime, created.getEndTime());
         assertEquals("class meeting", created.getReason());
@@ -202,6 +222,7 @@ class ReservationServiceImplTest {
         LocalDateTime startTime = LocalDateTime.now().plusHours(1);
         LocalDateTime endTime = startTime.plusHours(2);
         ClassroomReservationCreateDTO request = buildClassroomRequest(classroomId, startTime, endTime, "class meeting");
+        mockDefaultReservationConfig();
 
         Classroom classroom = new Classroom();
         classroom.setId(classroomId);
@@ -227,6 +248,7 @@ class ReservationServiceImplTest {
         LocalDateTime startTime = LocalDateTime.now().plusHours(1);
         LocalDateTime endTime = startTime.plusHours(2);
         ClassroomReservationCreateDTO request = buildClassroomRequest(classroomId, startTime, endTime, "class meeting");
+        mockDefaultReservationConfig();
 
         Classroom classroom = new Classroom();
         classroom.setId(classroomId);
@@ -309,5 +331,19 @@ class ReservationServiceImplTest {
         request.setEndTime(endTime.atOffset(ZoneOffset.UTC));
         request.setReason(reason);
         return request;
+    }
+
+    private void mockDefaultReservationConfig() {
+        lenient().when(systemConfigService.getMaxSingleReservationMinutes()).thenReturn(180);
+        lenient().when(systemConfigService.getDailyReservationLimitMinutes()).thenReturn(540);
+        lenient().when(systemConfigService.getSeatReservationAdvanceHours(any())).thenReturn(24);
+    }
+
+    private void mockStudent(Long userId) {
+        User user = new User();
+        user.setId(userId);
+        user.setRole("STUDENT");
+        user.setCreditScore(100);
+        when(userMapper.selectById(userId)).thenReturn(user);
     }
 }

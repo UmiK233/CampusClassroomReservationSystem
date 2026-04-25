@@ -3,9 +3,6 @@ package org.campus.classroom.enums;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @RequiredArgsConstructor
 @Getter
 public enum ResultCode {

@@ -1,7 +1,6 @@
 package org.campus.classroom.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data

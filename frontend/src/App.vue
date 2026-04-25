@@ -12,6 +12,7 @@ import {
 } from '@element-plus/icons-vue'
 import { authApi } from './api'
 import { useAuthStore } from './stores/auth'
+import { userRoleText } from './utils/dict'
 
 const router = useRouter()
 const route = useRoute()
@@ -62,7 +63,7 @@ onMounted(() => {
         </div>
         <div>
           <span>教室预约</span>
-          <small>Campus Reserve</small>
+          <small>校园预约平台</small>
         </div>
       </div>
 
@@ -93,7 +94,7 @@ onMounted(() => {
           <div class="page-subtitle">{{ pageMeta.subtitle }}</div>
         </div>
         <div class="user-zone">
-          <el-tag class="role-tag" effect="plain">{{ user?.role || 'USER' }}</el-tag>
+          <el-tag class="role-tag" effect="plain">{{ user?.role ? userRoleText(user.role) : '用户' }}</el-tag>
           <div class="user-pill">
             <el-icon><UserFilled /></el-icon>
             <span>{{ user?.nickname || user?.username }}</span>

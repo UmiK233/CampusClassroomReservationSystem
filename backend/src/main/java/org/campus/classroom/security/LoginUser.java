@@ -37,6 +37,10 @@ public class LoginUser implements UserDetails {
         return user.getStatus();
     }
 
+    public Integer getCreditScore() {
+        return user.getCreditScore();
+    }
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -1,6 +1,5 @@
 package org.campus.classroom.dto;
 
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -13,6 +12,6 @@ public class ClassroomQueryDTO {
     @Size(max = 100, message = "教学楼长度不能超过100")
     private String building;
 
-    @Pattern(regexp = "ENABLED|DISABLED", message = "状态只能是 ENABLED 或 DISABLED")
+    @Pattern(regexp = "ENABLED|DISABLED", message = "状态只能是启用或禁用")
     private String status;
 }
