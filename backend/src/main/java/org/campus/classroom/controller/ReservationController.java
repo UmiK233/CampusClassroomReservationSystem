@@ -6,14 +6,13 @@ import org.campus.classroom.common.Result;
 import org.campus.classroom.dto.ClassroomReservationCreateDTO;
 import org.campus.classroom.dto.SeatReservationCreateDTO;
 import org.campus.classroom.security.LoginUser;
+import org.campus.classroom.service.AttendanceService;
 import org.campus.classroom.service.ReservationService;
 import org.campus.classroom.vo.ReservationVO;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -21,6 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReservationController {
     private final ReservationService reservationService;
+    private final AttendanceService attendanceService;
 
     @PostMapping("/seats")
     @PreAuthorize("hasAnyRole('STUDENT')") // 只有学生可以预约座位
@@ -43,6 +43,13 @@ public class ReservationController {
     public Result<Void> cancelReservation(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
         reservationService.cancelReservation(loginUser.getId(), id);
         return Result.success("取消预约成功");
+    }
+
+    @PostMapping("/{id}/check-in")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')")
+    public Result<Void> checkIn(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        attendanceService.checkIn(loginUser.getId(), id);
+        return Result.success("签到成功");
     }
 
     @GetMapping()

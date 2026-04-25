@@ -1,12 +1,14 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Bell, Close, Refresh } from '@element-plus/icons-vue'
-import { notificationApi, reservationApi } from '../api'
+import { Bell, CircleCheck, Close, Refresh } from '@element-plus/icons-vue'
+import { authApi, notificationApi, reservationApi } from '../api'
+import { useAuthStore } from '../stores/auth'
 import { useReservationStore } from '../stores/reservation'
 import { formatDateTimeText, parseUtcTime } from '../utils/date'
-import { notificationTypeText, reservationStatusText, resourceTypeText } from '../utils/dict'
+import { attendanceStatusText, notificationTypeText, reservationStatusText, resourceTypeText } from '../utils/dict'
 
+const authStore = useAuthStore()
 const reservationStore = useReservationStore()
 const active = ref([])
 const history = ref([])
@@ -47,6 +49,14 @@ async function cancelReservation(row) {
   await loadData()
 }
 
+async function checkInReservation(row) {
+  await reservationApi.checkIn(row.id)
+  authStore.setUser(await authApi.me())
+  reservationStore.markChanged()
+  ElMessage.success('签到成功')
+  await loadData()
+}
+
 async function markNotificationsRead() {
   await notificationApi.markAllRead()
   unreadCount.value = 0
@@ -58,7 +68,19 @@ function getTime(value) {
   return parseUtcTime(value)
 }
 
-loadData()
+function attendanceTagType(status) {
+  const map = {
+    PENDING: 'warning',
+    CHECKED_IN: 'success',
+    NO_SHOW: 'danger',
+    CANCELLED: 'info'
+  }
+  return map[status] || 'info'
+}
+
+onMounted(() => {
+  loadData()
+})
 </script>
 
 <template>
@@ -94,9 +116,21 @@ loadData()
         <el-tag :type="currentReservations.some(item => item.id === nextReservation.id) ? 'success' : 'primary'">
           {{ currentReservations.some(item => item.id === nextReservation.id) ? '进行中' : '即将开始' }}
         </el-tag>
+        <el-tag v-if="nextReservation.attendanceStatus" class="status-tag" :type="attendanceTagType(nextReservation.attendanceStatus)">
+          {{ attendanceStatusText(nextReservation.attendanceStatus) }}
+        </el-tag>
         <h3>{{ nextReservation.resourceName }}</h3>
         <p>{{ resourceTypeText(nextReservation.resourceType) }} | {{ formatDateTimeText(nextReservation.startTime) }} - {{ formatDateTimeText(nextReservation.endTime) }}</p>
         <div class="next-actions">
+          <el-button
+            v-if="nextReservation.canCheckIn"
+            type="success"
+            plain
+            :icon="CircleCheck"
+            @click="checkInReservation(nextReservation)"
+          >
+            签到
+          </el-button>
           <el-button type="danger" plain :icon="Close" @click="cancelReservation(nextReservation)">取消预约</el-button>
         </div>
       </div>
@@ -136,11 +170,26 @@ loadData()
     <div v-else class="active-card-grid">
       <article v-for="item in sortedActive" :key="item.id" class="reservation-card">
         <div class="reservation-card-head">
-          <el-tag :type="item.resourceType === 'SEAT' ? 'primary' : 'success'">{{ resourceTypeText(item.resourceType) }}</el-tag>
-          <el-button type="danger" size="small" :icon="Close" @click="cancelReservation(item)">取消</el-button>
+          <div class="card-tags">
+            <el-tag :type="item.resourceType === 'SEAT' ? 'primary' : 'success'">{{ resourceTypeText(item.resourceType) }}</el-tag>
+            <el-tag v-if="item.attendanceStatus" :type="attendanceTagType(item.attendanceStatus)">{{ attendanceStatusText(item.attendanceStatus) }}</el-tag>
+          </div>
+          <div class="card-actions">
+            <el-button
+              v-if="item.canCheckIn"
+              type="success"
+              size="small"
+              :icon="CircleCheck"
+              @click="checkInReservation(item)"
+            >
+              签到
+            </el-button>
+            <el-button type="danger" size="small" :icon="Close" @click="cancelReservation(item)">取消</el-button>
+          </div>
         </div>
         <h3>{{ item.resourceName }}</h3>
         <div class="reservation-time">{{ formatDateTimeText(item.startTime) }} - {{ formatDateTimeText(item.endTime) }}</div>
+        <div v-if="item.checkInTime" class="check-in-time">签到时间：{{ formatDateTimeText(item.checkInTime) }}</div>
         <p>{{ item.reason || '暂无预约原因' }}</p>
       </article>
     </div>
@@ -167,6 +216,12 @@ loadData()
       <el-table-column prop="status" label="状态" width="120">
         <template #default="{ row }">
           <el-tag :type="row.status === 'CANCELLED' ? 'warning' : 'info'">{{ reservationStatusText(row.status) }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="签到状态" width="120">
+        <template #default="{ row }">
+          <el-tag v-if="row.attendanceStatus" :type="attendanceTagType(row.attendanceStatus)">{{ attendanceStatusText(row.attendanceStatus) }}</el-tag>
+          <span v-else>-</span>
         </template>
       </el-table-column>
       <el-table-column prop="reason" label="原因" min-width="150" show-overflow-tooltip />
@@ -269,6 +324,14 @@ loadData()
   font-size: 12px;
 }
 
+.card-tags,
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .notification-card h4,
 .reservation-card h3 {
   margin: 14px 0 8px;
@@ -287,6 +350,17 @@ loadData()
   color: #2563eb;
   font-size: 13px;
   font-weight: 800;
+}
+
+.check-in-time {
+  margin: 8px 0 0;
+  color: #16a34a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.status-tag {
+  margin-left: 8px;
 }
 
 .hint {

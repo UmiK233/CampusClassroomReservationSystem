@@ -29,7 +29,7 @@ public class RequestTraceIdFilter extends OncePerRequestFilter {
         try {
             MDC.put(TRACE_ID, traceId);
 
-            log.info("[请求开始] traceId={}, method={}, uri={}, query={}",
+            log.info("[请求开始] 跟踪ID={}, 请求方式={}, 请求路径={}, 查询参数={}",
                     traceId,
                     request.getMethod(),
                     request.getRequestURI(),
@@ -37,7 +37,7 @@ public class RequestTraceIdFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
 
-            log.info("[请求结束] traceId={}, method={}, uri={}, status={}, cost={}ms",
+            log.info("[请求结束] 跟踪ID={}, 请求方式={}, 请求路径={}, 响应状态={}, 耗时={}毫秒",
                     traceId,
                     request.getMethod(),
                     request.getRequestURI(),
@@ -45,7 +45,7 @@ public class RequestTraceIdFilter extends OncePerRequestFilter {
                     System.currentTimeMillis() - start);
 
         } catch (Exception e) {
-            log.error("[请求异常] traceId={}, method={}, uri={}, message={}",
+            log.error("[请求异常] 跟踪ID={}, 请求方式={}, 请求路径={}, 异常信息={}",
                     traceId,
                     request.getMethod(),
                     request.getRequestURI(),

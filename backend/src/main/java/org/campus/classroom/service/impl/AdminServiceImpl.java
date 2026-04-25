@@ -10,6 +10,7 @@ import org.campus.classroom.enums.ReservationStatus;
 import org.campus.classroom.enums.ResourceType;
 import org.campus.classroom.enums.ResultCode;
 import org.campus.classroom.exception.BusinessException;
+import org.campus.classroom.mapper.AttendanceMapper;
 import org.campus.classroom.mapper.ClassroomMapper;
 import org.campus.classroom.mapper.ReservationMapper;
 import org.campus.classroom.mapper.SeatMapper;
@@ -36,6 +37,7 @@ public class AdminServiceImpl implements AdminService {
     private final ReservationMapper reservationMapper;
     private final ClassroomMapper classroomMapper;
     private final SeatMapper seatMapper;
+    private final AttendanceMapper attendanceMapper;
     private final NotificationService notificationService;
 
     @Override
@@ -68,9 +70,8 @@ public class AdminServiceImpl implements AdminService {
         String content = buildUserStatusNotice(status, reason);
         notificationService.createSystemNotification(targetUserId, "USER_STATUS", title, content);
 
-        log.info("[管理员更新用户状态成功] adminUserId={}, targetUserId={}, status={}", adminUserId, targetUserId, status);
-        User newUser = getUser(targetUserId);
-        return toUserVO(newUser);
+        log.info("[管理员更新用户状态成功] 管理员ID={}, 目标用户ID={}, 新状态={}", adminUserId, targetUserId, status);
+        return toUserVO(getUser(targetUserId));
     }
 
     @Override
@@ -126,6 +127,9 @@ public class AdminServiceImpl implements AdminService {
             throw new BusinessException(ResultCode.INTERNAL_ERROR, "回滚预约额度失败，请联系管理员");
         }
 
+        attendanceMapper.insertStatusIfAbsent(reservationId, "CANCELLED");
+        attendanceMapper.updateStatusIfPending(reservationId, "CANCELLED");
+
         notificationService.createSystemNotification(
                 reservation.getUserId(),
                 "RESERVATION_CANCELLED",
@@ -133,7 +137,7 @@ public class AdminServiceImpl implements AdminService {
                 buildReservationCancelNotice(reason)
         );
 
-        log.info("[管理员取消预约成功] adminUserId={}, reservationId={}", adminUserId, reservationId);
+        log.info("[管理员取消预约成功] 管理员ID={}, 预约ID={}", adminUserId, reservationId);
     }
 
     private User getUser(Long userId) {
@@ -204,7 +208,7 @@ public class AdminServiceImpl implements AdminService {
         if (!StringUtils.hasText(reason)) {
             return action;
         }
-        return action + "\n" + "原因：" + reason.trim();
+        return action + "\n原因：" + reason.trim();
     }
 
     private String buildReservationCancelNotice(String reason) {
@@ -212,6 +216,6 @@ public class AdminServiceImpl implements AdminService {
         if (!StringUtils.hasText(reason)) {
             return content;
         }
-        return content + " 原因：" + reason.trim();
+        return content + "\n原因：" + reason.trim();
     }
 }

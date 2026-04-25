@@ -43,16 +43,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // 没带 token：不认证，直接继续
+        // 未携带令牌：不认证，直接继续
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.debug("Filter: 没有 Bearer Token，跳过JWT认证");
+            log.debug("认证过滤器：未携带 Bearer 令牌，跳过令牌认证");
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 已经有认证信息：直接继续
+        // 已经存在认证信息：直接继续
         if (SecurityContextHolder.getContext().getAuthentication() != null) {
-            log.debug("Filter: 已有认证信息，直接放行");
+            log.debug("认证过滤器：已存在认证信息，直接放行");
             filterChain.doFilter(request, response);
             return;
         }
@@ -77,7 +77,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (Exception e) {
-            log.debug("Filter: Token解析失败，错误信息: {}", e.getMessage());
+            log.debug("认证过滤器：令牌解析失败，错误信息：{}", e.getMessage());
             returnUnauthorizedResponse(response);
             return;
         }

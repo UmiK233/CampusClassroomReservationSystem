@@ -13,7 +13,6 @@ import org.campus.classroom.service.AuthService;
 import org.campus.classroom.vo.LoginVO;
 import org.campus.classroom.vo.UserInfoVO;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -33,23 +32,17 @@ public class AuthController {
     public Result<LoginVO> login(@RequestBody @Valid LoginDTO request) {
         String username = request.getUsername();
         String password = request.getPassword();
-        //通过SpringSecurity对账号密码进行认证
         try {
-            //① 查用户 UserDetailsService
-            //② 校验密码 PasswordEncoder
-            //③ 状态校验 UserDetails 的属性
-            UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(username, password);
-            Authentication authentication = authenticationManager.authenticate(usernamePasswordAuthenticationToken);
+            UsernamePasswordAuthenticationToken token =
+                    new UsernamePasswordAuthenticationToken(username, password);
+            Authentication authentication = authenticationManager.authenticate(token);
             LoginUser loginUser = (LoginUser) authentication.getPrincipal();
             LoginVO loginVO = authService.login(loginUser);
             return Result.success("登录成功", loginVO);
         } catch (InternalAuthenticationServiceException e) {
-//            Throwable cause = e.getCause();
-//            log.error("真实异常: ", cause);
             throw new BusinessException(ResultCode.FORBIDDEN, "用户已被封禁");
         } catch (AuthenticationException e) {
-            // 兜底异常，防止其他未知的认证异常导致系统崩溃
-            log.info("[登录失败] username={}, reason=authentication failed, exception={}", username, e.getMessage());
+            log.info("[登录失败] 用户名={}, 原因=认证失败, 异常信息={}", username, e.getMessage());
             throw new BusinessException(ResultCode.UNAUTHORIZED, "用户名或密码错误");
         }
     }

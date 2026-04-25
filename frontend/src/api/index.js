@@ -22,9 +22,10 @@ export const classroomApi = {
 export const reservationApi = {
   list: () => http.get('/reservations'),
   history: () => http.get('/reservations/history'),
-  reservedSeats: (id, params) => http.get(`/classrooms/${id}/reserved_seats`, { params }),
+  reservedSeats: (id, params, config = {}) => http.get(`/classrooms/${id}/reserved_seats`, { params, ...config }),
   reserveSeat: data => http.post('/reservations/seats', data),
   reserveClassroom: data => http.post('/reservations/classrooms', data),
+  checkIn: id => http.post(`/reservations/${id}/check-in`),
   cancel: id => http.delete(`/reservations/${id}`)
 }
 
@@ -41,5 +42,7 @@ export const adminApi = {
   users: params => http.get('/admin/users', { params }),
   updateUserStatus: (id, data) => http.patch(`/admin/users/${id}/status`, data),
   reservations: params => http.get('/admin/reservations', { params }),
-  cancelReservation: (id, data) => http.delete(`/admin/reservations/${id}`, { data })
+  cancelReservation: (id, data) => http.delete(`/admin/reservations/${id}`, { data }),
+  configs: params => http.get('/admin/configs', { params }),
+  updateConfig: (key, data) => http.put(`/admin/configs/${key}`, data)
 }

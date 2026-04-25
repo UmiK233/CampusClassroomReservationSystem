@@ -36,6 +36,15 @@ public interface ReservationMapper {
     })
     Reservation selectById(Long id);
 
+    @Select("""
+            SELECT *
+            FROM reservation
+            WHERE id = #{id}
+            FOR UPDATE
+            """)
+    @ResultMap("reservationResultMap")
+    Reservation selectByIdForUpdate(@Param("id") Long id);
+
     @Select("SELECT * FROM reservation WHERE user_id=#{userId} ORDER BY create_time DESC")
     @ResultMap("reservationResultMap")
     List<Reservation> selectByUserId(Long userId);
@@ -48,6 +57,16 @@ public interface ReservationMapper {
             """)
     @ResultMap("reservationResultMap")
     Reservation selectByReservationIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
+
+    @Select("""
+            SELECT *
+            FROM reservation
+            WHERE id = #{id}
+              AND user_id = #{userId}
+            FOR UPDATE
+            """)
+    @ResultMap("reservationResultMap")
+    Reservation selectByReservationIdAndUserIdForUpdate(@Param("id") Long id, @Param("userId") Long userId);
 
     @Insert("""
             INSERT INTO reservation_usage (user_id, date, used_minutes)
@@ -62,9 +81,12 @@ public interface ReservationMapper {
             SET used_minutes = used_minutes + #{addMinutes}
             WHERE user_id = #{userId}
               AND date = #{date}
-              AND used_minutes + #{addMinutes} <= 9*60
+              AND used_minutes + #{addMinutes} <= #{maxMinutes}
             """)
-    int tryAddUsage(@Param("userId") Long userId, @Param("date") LocalDate date, @Param("addMinutes") Long addMinutes);
+    int tryAddUsage(@Param("userId") Long userId,
+                    @Param("date") LocalDate date,
+                    @Param("addMinutes") Long addMinutes,
+                    @Param("maxMinutes") Integer maxMinutes);
 
     @Update("""
             UPDATE reservation_usage
@@ -147,11 +169,31 @@ public interface ReservationMapper {
 
     @Update("""
             UPDATE reservation
+            SET status = 'CANCELLED'
+            WHERE id = #{id}
+              AND status = 'ACTIVE'
+            """)
+    int noShowCancelReservation(@Param("id") Long id);
+
+    @Update("""
+            UPDATE reservation
             SET status = 'EXPIRED'
             WHERE status = 'ACTIVE'
               AND end_time < UTC_TIMESTAMP()
             """)
     int expireActiveReservations();
+
+    @Select("""
+            SELECT r.*
+            FROM reservation r
+            LEFT JOIN reservation_attendance a ON a.reservation_id = r.id
+            WHERE r.status = 'ACTIVE'
+              AND r.start_time <= #{latestAllowedCheckIn}
+              AND (a.id IS NULL OR a.status = 'PENDING')
+            ORDER BY r.start_time ASC, r.id ASC
+            """)
+    @ResultMap("reservationResultMap")
+    List<Reservation> selectReservationsDueForNoShow(@Param("latestAllowedCheckIn") LocalDateTime latestAllowedCheckIn);
 
 
     @Select("""

@@ -60,7 +60,7 @@ async function submit() {
           </div>
           <div>
             <strong>教室预约</strong>
-            <span>Campus Reserve</span>
+            <span>校园预约平台</span>
           </div>
         </div>
         <h1>校园教室预约系统</h1>
@@ -68,7 +68,7 @@ async function submit() {
         <div class="login-metrics">
           <div class="metric">
             <div class="metric-label">账号安全</div>
-            <div class="metric-value">JWT</div>
+            <div class="metric-value">令牌认证</div>
           </div>
           <div class="metric">
             <div class="metric-label">预约规则</div>

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { ElMessage } from 'element-plus'
 import { Calendar, Grid, Search } from '@element-plus/icons-vue'
@@ -104,6 +104,7 @@ const capacityMetricValue = computed(() => selectedClassroom.value && layout.val
 const isClassroomUnavailableForTeacher = computed(() => user.value?.role === 'TEACHER' && reservedSeatCount.value > 0)
 const pageActionLabel = computed(() => user.value?.role === 'TEACHER' ? '查看并预约教室' : '查看座位')
 const startMinTime = computed(() => isSelectedDateToday() ? currentClockTime() : '')
+const studentSeatAdvanceHours = computed(() => user.value?.seatReservationAdvanceHours || 24)
 const selectedTimeLabel = computed(() => {
   if (!hasReservationTime()) return ''
   const { start, end } = getReservationDateTimes()
@@ -157,8 +158,9 @@ async function loadBuildingPreferences() {
 }
 
 async function loadClassrooms() {
-  if (!canQueryAvailability()) {
-    ElMessage.warning('请先选择有效的预约时间')
+  const validationMessage = getAvailabilityValidationMessage()
+  if (validationMessage) {
+    ElMessage.warning(validationMessage)
     return
   }
   loading.value = true
@@ -182,15 +184,24 @@ async function loadClassroomCapacityStats() {
 
   capacityLoading.value = true
   try {
+    let hasCapacityQueryError = false
+    let capacityQueryErrorMessage = ''
     const entries = await Promise.all(classrooms.value.map(async room => {
       try {
         const stats = await getClassroomCapacityStats(room)
         return [room.id, stats]
-      } catch {
+      } catch (error) {
+        hasCapacityQueryError = true
+        if (!capacityQueryErrorMessage) {
+          capacityQueryErrorMessage = getCapacityQueryErrorMessage(error)
+        }
         return [room.id, { remaining: null, total: room.capacity || 0 }]
       }
     }))
     classroomCapacityMap.value = Object.fromEntries(entries)
+    if (hasCapacityQueryError) {
+      ElMessage.warning(capacityQueryErrorMessage || '部分教室容量暂时无法计算，请调整时间后重试')
+    }
   } finally {
     capacityLoading.value = false
   }
@@ -199,7 +210,7 @@ async function loadClassroomCapacityStats() {
 async function getClassroomCapacityStats(room) {
   const [seatLayout, reservedIds] = await Promise.all([
     classroomApi.seats(room.id),
-    reservationApi.reservedSeats(room.id, getAvailabilityParams())
+    reservationApi.reservedSeats(room.id, getAvailabilityParams(), { silentError: true })
   ])
   const seats = seatLayout?.seatVOS || []
   const disabled = seats.filter(item => item.status === 'DISABLED').length
@@ -212,8 +223,9 @@ async function getClassroomCapacityStats(room) {
 }
 
 async function openSeats(room) {
-  if (!canQueryAvailability()) {
-    ElMessage.warning('请先选择预约时间，再查看楼内教室和座位')
+  const validationMessage = getAvailabilityValidationMessage()
+  if (validationMessage) {
+    ElMessage.warning(validationMessage)
     return
   }
   await loadSeatsForClassroom(room)
@@ -287,8 +299,30 @@ function isStartAfterNow() {
   return new Date(start).getTime() > Date.now()
 }
 
+function isSeatReservationAdvanceValid() {
+  if (user.value?.role !== 'STUDENT' || !hasReservationTime()) return true
+  const { start } = getReservationDateTimes()
+  return new Date(start).getTime() <= Date.now() + studentSeatAdvanceHours.value * 60 * 60 * 1000
+}
+
+function getAvailabilityValidationMessage() {
+  if (!hasReservationTime()) {
+    return '请先选择预约时间'
+  }
+  if (!isEndAfterStart()) {
+    return '结束时间必须晚于开始时间'
+  }
+  if (!isStartAfterNow()) {
+    return '开始时间必须晚于当前时间'
+  }
+  if (!isSeatReservationAdvanceValid()) {
+    return '当前预约时间超出可预约范围，请调整后重试'
+  }
+  return ''
+}
+
 function canQueryAvailability() {
-  return hasReservationTime() && isEndAfterStart() && isStartAfterNow()
+  return !getAvailabilityValidationMessage()
 }
 
 function handleReservationTimeChange() {
@@ -302,8 +336,9 @@ function handleReservationTimeChange() {
 }
 
 async function submitReservation() {
-  if (!canQueryAvailability()) {
-    ElMessage.warning('请先选择有效的预约时间')
+  const validationMessage = getAvailabilityValidationMessage()
+  if (validationMessage) {
+    ElMessage.warning(validationMessage)
     return
   }
   const { start, end } = getReservationDateTimes()
@@ -371,6 +406,21 @@ function formatRoomRemainingCapacity(room) {
   return Number.isFinite(remaining) ? remaining : '--'
 }
 
+function getCapacityQueryErrorMessage(error) {
+  const message = error?.response?.data?.message || error?.message || ''
+  if (
+    message.includes('单次预约时长不能超过3小时')
+    || message.includes('single reservation cannot exceed 3 hours')
+    || message.includes('cannot exceed 3 hours')
+  ) {
+    return '单次预约时长不能超过3小时'
+  }
+  if (message.includes('当前预约时间超出可预约范围')) {
+    return '当前预约时间超出可预约范围，请调整后重试'
+  }
+  return ''
+}
+
 async function refreshReservationState() {
   if (!selectedClassroom.value || !canQueryAvailability()) return
   selectedSeat.value = null
@@ -388,10 +438,12 @@ watch(
   }
 )
 
-loadBuildingPreferences().then(() => {
-  if (canQueryAvailability()) {
-    loadClassrooms()
-  }
+onMounted(() => {
+  loadBuildingPreferences().then(() => {
+    if (canQueryAvailability()) {
+      loadClassrooms()
+    }
+  })
 })
 </script>
 
@@ -419,7 +471,7 @@ loadBuildingPreferences().then(() => {
     <div class="toolbar">
       <div>
         <strong>{{ user?.role === 'TEACHER' ? '先选时间，再看可预约教室' : '先选时间，再看可预约座位' }}</strong>
-        <div class="hint">系统会默认选中你更常预约的教学楼，并按历史偏好优先展示楼内教室</div>
+        <div class="hint">{{ user?.role === 'STUDENT' ? '学生座位预约范围会根据近期使用情况动态调整，请先选择合适时间后再查询。' : '系统会默认选中你更常预约的教学楼，并按历史偏好优先展示楼内教室。' }}</div>
       </div>
       <el-segmented v-model="viewMode" :options="viewModeOptions" />
     </div>

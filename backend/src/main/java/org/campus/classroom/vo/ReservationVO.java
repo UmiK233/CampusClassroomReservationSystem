@@ -1,12 +1,9 @@
 package org.campus.classroom.vo;
 
 import lombok.Data;
-import org.campus.classroom.enums.ReservationStatus;
-import org.campus.classroom.enums.ResourceType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 @Data
 public class ReservationVO {
@@ -19,5 +16,8 @@ public class ReservationVO {
     private LocalDateTime endTime;
     private String reason;
     private String status;
+    private String attendanceStatus;
+    private LocalDateTime checkInTime;
+    private Boolean canCheckIn;
     private LocalDateTime createTime;
 }

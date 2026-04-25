@@ -21,9 +21,12 @@ http.interceptors.request.use(config => {
 http.interceptors.response.use(
   response => {
     const body = response.data
+    const silentError = response.config?.silentError
     if (body && typeof body.code !== 'undefined' && body.code !== 200) {
       const message = body.message || '请求失败'
-      ElMessage.error(message)
+      if (!silentError) {
+        ElMessage.error(message)
+      }
       if (body.code === 401) {
         const authStore = useAuthStore(pinia)
         authStore.clearAuth()
@@ -36,12 +39,15 @@ http.interceptors.response.use(
   error => {
     const status = error.response?.status
     const message = error.response?.data?.message || error.message || '网络请求失败'
+    const silentError = error.config?.silentError
     if (status === 401) {
       const authStore = useAuthStore(pinia)
       authStore.clearAuth()
       router.replace('/login')
     }
-    ElMessage.error(message)
+    if (!silentError) {
+      ElMessage.error(message)
+    }
     return Promise.reject(error)
   }
 )

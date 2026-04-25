@@ -1,6 +1,5 @@
 package org.campus.classroom.config;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -48,31 +47,27 @@ public class SecurityConfiguration {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/index", "/auth/login", "/auth/register", "/swagger-ui.html", "/swagger-ui/**", "/openapi.yaml", "/v3/api-docs/**").permitAll() //放行登录接口不走过滤
-                        .requestMatchers("/admin/**").hasRole("ADMIN") //只有ADMIN角色可以访问/admin接口
+                        .requestMatchers("/index", "/auth/login", "/auth/register", "/swagger-ui.html", "/swagger-ui/**", "/openapi.yaml", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
-                //在UsernamePasswordAuthenticationFilter前添加jwtAuthenticationFilter，验证Token是否合法，如果合法就直接放行，不需要再走UsernamePasswordAuthenticationFilter了
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-        //在过滤链拦截权限不足的请求，返回403错误和自定义的错误信息
         http.exceptionHandling(exception -> exception
-                // 401：未登录 / token 无效 / 认证失败
                 .authenticationEntryPoint((request, response, e) -> {
-                    log.error("Filter: 未认证或Token无效: {}", e.getMessage());
+                    log.error("认证过滤器: 未登录或令牌无效: {}", e.getMessage());
                     response.setContentType("application/json;charset=UTF-8");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    new ObjectMapper().writeValue(
+                    objectMapper.writeValue(
                             response.getWriter(),
-                            Result.fail(ResultCode.UNAUTHORIZED, "未登录或Token无效")
+                            Result.fail(ResultCode.UNAUTHORIZED, "未登录或令牌无效")
                     );
                 })
-                // 403：已登录但权限不足
                 .accessDeniedHandler((request, response, e) -> {
-                    log.error("Filter: 权限不足，无法访问: {}", e.getMessage());
+                    log.error("认证过滤器: 权限不足，无法访问: {}", e.getMessage());
                     response.setContentType("application/json;charset=UTF-8");
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    new ObjectMapper().writeValue(
+                    objectMapper.writeValue(
                             response.getWriter(),
                             Result.fail(ResultCode.FORBIDDEN, "权限不足，无法访问")
                     );
@@ -80,6 +75,4 @@ public class SecurityConfiguration {
         );
         return http.build();
     }
-
-
 }

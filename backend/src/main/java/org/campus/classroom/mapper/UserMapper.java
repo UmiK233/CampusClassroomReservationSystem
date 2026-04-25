@@ -16,6 +16,7 @@ public interface UserMapper {
             @Result(column = "email", property = "email"),
             @Result(column = "role", property = "role"),
             @Result(column = "status", property = "status"),
+            @Result(column = "credit_score", property = "creditScore"),
             @Result(column = "create_time", property = "createTime")
     })
     User selectById(Long id);
@@ -61,4 +62,18 @@ public interface UserMapper {
             WHERE id = #{id}
             """)
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);
+
+    @Update("""
+            UPDATE user
+            SET credit_score = GREATEST(0, COALESCE(credit_score, 100) - #{delta})
+            WHERE id = #{id}
+            """)
+    int decreaseCreditScore(@Param("id") Long id, @Param("delta") Integer delta);
+
+    @Update("""
+            UPDATE user
+            SET credit_score = LEAST(100, COALESCE(credit_score, 100) + #{delta})
+            WHERE id = #{id}
+            """)
+    int increaseCreditScore(@Param("id") Long id, @Param("delta") Integer delta);
 }

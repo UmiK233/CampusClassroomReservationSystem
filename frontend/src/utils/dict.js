@@ -43,7 +43,18 @@ export function userRoleText(role) {
 export function notificationTypeText(type) {
   const map = {
     USER_STATUS: '账号通知',
-    RESERVATION_CANCELLED: '预约通知'
+    RESERVATION_CANCELLED: '预约通知',
+    RESERVATION_NO_SHOW: '爽约通知'
   }
   return map[type] || type || '系统通知'
+}
+
+export function attendanceStatusText(status) {
+  const map = {
+    PENDING: '待签到',
+    CHECKED_IN: '已签到',
+    NO_SHOW: '已爽约',
+    CANCELLED: '已关闭'
+  }
+  return map[status] || status || '-'
 }

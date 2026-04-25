@@ -17,7 +17,7 @@ public class SeatCreateDTO {
     @Min(value = 1, message = "座位列号必须大于0")
     private Integer colNumber;
 
-    @Pattern(regexp = "ENABLED|DISABLED", message = "状态只能是 ENABLED 或 DISABLED")
+    @Pattern(regexp = "ENABLED|DISABLED", message = "状态只能是启用或禁用")
     private String status;
 
     @Size(max = 255, message = "备注长度不能超过255")
