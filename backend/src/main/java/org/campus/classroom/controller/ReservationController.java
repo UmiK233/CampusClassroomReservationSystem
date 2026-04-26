@@ -11,7 +11,13 @@ import org.campus.classroom.service.ReservationService;
 import org.campus.classroom.vo.ReservationVO;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -23,7 +29,7 @@ public class ReservationController {
     private final AttendanceService attendanceService;
 
     @PostMapping("/seats")
-    @PreAuthorize("hasAnyRole('STUDENT')") // 只有学生可以预约座位
+    @PreAuthorize("hasRole('STUDENT')")
     public Result<Long> createSeatReservation(@RequestBody @Valid SeatReservationCreateDTO request,
                                               @AuthenticationPrincipal LoginUser loginUser) {
         Long reservationId = reservationService.createSeatReservation(loginUser.getId(), request);
@@ -31,9 +37,9 @@ public class ReservationController {
     }
 
     @PostMapping("/classrooms")
-    @PreAuthorize("hasRole('TEACHER')") // 只有教师可以预约教室
+    @PreAuthorize("hasRole('TEACHER')")
     public Result<Long> createClassroomReservation(@RequestBody @Valid ClassroomReservationCreateDTO request,
-                                        @AuthenticationPrincipal LoginUser loginUser) {
+                                                   @AuthenticationPrincipal LoginUser loginUser) {
         Long reservationId = reservationService.createClassroomReservation(loginUser.getId(), request);
         return Result.success("预约教室成功", reservationId);
     }
@@ -46,7 +52,7 @@ public class ReservationController {
     }
 
     @PostMapping("/{id}/check-in")
-    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public Result<Void> checkIn(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
         attendanceService.checkIn(loginUser.getId(), id);
         return Result.success("签到成功");

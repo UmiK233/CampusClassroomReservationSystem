@@ -43,6 +43,14 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     @Transactional
     public Boolean checkIn(Long currentUserId, Long reservationId) {
+        User currentUser = userMapper.selectById(currentUserId);
+        if (currentUser == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在");
+        }
+        if (!"STUDENT".equals(currentUser.getRole())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "仅学生预约需要签到");
+        }
+
         Reservation reservation = reservationMapper.selectByReservationIdAndUserIdForUpdate(reservationId, currentUserId);
         if (reservation == null) {
             throw new BusinessException(ResultCode.NOT_FOUND, "预约记录不存在");

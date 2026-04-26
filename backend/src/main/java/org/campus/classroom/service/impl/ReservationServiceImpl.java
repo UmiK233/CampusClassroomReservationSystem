@@ -37,7 +37,6 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -95,7 +94,6 @@ public class ReservationServiceImpl implements ReservationService {
 
         Reservation reservation = buildClassroomReservation(currentUserId, request, utcStartTime, utcEndTime);
         reservationMapper.insert(reservation);
-        attendanceMapper.insertStatusIfAbsent(reservation.getId(), AttendanceStatus.PENDING.name());
         log.info("[创建教室预约成功] userId={}, reservationId={}, classroomId={}",
                 currentUserId, reservation.getId(), request.getClassroomId());
         return reservation.getId();
@@ -128,8 +126,10 @@ public class ReservationServiceImpl implements ReservationService {
             throw new BusinessException(ResultCode.INTERNAL_ERROR, "取消预约失败");
         }
 
-        attendanceMapper.insertStatusIfAbsent(reservationId, AttendanceStatus.CANCELLED.name());
-        attendanceMapper.updateStatusIfPending(reservationId, AttendanceStatus.CANCELLED.name());
+        if (ResourceType.SEAT.name().equals(reservation.getResourceType())) {
+            attendanceMapper.insertStatusIfAbsent(reservationId, AttendanceStatus.CANCELLED.name());
+            attendanceMapper.updateStatusIfPending(reservationId, AttendanceStatus.CANCELLED.name());
+        }
         applyCancelCreditPenalty(reservation);
         return true;
     }
@@ -259,6 +259,13 @@ public class ReservationServiceImpl implements ReservationService {
             );
         }
 
+        if (ResourceType.CLASSROOM.name().equals(reservation.getResourceType())) {
+            reservationVO.setAttendanceStatus(null);
+            reservationVO.setCheckInTime(null);
+            reservationVO.setCanCheckIn(false);
+            return reservationVO;
+        }
+
         AttendanceRecord attendanceRecord = attendanceMap.get(reservation.getId());
         String attendanceStatus = attendanceRecord != null
                 ? attendanceRecord.getStatus()
@@ -292,8 +299,11 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     private void validateDurationTime(User currentUser, OffsetDateTime startTime, OffsetDateTime endTime) {
+        if (isTeacher(currentUser)) {
+            return;
+        }
         long minutes = Duration.between(startTime, endTime).toMinutes();
-        int maxSingleReservationMinutes = systemConfigService.getMaxSingleReservationMinutes(currentUser.getCreditScore());
+        int maxSingleReservationMinutes = systemConfigService.getMaxSingleReservationMinutes(getQuotaCreditScore(currentUser));
         if (minutes > maxSingleReservationMinutes) {
             throw new BusinessException(
                     ResultCode.BAD_REQUEST,
@@ -313,7 +323,7 @@ public class ReservationServiceImpl implements ReservationService {
     public void tryConsumeDailyUsageQuota(User currentUser, OffsetDateTime startTime, OffsetDateTime endTime) {
         LocalDate date = toBeijingDate(startTime);
         long addMinutes = Duration.between(startTime, endTime).toMinutes();
-        int dailyReservationLimitMinutes = systemConfigService.getDailyReservationLimitMinutes(currentUser.getCreditScore());
+        int dailyReservationLimitMinutes = getDailyReservationLimitMinutes(currentUser);
 
         reservationMapper.initUsage(currentUser.getId(), date);
         int updatedRows = reservationMapper.tryAddUsage(currentUser.getId(), date, addMinutes, dailyReservationLimitMinutes);
@@ -407,7 +417,7 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         User user = userMapper.selectById(reservation.getUserId());
-        if (user == null) {
+        if (user == null || !"STUDENT".equals(user.getRole())) {
             return;
         }
 
@@ -462,6 +472,24 @@ public class ReservationServiceImpl implements ReservationService {
         LocalDateTime earliest = reservation.getStartTime().minusMinutes(checkInEarlyMinutes);
         LocalDateTime latest = reservation.getStartTime().plusMinutes(checkInGraceMinutes);
         return !now.isBefore(earliest) && !now.isAfter(latest);
+    }
+
+    private Integer getQuotaCreditScore(User user) {
+        if (isTeacher(user)) {
+            return systemConfigService.getCreditMaxScore();
+        }
+        return user == null ? null : user.getCreditScore();
+    }
+
+    private int getDailyReservationLimitMinutes(User user) {
+        if (isTeacher(user)) {
+            return Integer.MAX_VALUE;
+        }
+        return systemConfigService.getDailyReservationLimitMinutes(getQuotaCreditScore(user));
+    }
+
+    private boolean isTeacher(User user) {
+        return user != null && "TEACHER".equals(user.getRole());
     }
 
     private String formatMinutesText(int minutes) {

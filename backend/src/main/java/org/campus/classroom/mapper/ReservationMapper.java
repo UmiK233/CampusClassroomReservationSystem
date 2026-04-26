@@ -188,6 +188,7 @@ public interface ReservationMapper {
             FROM reservation r
             LEFT JOIN reservation_attendance a ON a.reservation_id = r.id
             WHERE r.status = 'ACTIVE'
+              AND r.resource_type = 'SEAT'
               AND r.start_time <= #{latestAllowedCheckIn}
               AND (a.id IS NULL OR a.status = 'PENDING')
             ORDER BY r.start_time ASC, r.id ASC

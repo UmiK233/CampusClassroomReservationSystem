@@ -101,6 +101,7 @@ const disabledSeatCount = computed(() => layout.value?.seatVOS?.filter(item => i
 const availableSeatCount = computed(() => Math.max((layout.value?.seatVOS?.length || 0) - reservedSeatCount.value - disabledSeatCount.value, 0))
 const capacityMetricLabel = computed(() => selectedClassroom.value && layout.value ? '剩余容量' : '总座位')
 const capacityMetricValue = computed(() => selectedClassroom.value && layout.value ? availableSeatCount.value : totalCapacity.value)
+const isTeacher = computed(() => user.value?.role === 'TEACHER')
 const isClassroomUnavailableForTeacher = computed(() => user.value?.role === 'TEACHER' && reservedSeatCount.value > 0)
 const pageActionLabel = computed(() => user.value?.role === 'TEACHER' ? '查看并预约教室' : '查看座位')
 const startMinTime = computed(() => isSelectedDateToday() ? currentClockTime() : '')
@@ -330,7 +331,7 @@ function getAvailabilityValidationMessage() {
   if (!isStartAfterNow()) {
     return '开始时间必须晚于当前时间'
   }
-  if (getReservationDurationMinutes() > maxSingleReservationMinutes.value) {
+  if (!isTeacher.value && getReservationDurationMinutes() > maxSingleReservationMinutes.value) {
     return `单次预约时长不能超过${formatMinutesText(maxSingleReservationMinutes.value)}`
   }
   if (!isSeatReservationAdvanceValid()) {

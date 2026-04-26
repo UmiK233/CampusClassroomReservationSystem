@@ -147,8 +147,10 @@ public class AdminServiceImpl implements AdminService {
             throw new BusinessException(ResultCode.INTERNAL_ERROR, "回滚预约额度失败，请联系管理员");
         }
 
-        attendanceMapper.insertStatusIfAbsent(reservationId, "CANCELLED");
-        attendanceMapper.updateStatusIfPending(reservationId, "CANCELLED");
+        if (ResourceType.SEAT.name().equals(reservation.getResourceType())) {
+            attendanceMapper.insertStatusIfAbsent(reservationId, "CANCELLED");
+            attendanceMapper.updateStatusIfPending(reservationId, "CANCELLED");
+        }
 
         notificationService.createSystemNotification(
                 reservation.getUserId(),

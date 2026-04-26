@@ -203,7 +203,7 @@ class ReservationServiceImplTest {
         LocalDateTime endTime = startTime.plusHours(2);
         ClassroomReservationCreateDTO request = buildClassroomRequest(classroomId, startTime, endTime, "class meeting");
         mockDefaultReservationConfig();
-        mockStudent(userId);
+        mockTeacher(userId);
 
         Classroom classroom = new Classroom();
         classroom.setId(classroomId);
@@ -240,6 +240,7 @@ class ReservationServiceImplTest {
         assertEquals(endTime, created.getEndTime());
         assertEquals("class meeting", created.getReason());
         assertEquals(ReservationStatus.ACTIVE.name(), created.getStatus());
+        verify(attendanceMapper, never()).insertStatusIfAbsent(any(Long.class), any(String.class));
     }
 
     @Test
@@ -317,6 +318,7 @@ class ReservationServiceImplTest {
         when(reservationMapper.minusUsage(any(Long.class), any(java.time.LocalDate.class), any(Long.class))).thenReturn(1);
         User user = new User();
         user.setId(userId);
+        user.setRole("STUDENT");
         when(userMapper.selectById(userId)).thenReturn(user);
         when(userMapper.decreaseCreditScore(userId, 1, 30, 100)).thenReturn(1);
 
@@ -325,6 +327,77 @@ class ReservationServiceImplTest {
         assertEquals(true, cancelled);
         verify(reservationMapper).cancelReservation(reservationId);
         verify(userMapper).decreaseCreditScore(userId, 1, 30, 100);
+    }
+
+    @Test
+    void createClassroomReservation_shouldBypassSingleAndDailyQuotaForTeacher() {
+        Long userId = 10001L;
+        Long classroomId = 22L;
+        LocalDateTime startTime = LocalDateTime.now().plusDays(1).withHour(1).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime endTime = startTime.plusHours(8);
+        ClassroomReservationCreateDTO request = buildClassroomRequest(classroomId, startTime, endTime, "class meeting");
+        mockDefaultReservationConfig();
+
+        User user = new User();
+        user.setId(userId);
+        user.setRole("TEACHER");
+        user.setCreditScore(35);
+        when(userMapper.selectById(userId)).thenReturn(user);
+
+        Classroom classroom = new Classroom();
+        classroom.setId(classroomId);
+        classroom.setStatus(ClassroomStatus.ENABLED.name());
+        when(classroomMapper.selectByIdForUpdate(classroomId)).thenReturn(classroom);
+
+        when(reservationMapper.selectClassroomConflictsForUpdate(classroomId, startTime, endTime))
+                .thenReturn(Collections.emptyList());
+        when(reservationMapper.selectSeatConflictsInClassroomForUpdate(classroomId, startTime, endTime))
+                .thenReturn(Collections.emptyList());
+        when(reservationMapper.tryAddUsage(any(Long.class), any(java.time.LocalDate.class), any(Long.class), any(Integer.class)))
+                .thenReturn(1);
+        doAnswer(invocation -> {
+            Reservation reservation = invocation.getArgument(0);
+            reservation.setId(1000L);
+            return 1;
+        }).when(reservationMapper).insert(any(Reservation.class));
+
+        Long reservationId = reservationService.createClassroomReservation(userId, request);
+
+        assertEquals(1000L, reservationId);
+        verify(systemConfigService, never()).getMaxSingleReservationMinutes(any());
+        verify(systemConfigService, never()).getDailyReservationLimitMinutes(any());
+    }
+
+    @Test
+    void cancelReservation_shouldNotDeductTeacherCredit() {
+        Long userId = 10001L;
+        Long reservationId = 20001L;
+        mockDefaultReservationConfig();
+
+        Reservation reservation = new Reservation();
+        reservation.setId(reservationId);
+        reservation.setUserId(userId);
+        reservation.setResourceType(ResourceType.CLASSROOM.name());
+        reservation.setStatus(ReservationStatus.ACTIVE.name());
+        reservation.setReserveDate(LocalDateTime.now().toLocalDate());
+        reservation.setStartTime(LocalDateTime.now());
+        reservation.setEndTime(LocalDateTime.now().plusHours(1));
+
+        when(reservationMapper.selectByReservationIdAndUserId(reservationId, userId)).thenReturn(reservation);
+        when(reservationMapper.cancelReservation(reservationId)).thenReturn(1);
+        when(reservationMapper.minusUsage(any(Long.class), any(java.time.LocalDate.class), any(Long.class))).thenReturn(1);
+
+        User teacher = new User();
+        teacher.setId(userId);
+        teacher.setRole("TEACHER");
+        when(userMapper.selectById(userId)).thenReturn(teacher);
+
+        Boolean cancelled = reservationService.cancelReservation(userId, reservationId);
+
+        assertEquals(true, cancelled);
+        verify(userMapper, never()).decreaseCreditScore(any(Long.class), any(Integer.class), any(Integer.class), any(Integer.class));
+        verify(attendanceMapper, never()).insertStatusIfAbsent(any(Long.class), any(String.class));
+        verify(attendanceMapper, never()).updateStatusIfPending(any(Long.class), any(String.class));
     }
 
     @Test
@@ -381,6 +454,14 @@ class ReservationServiceImplTest {
         User user = new User();
         user.setId(userId);
         user.setRole("STUDENT");
+        user.setCreditScore(100);
+        when(userMapper.selectById(userId)).thenReturn(user);
+    }
+
+    private void mockTeacher(Long userId) {
+        User user = new User();
+        user.setId(userId);
+        user.setRole("TEACHER");
         user.setCreditScore(100);
         when(userMapper.selectById(userId)).thenReturn(user);
     }

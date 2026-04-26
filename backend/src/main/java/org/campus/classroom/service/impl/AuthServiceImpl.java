@@ -60,7 +60,7 @@ public class AuthServiceImpl implements AuthService {
         userInfoVO.setNickname(user.getNickname());
         userInfoVO.setEmail(user.getEmail());
         userInfoVO.setRole(user.getRole());
-        fillUserCreditInfo(userInfoVO, user.getCreditScore());
+        fillUserCreditInfo(userInfoVO, user.getRole(), user.getCreditScore());
 
         LoginVO loginVO = new LoginVO();
         loginVO.setToken(token);
@@ -78,15 +78,23 @@ public class AuthServiceImpl implements AuthService {
         userInfoVO.setNickname(loginUser.getNickname());
         userInfoVO.setEmail(loginUser.getEmail());
         userInfoVO.setRole(loginUser.getRole());
-        fillUserCreditInfo(userInfoVO, loginUser.getCreditScore());
+        fillUserCreditInfo(userInfoVO, loginUser.getRole(), loginUser.getCreditScore());
         return userInfoVO;
     }
 
-    private void fillUserCreditInfo(UserInfoVO userInfoVO, Integer creditScore) {
-        userInfoVO.setCreditScore(creditScore == null ? systemConfigService.getCreditMaxScore() : creditScore);
-        userInfoVO.setCreditLevel(systemConfigService.getCreditLevelCode(creditScore));
-        userInfoVO.setSeatReservationAdvanceHours(systemConfigService.getSeatReservationAdvanceHours(creditScore));
-        userInfoVO.setMaxSingleReservationMinutes(systemConfigService.getMaxSingleReservationMinutes(creditScore));
-        userInfoVO.setDailyReservationLimitMinutes(systemConfigService.getDailyReservationLimitMinutes(creditScore));
+    private void fillUserCreditInfo(UserInfoVO userInfoVO, String role, Integer creditScore) {
+        Integer quotaCreditScore = resolveQuotaCreditScore(role, creditScore);
+        userInfoVO.setCreditScore(quotaCreditScore);
+        userInfoVO.setCreditLevel(systemConfigService.getCreditLevelCode(quotaCreditScore));
+        userInfoVO.setSeatReservationAdvanceHours(systemConfigService.getSeatReservationAdvanceHours(quotaCreditScore));
+        userInfoVO.setMaxSingleReservationMinutes(systemConfigService.getMaxSingleReservationMinutes(quotaCreditScore));
+        userInfoVO.setDailyReservationLimitMinutes(systemConfigService.getDailyReservationLimitMinutes(quotaCreditScore));
+    }
+
+    private Integer resolveQuotaCreditScore(String role, Integer creditScore) {
+        if ("TEACHER".equals(role)) {
+            return systemConfigService.getCreditMaxScore();
+        }
+        return creditScore == null ? systemConfigService.getCreditMaxScore() : creditScore;
     }
 }

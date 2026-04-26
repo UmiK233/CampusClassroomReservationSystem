@@ -86,7 +86,7 @@ public interface UserMapper {
     @Update("""
             UPDATE user
             SET credit_score = LEAST(#{maxScore}, GREATEST(#{minScore}, COALESCE(credit_score, #{maxScore}) + #{delta}))
-            WHERE role IN ('STUDENT', 'TEACHER')
+            WHERE role = 'STUDENT'
               AND COALESCE(credit_score, #{maxScore}) < #{maxScore}
             """)
     int recoverCreditScoreDaily(@Param("delta") Integer delta,
