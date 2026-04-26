@@ -17,6 +17,7 @@ import org.campus.classroom.mapper.ClassroomMapper;
 import org.campus.classroom.mapper.ReservationMapper;
 import org.campus.classroom.mapper.SeatMapper;
 import org.campus.classroom.mapper.UserMapper;
+import org.campus.classroom.mapper.ViolationRecordMapper;
 import org.campus.classroom.service.SystemConfigService;
 import org.campus.classroom.service.impl.ReservationServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -53,6 +55,8 @@ class ReservationServiceImplTest {
     private AttendanceMapper attendanceMapper;
     @Mock
     private UserMapper userMapper;
+    @Mock
+    private ViolationRecordMapper violationRecordMapper;
     @Mock
     private SystemConfigService systemConfigService;
 
@@ -170,6 +174,28 @@ class ReservationServiceImplTest {
     }
 
     @Test
+    void createSeatReservation_shouldUseCreditBasedSingleLimit() {
+        Long userId = 10001L;
+        LocalDateTime startTime = LocalDateTime.now().plusHours(1);
+        LocalDateTime endTime = startTime.plusHours(3);
+        SeatReservationCreateDTO request = buildSeatRequest(11L, startTime, endTime, "self-study");
+        mockDefaultReservationConfig();
+
+        User user = new User();
+        user.setId(userId);
+        user.setRole("STUDENT");
+        user.setCreditScore(35);
+        when(userMapper.selectById(userId)).thenReturn(user);
+        when(systemConfigService.getMaxSingleReservationMinutes(35)).thenReturn(120);
+
+        BusinessException exception =
+                assertThrows(BusinessException.class, () -> reservationService.createSeatReservation(userId, request));
+
+        assertEquals(ResultCode.BAD_REQUEST, exception.getResultCode());
+        verify(reservationMapper, never()).insert(any(Reservation.class));
+    }
+
+    @Test
     void createClassroomReservation_shouldCreateSuccessfully() {
         Long userId = 10001L;
         Long classroomId = 22L;
@@ -177,6 +203,7 @@ class ReservationServiceImplTest {
         LocalDateTime endTime = startTime.plusHours(2);
         ClassroomReservationCreateDTO request = buildClassroomRequest(classroomId, startTime, endTime, "class meeting");
         mockDefaultReservationConfig();
+        mockStudent(userId);
 
         Classroom classroom = new Classroom();
         classroom.setId(classroomId);
@@ -223,6 +250,7 @@ class ReservationServiceImplTest {
         LocalDateTime endTime = startTime.plusHours(2);
         ClassroomReservationCreateDTO request = buildClassroomRequest(classroomId, startTime, endTime, "class meeting");
         mockDefaultReservationConfig();
+        mockStudent(userId);
 
         Classroom classroom = new Classroom();
         classroom.setId(classroomId);
@@ -249,6 +277,7 @@ class ReservationServiceImplTest {
         LocalDateTime endTime = startTime.plusHours(2);
         ClassroomReservationCreateDTO request = buildClassroomRequest(classroomId, startTime, endTime, "class meeting");
         mockDefaultReservationConfig();
+        mockStudent(userId);
 
         Classroom classroom = new Classroom();
         classroom.setId(classroomId);
@@ -273,6 +302,7 @@ class ReservationServiceImplTest {
     void cancelReservation_shouldSucceedWhenReservationIsActive() {
         Long userId = 10001L;
         Long reservationId = 20001L;
+        mockDefaultReservationConfig();
 
         Reservation reservation = new Reservation();
         reservation.setId(reservationId);
@@ -285,11 +315,16 @@ class ReservationServiceImplTest {
         when(reservationMapper.selectByReservationIdAndUserId(reservationId, userId)).thenReturn(reservation);
         when(reservationMapper.cancelReservation(reservationId)).thenReturn(1);
         when(reservationMapper.minusUsage(any(Long.class), any(java.time.LocalDate.class), any(Long.class))).thenReturn(1);
+        User user = new User();
+        user.setId(userId);
+        when(userMapper.selectById(userId)).thenReturn(user);
+        when(userMapper.decreaseCreditScore(userId, 1, 30, 100)).thenReturn(1);
 
         Boolean cancelled = reservationService.cancelReservation(userId, reservationId);
 
         assertEquals(true, cancelled);
         verify(reservationMapper).cancelReservation(reservationId);
+        verify(userMapper).decreaseCreditScore(userId, 1, 30, 100);
     }
 
     @Test
@@ -334,9 +369,12 @@ class ReservationServiceImplTest {
     }
 
     private void mockDefaultReservationConfig() {
-        lenient().when(systemConfigService.getMaxSingleReservationMinutes()).thenReturn(180);
-        lenient().when(systemConfigService.getDailyReservationLimitMinutes()).thenReturn(540);
+        lenient().when(systemConfigService.getMaxSingleReservationMinutes(any())).thenReturn(180);
+        lenient().when(systemConfigService.getDailyReservationLimitMinutes(any())).thenReturn(540);
         lenient().when(systemConfigService.getSeatReservationAdvanceHours(any())).thenReturn(24);
+        lenient().when(systemConfigService.getCancelDeductionScore()).thenReturn(1);
+        lenient().when(systemConfigService.getCreditMinScore()).thenReturn(30);
+        lenient().when(systemConfigService.getCreditMaxScore()).thenReturn(100);
     }
 
     private void mockStudent(Long userId) {

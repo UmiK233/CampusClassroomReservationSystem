@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { ElMessage } from 'element-plus'
@@ -105,6 +105,7 @@ const isClassroomUnavailableForTeacher = computed(() => user.value?.role === 'TE
 const pageActionLabel = computed(() => user.value?.role === 'TEACHER' ? '查看并预约教室' : '查看座位')
 const startMinTime = computed(() => isSelectedDateToday() ? currentClockTime() : '')
 const studentSeatAdvanceHours = computed(() => user.value?.seatReservationAdvanceHours || 24)
+const maxSingleReservationMinutes = computed(() => user.value?.maxSingleReservationMinutes || 180)
 const selectedTimeLabel = computed(() => {
   if (!hasReservationTime()) return ''
   const { start, end } = getReservationDateTimes()
@@ -299,6 +300,20 @@ function isStartAfterNow() {
   return new Date(start).getTime() > Date.now()
 }
 
+function getReservationDurationMinutes() {
+  if (!hasReservationTime()) return 0
+  const { start, end } = getReservationDateTimes()
+  return Math.floor((new Date(end).getTime() - new Date(start).getTime()) / 60000)
+}
+
+function formatMinutesText(minutes) {
+  if (!minutes) return '0分钟'
+  if (minutes % 60 === 0) {
+    return `${minutes / 60}小时`
+  }
+  return `${minutes}分钟`
+}
+
 function isSeatReservationAdvanceValid() {
   if (user.value?.role !== 'STUDENT' || !hasReservationTime()) return true
   const { start } = getReservationDateTimes()
@@ -314,6 +329,9 @@ function getAvailabilityValidationMessage() {
   }
   if (!isStartAfterNow()) {
     return '开始时间必须晚于当前时间'
+  }
+  if (getReservationDurationMinutes() > maxSingleReservationMinutes.value) {
+    return `单次预约时长不能超过${formatMinutesText(maxSingleReservationMinutes.value)}`
   }
   if (!isSeatReservationAdvanceValid()) {
     return '当前预约时间超出可预约范围，请调整后重试'
@@ -356,7 +374,7 @@ async function submitReservation() {
   } else {
     await reservationApi.reserveClassroom({ ...payload, classroom_id: selectedClassroom.value.id })
   }
-  ElMessage.success('预约成功')
+  ElMessage.success(reserveType.value === 'seat' ? '座位预约成功' : '教室预约成功')
   reserveDialog.value = false
   selectedSeat.value = null
   await loadReservedSeats()
@@ -409,14 +427,13 @@ function formatRoomRemainingCapacity(room) {
 function getCapacityQueryErrorMessage(error) {
   const message = error?.response?.data?.message || error?.message || ''
   if (
-    message.includes('单次预约时长不能超过3小时')
-    || message.includes('single reservation cannot exceed 3 hours')
-    || message.includes('cannot exceed 3 hours')
+    message.includes('单次预约时长不能超过')
+    || message.includes('single reservation cannot exceed')
+    || message.includes('cannot exceed')
+    || message.includes('已超过当前信用等级对应的当日预约时长上限')
+    || message.includes('当前预约时间超出可预约范围')
   ) {
-    return '单次预约时长不能超过3小时'
-  }
-  if (message.includes('当前预约时间超出可预约范围')) {
-    return '当前预约时间超出可预约范围，请调整后重试'
+    return message
   }
   return ''
 }
@@ -1121,3 +1138,4 @@ onMounted(() => {
   }
 }
 </style>
+

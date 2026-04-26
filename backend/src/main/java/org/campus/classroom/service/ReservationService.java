@@ -19,5 +19,5 @@ public interface ReservationService {
     List<ReservationVO> listUserAvailableReservations(Long currentUserId);
     List<ReservationVO> listUserHistoryReservations(Long currentUserId);
 
-    List<Long> listReservedSeatIds(Long classroomId, OffsetDateTime startTime, OffsetDateTime endTime);
+    List<Long> listReservedSeatIds(Long currentUserId, Long classroomId, OffsetDateTime startTime, OffsetDateTime endTime);
 }

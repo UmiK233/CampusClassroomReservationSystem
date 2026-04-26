@@ -65,15 +65,31 @@ public interface UserMapper {
 
     @Update("""
             UPDATE user
-            SET credit_score = GREATEST(0, COALESCE(credit_score, 100) - #{delta})
+            SET credit_score = GREATEST(#{minScore}, COALESCE(credit_score, #{maxScore}) - #{delta})
             WHERE id = #{id}
             """)
-    int decreaseCreditScore(@Param("id") Long id, @Param("delta") Integer delta);
+    int decreaseCreditScore(@Param("id") Long id,
+                            @Param("delta") Integer delta,
+                            @Param("minScore") Integer minScore,
+                            @Param("maxScore") Integer maxScore);
 
     @Update("""
             UPDATE user
-            SET credit_score = LEAST(100, COALESCE(credit_score, 100) + #{delta})
+            SET credit_score = LEAST(#{maxScore}, GREATEST(#{minScore}, COALESCE(credit_score, #{maxScore}) + #{delta}))
             WHERE id = #{id}
             """)
-    int increaseCreditScore(@Param("id") Long id, @Param("delta") Integer delta);
+    int increaseCreditScore(@Param("id") Long id,
+                            @Param("delta") Integer delta,
+                            @Param("minScore") Integer minScore,
+                            @Param("maxScore") Integer maxScore);
+
+    @Update("""
+            UPDATE user
+            SET credit_score = LEAST(#{maxScore}, GREATEST(#{minScore}, COALESCE(credit_score, #{maxScore}) + #{delta}))
+            WHERE role IN ('STUDENT', 'TEACHER')
+              AND COALESCE(credit_score, #{maxScore}) < #{maxScore}
+            """)
+    int recoverCreditScoreDaily(@Param("delta") Integer delta,
+                                @Param("minScore") Integer minScore,
+                                @Param("maxScore") Integer maxScore);
 }

@@ -9,18 +9,21 @@ import org.campus.classroom.entity.Classroom;
 import org.campus.classroom.entity.Reservation;
 import org.campus.classroom.entity.Seat;
 import org.campus.classroom.entity.User;
+import org.campus.classroom.entity.ViolationRecord;
 import org.campus.classroom.enums.AttendanceStatus;
 import org.campus.classroom.enums.ClassroomStatus;
 import org.campus.classroom.enums.ReservationStatus;
 import org.campus.classroom.enums.ResourceType;
 import org.campus.classroom.enums.ResultCode;
 import org.campus.classroom.enums.SeatStatus;
+import org.campus.classroom.enums.ViolationType;
 import org.campus.classroom.exception.BusinessException;
 import org.campus.classroom.mapper.AttendanceMapper;
 import org.campus.classroom.mapper.ClassroomMapper;
 import org.campus.classroom.mapper.ReservationMapper;
 import org.campus.classroom.mapper.SeatMapper;
 import org.campus.classroom.mapper.UserMapper;
+import org.campus.classroom.mapper.ViolationRecordMapper;
 import org.campus.classroom.service.ReservationService;
 import org.campus.classroom.service.SystemConfigService;
 import org.campus.classroom.vo.ReservationVO;
@@ -34,6 +37,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,25 +55,27 @@ public class ReservationServiceImpl implements ReservationService {
     private final ClassroomMapper classroomMapper;
     private final AttendanceMapper attendanceMapper;
     private final UserMapper userMapper;
+    private final ViolationRecordMapper violationRecordMapper;
     private final SystemConfigService systemConfigService;
 
     @Override
     @Transactional
     public Long createSeatReservation(Long currentUserId, SeatReservationCreateDTO request) {
+        User currentUser = getUserOrThrow(currentUserId);
         OffsetDateTime startTime = request.getStartTime();
         OffsetDateTime endTime = request.getEndTime();
         LocalDateTime utcStartTime = toUtcLocalDateTime(startTime);
         LocalDateTime utcEndTime = toUtcLocalDateTime(endTime);
 
-        validateTime(startTime, endTime);
-        validateSeatReservationAdvanceTime(currentUserId, startTime);
+        validateTime(currentUser, startTime, endTime);
+        validateSeatReservationAdvanceTime(currentUser, startTime);
         Long classroomId = checkSeatReservableAndGetClassroomId(currentUserId, request, utcStartTime, utcEndTime);
-        tryConsumeDailyUsageQuota(currentUserId, startTime, endTime);
+        tryConsumeDailyUsageQuota(currentUser, startTime, endTime);
 
         Reservation reservation = buildSeatReservation(currentUserId, request, classroomId, utcStartTime, utcEndTime);
         reservationMapper.insert(reservation);
         attendanceMapper.insertStatusIfAbsent(reservation.getId(), AttendanceStatus.PENDING.name());
-        log.info("[创建座位预约成功] 用户ID={}, 预约ID={}, 座位ID={}",
+        log.info("[创建座位预约成功] userId={}, reservationId={}, seatId={}",
                 currentUserId, reservation.getId(), request.getSeatId());
         return reservation.getId();
     }
@@ -77,19 +83,20 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @Transactional
     public Long createClassroomReservation(Long currentUserId, ClassroomReservationCreateDTO request) {
+        User currentUser = getUserOrThrow(currentUserId);
         OffsetDateTime startTime = request.getStartTime();
         OffsetDateTime endTime = request.getEndTime();
         LocalDateTime utcStartTime = toUtcLocalDateTime(startTime);
         LocalDateTime utcEndTime = toUtcLocalDateTime(endTime);
 
-        validateTime(startTime, endTime);
+        validateTime(currentUser, startTime, endTime);
         checkClassroomReservable(request, utcStartTime, utcEndTime);
-        tryConsumeDailyUsageQuota(currentUserId, startTime, endTime);
+        tryConsumeDailyUsageQuota(currentUser, startTime, endTime);
 
         Reservation reservation = buildClassroomReservation(currentUserId, request, utcStartTime, utcEndTime);
         reservationMapper.insert(reservation);
         attendanceMapper.insertStatusIfAbsent(reservation.getId(), AttendanceStatus.PENDING.name());
-        log.info("[创建教室预约成功] 用户ID={}, 预约ID={}, 教室ID={}",
+        log.info("[创建教室预约成功] userId={}, reservationId={}, classroomId={}",
                 currentUserId, reservation.getId(), request.getClassroomId());
         return reservation.getId();
     }
@@ -113,17 +120,17 @@ public class ReservationServiceImpl implements ReservationService {
             throw new BusinessException(ResultCode.CONFLICT, "预约状态已变化，请刷新后重试");
         }
 
-        Long minusMinutes = Duration.between(reservation.getStartTime(), reservation.getEndTime()).toMinutes();
+        long minusMinutes = Duration.between(reservation.getStartTime(), reservation.getEndTime()).toMinutes();
         int minusUsageRows = reservationMapper.minusUsage(reservation.getUserId(), reservation.getReserveDate(), minusMinutes);
         if (minusUsageRows != 1) {
-            log.error("[取消预约回滚失败] 用户ID={}, 预约日期={}, 回退分钟数={}",
+            log.error("[取消预约回滚失败] userId={}, reserveDate={}, minusMinutes={}",
                     reservation.getUserId(), reservation.getReserveDate(), minusMinutes);
             throw new BusinessException(ResultCode.INTERNAL_ERROR, "取消预约失败");
         }
 
         attendanceMapper.insertStatusIfAbsent(reservationId, AttendanceStatus.CANCELLED.name());
         attendanceMapper.updateStatusIfPending(reservationId, AttendanceStatus.CANCELLED.name());
-
+        applyCancelCreditPenalty(reservation);
         return true;
     }
 
@@ -151,11 +158,12 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public List<Long> listReservedSeatIds(Long classroomId, OffsetDateTime startTime, OffsetDateTime endTime) {
+    public List<Long> listReservedSeatIds(Long currentUserId, Long classroomId, OffsetDateTime startTime, OffsetDateTime endTime) {
+        User currentUser = getUserOrThrow(currentUserId);
         LocalDateTime utcStartTime = toUtcLocalDateTime(startTime);
         LocalDateTime utcEndTime = toUtcLocalDateTime(endTime);
 
-        validateTime(startTime, endTime);
+        validateTime(currentUser, startTime, endTime);
 
         Classroom classroom = classroomMapper.selectById(classroomId);
         if (classroom == null) {
@@ -228,8 +236,8 @@ public class ReservationServiceImpl implements ReservationService {
         Map<Long, AttendanceRecord> attendanceMap = reservationList.isEmpty()
                 ? Collections.emptyMap()
                 : attendanceMapper.selectByReservationIds(
-                        reservationList.stream().map(Reservation::getId).toList()
-                ).stream().collect(Collectors.toMap(AttendanceRecord::getReservationId, Function.identity()));
+                reservationList.stream().map(Reservation::getId).toList()
+        ).stream().collect(Collectors.toMap(AttendanceRecord::getReservationId, Function.identity()));
 
         return reservationList.stream()
                 .map(reservation -> reservationToReservationVO(reservation, classroomMap, seatMap, attendanceMap))
@@ -263,9 +271,9 @@ public class ReservationServiceImpl implements ReservationService {
         return reservationVO;
     }
 
-    private void validateTime(OffsetDateTime startTime, OffsetDateTime endTime) {
+    private void validateTime(User currentUser, OffsetDateTime startTime, OffsetDateTime endTime) {
         validateBasicTime(startTime, endTime);
-        validateDurationTime(startTime, endTime);
+        validateDurationTime(currentUser, startTime, endTime);
     }
 
     private void validateBasicTime(OffsetDateTime startTime, OffsetDateTime endTime) {
@@ -283,41 +291,34 @@ public class ReservationServiceImpl implements ReservationService {
         }
     }
 
-    private void validateDurationTime(OffsetDateTime startTime, OffsetDateTime endTime) {
+    private void validateDurationTime(User currentUser, OffsetDateTime startTime, OffsetDateTime endTime) {
         long minutes = Duration.between(startTime, endTime).toMinutes();
-        int maxSingleReservationMinutes = systemConfigService.getMaxSingleReservationMinutes();
+        int maxSingleReservationMinutes = systemConfigService.getMaxSingleReservationMinutes(currentUser.getCreditScore());
         if (minutes > maxSingleReservationMinutes) {
-            throw new BusinessException(ResultCode.BAD_REQUEST,
-                    "单次预约时长不能超过" + formatMinutesText(maxSingleReservationMinutes));
-        }
-        if (false && minutes > maxSingleReservationMinutes) {
-            throw new BusinessException(ResultCode.BAD_REQUEST, "单次预约时长不能超过3小时");
+            throw new BusinessException(
+                    ResultCode.BAD_REQUEST,
+                    "单次预约时长不能超过" + formatMinutesText(maxSingleReservationMinutes)
+            );
         }
     }
 
-    private void validateSeatReservationAdvanceTime(Long currentUserId, OffsetDateTime startTime) {
-        User user = userMapper.selectById(currentUserId);
-        if (user == null) {
-            throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在");
-        }
-
-        int maxAdvanceHours = systemConfigService.getSeatReservationAdvanceHours(user.getCreditScore());
+    private void validateSeatReservationAdvanceTime(User currentUser, OffsetDateTime startTime) {
+        int maxAdvanceHours = systemConfigService.getSeatReservationAdvanceHours(currentUser.getCreditScore());
         OffsetDateTime latestAllowedStartTime = OffsetDateTime.now(ZoneOffset.UTC).plusHours(maxAdvanceHours);
         if (startTime.isAfter(latestAllowedStartTime)) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "当前预约时间超出可预约范围，请调整后重试");
         }
     }
 
-    public void tryConsumeDailyUsageQuota(Long currentUserId, OffsetDateTime startTime, OffsetDateTime endTime) {
+    public void tryConsumeDailyUsageQuota(User currentUser, OffsetDateTime startTime, OffsetDateTime endTime) {
         LocalDate date = toBeijingDate(startTime);
         long addMinutes = Duration.between(startTime, endTime).toMinutes();
-        int dailyReservationLimitMinutes = systemConfigService.getDailyReservationLimitMinutes();
+        int dailyReservationLimitMinutes = systemConfigService.getDailyReservationLimitMinutes(currentUser.getCreditScore());
 
-        reservationMapper.initUsage(currentUserId, date);
-        int updatedRows = reservationMapper.tryAddUsage(currentUserId, date, addMinutes, dailyReservationLimitMinutes);
-
+        reservationMapper.initUsage(currentUser.getId(), date);
+        int updatedRows = reservationMapper.tryAddUsage(currentUser.getId(), date, addMinutes, dailyReservationLimitMinutes);
         if (updatedRows == 0) {
-            throw new BusinessException(ResultCode.BAD_REQUEST, "已超过当日可预约时长上限");
+            throw new BusinessException(ResultCode.BAD_REQUEST, "已超过当前信用等级对应的当日预约时长上限");
         }
     }
 
@@ -397,6 +398,43 @@ public class ReservationServiceImpl implements ReservationService {
         if (withSeatConflict) {
             throw new BusinessException(ResultCode.CONFLICT, "该时间段内教室中已有座位被预约");
         }
+    }
+
+    private void applyCancelCreditPenalty(Reservation reservation) {
+        int cancelDeductionScore = systemConfigService.getCancelDeductionScore();
+        if (cancelDeductionScore <= 0) {
+            return;
+        }
+
+        User user = userMapper.selectById(reservation.getUserId());
+        if (user == null) {
+            return;
+        }
+
+        int updatedRows = userMapper.decreaseCreditScore(
+                user.getId(),
+                cancelDeductionScore,
+                systemConfigService.getCreditMinScore(),
+                systemConfigService.getCreditMaxScore()
+        );
+        if (updatedRows != 1) {
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "更新用户信用信息失败");
+        }
+
+        ViolationRecord violationRecord = new ViolationRecord();
+        violationRecord.setUserId(user.getId());
+        violationRecord.setReservationId(reservation.getId());
+        violationRecord.setType(ViolationType.USER_CANCEL.name());
+        violationRecord.setRemark("用户主动取消预约，扣除" + cancelDeductionScore + "分信用分。");
+        violationRecordMapper.insert(violationRecord);
+    }
+
+    private User getUserOrThrow(Long currentUserId) {
+        User currentUser = userMapper.selectById(currentUserId);
+        if (currentUser == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在");
+        }
+        return currentUser;
     }
 
     private LocalDateTime toUtcLocalDateTime(OffsetDateTime dateTime) {

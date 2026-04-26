@@ -10,9 +10,9 @@ public interface SystemConfigService {
 
     SystemConfigVO updateConfig(String key, String value);
 
-    int getMaxSingleReservationMinutes();
+    int getMaxSingleReservationMinutes(Integer creditScore);
 
-    int getDailyReservationLimitMinutes();
+    int getDailyReservationLimitMinutes(Integer creditScore);
 
     int getCheckInEarlyMinutes();
 
@@ -23,6 +23,20 @@ public interface SystemConfigService {
     int getNoShowDeductionScore();
 
     int getSeatReservationAdvanceHours(Integer creditScore);
+
+    int getCancelDeductionScore();
+
+    int getDailyRecoveryScore();
+
+    int getSuccessStreakRewardScore();
+
+    int getSuccessStreakSize();
+
+    int getCreditMinScore();
+
+    int getCreditMaxScore();
+
+    String getCreditLevelCode(Integer creditScore);
 
     LocalTime getReservationStartTime();
 

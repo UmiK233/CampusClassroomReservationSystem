@@ -6,9 +6,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 public enum CreditLevel {
-    A("A", 85, 24),
-    B("B", 60, 12),
-    C("C", 0, 6);
+    A("A", 80, 24),
+    B("B", 50, 12),
+    C("C", 30, 6);
 
     private final String code;
     private final int minScore;
@@ -18,7 +18,7 @@ public enum CreditLevel {
         if (score == null) {
             return 100;
         }
-        return Math.max(0, Math.min(100, score));
+        return Math.max(30, Math.min(100, score));
     }
 
     public static CreditLevel fromScore(Integer score) {

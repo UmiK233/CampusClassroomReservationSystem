@@ -6,4 +6,6 @@ public interface AttendanceService {
     int markNoShows();
 
     void markCancelledIfPending(Long reservationId);
+
+    int recoverCreditScoreDaily();
 }

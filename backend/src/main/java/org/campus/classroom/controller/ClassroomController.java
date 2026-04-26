@@ -13,7 +13,11 @@ import org.campus.classroom.vo.ClassroomVO;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -53,7 +57,11 @@ public class ClassroomController {
     public Result<List<Long>> listReservedSeatIds(
             @PathVariable Long id,
             @RequestParam("start_time") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime startTime,
-            @RequestParam("end_time") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endTime) {
-        return Result.success("查询已预约座位成功", reservationService.listReservedSeatIds(id, startTime, endTime));
+            @RequestParam("end_time") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endTime,
+            @AuthenticationPrincipal LoginUser loginUser) {
+        return Result.success(
+                "查询已预约座位成功",
+                reservationService.listReservedSeatIds(loginUser.getId(), id, startTime, endTime)
+        );
     }
 }

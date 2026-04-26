@@ -25,6 +25,9 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -54,8 +57,10 @@ public class AttendanceServiceImpl implements AttendanceService {
         LocalDateTime earliestCheckInTime = reservation.getStartTime().minusMinutes(checkInEarlyMinutes);
         LocalDateTime latestCheckInTime = reservation.getStartTime().plusMinutes(checkInGraceMinutes);
         if (now.isBefore(earliestCheckInTime) || now.isAfter(latestCheckInTime)) {
-            throw new BusinessException(ResultCode.BAD_REQUEST,
-                    "仅可在预约开始前" + checkInEarlyMinutes + "分钟到开始后" + checkInGraceMinutes + "分钟内签到");
+            throw new BusinessException(
+                    ResultCode.BAD_REQUEST,
+                    "仅可在预约开始前" + checkInEarlyMinutes + "分钟到开始后" + checkInGraceMinutes + "分钟内签到"
+            );
         }
 
         attendanceMapper.insertStatusIfAbsent(reservationId, AttendanceStatus.PENDING.name());
@@ -78,7 +83,7 @@ public class AttendanceServiceImpl implements AttendanceService {
             throw new BusinessException(ResultCode.CONFLICT, "签到状态已变化，请刷新后重试");
         }
 
-        rewardStudentCreditScore(currentUserId);
+        rewardAfterSuccessfulCheckIn(currentUserId);
         return true;
     }
 
@@ -101,6 +106,16 @@ public class AttendanceServiceImpl implements AttendanceService {
     public void markCancelledIfPending(Long reservationId) {
         attendanceMapper.insertStatusIfAbsent(reservationId, AttendanceStatus.CANCELLED.name());
         attendanceMapper.updateStatusIfPending(reservationId, AttendanceStatus.CANCELLED.name());
+    }
+
+    @Override
+    @Transactional
+    public int recoverCreditScoreDaily() {
+        return userMapper.recoverCreditScoreDaily(
+                systemConfigService.getDailyRecoveryScore(),
+                systemConfigService.getCreditMinScore(),
+                systemConfigService.getCreditMaxScore()
+        );
     }
 
     private boolean markSingleNoShow(Long reservationId) {
@@ -133,15 +148,11 @@ public class AttendanceServiceImpl implements AttendanceService {
         long minusMinutes = Duration.between(reservation.getStartTime(), reservation.getEndTime()).toMinutes();
         int usageRows = reservationMapper.minusUsage(reservation.getUserId(), reservation.getReserveDate(), minusMinutes);
         if (usageRows != 1) {
-            throw new BusinessException(ResultCode.INTERNAL_ERROR, "爽约回滚预约额度失败");
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "爽约回滚预约配额失败");
         }
 
-        User user = userMapper.selectById(reservation.getUserId());
-        if (user != null && "STUDENT".equals(user.getRole())) {
-            int updatedRows = userMapper.decreaseCreditScore(user.getId(), systemConfigService.getNoShowDeductionScore());
-            if (updatedRows != 1) {
-                throw new BusinessException(ResultCode.INTERNAL_ERROR, "更新用户信誉信息失败");
-            }
+        if (userMapper.selectById(reservation.getUserId()) != null) {
+            decreaseCreditScore(reservation.getUserId(), systemConfigService.getNoShowDeductionScore());
         }
 
         ViolationRecord violationRecord = new ViolationRecord();
@@ -170,14 +181,74 @@ public class AttendanceServiceImpl implements AttendanceService {
                 + "分钟内未完成签到，系统已自动取消本次预约并记录异常，后续预约将受到影响。";
     }
 
-    private void rewardStudentCreditScore(Long userId) {
-        User user = userMapper.selectById(userId);
-        if (user == null || !"STUDENT".equals(user.getRole())) {
+    private void rewardAfterSuccessfulCheckIn(Long userId) {
+        if (userMapper.selectById(userId) == null) {
             return;
         }
-        int updatedRows = userMapper.increaseCreditScore(userId, systemConfigService.getCheckInRewardScore());
+
+        int checkInRewardScore = systemConfigService.getCheckInRewardScore();
+        if (checkInRewardScore > 0) {
+            increaseCreditScore(userId, checkInRewardScore);
+        }
+
+        int successStreakSize = systemConfigService.getSuccessStreakSize();
+        int successStreakReward = systemConfigService.getSuccessStreakRewardScore();
+        if (successStreakSize <= 0 || successStreakReward <= 0) {
+            return;
+        }
+
+        int streakCount = getRecentSuccessStreakCount(userId);
+        if (streakCount >= successStreakSize && streakCount % successStreakSize == 0) {
+            increaseCreditScore(userId, successStreakReward);
+        }
+    }
+
+    private int getRecentSuccessStreakCount(Long userId) {
+        List<Reservation> reservations = reservationMapper.selectByUserId(userId);
+        if (reservations.isEmpty()) {
+            return 0;
+        }
+
+        Map<Long, AttendanceRecord> attendanceMap = attendanceMapper.selectByReservationIds(
+                reservations.stream().map(Reservation::getId).toList()
+        ).stream().collect(Collectors.toMap(AttendanceRecord::getReservationId, Function.identity()));
+
+        int streak = 0;
+        for (Reservation reservation : reservations) {
+            AttendanceRecord attendanceRecord = attendanceMap.get(reservation.getId());
+            if (attendanceRecord == null) {
+                continue;
+            }
+            if (AttendanceStatus.CHECKED_IN.name().equals(attendanceRecord.getStatus())) {
+                streak++;
+                continue;
+            }
+            break;
+        }
+        return streak;
+    }
+
+    private void decreaseCreditScore(Long userId, int delta) {
+        int updatedRows = userMapper.decreaseCreditScore(
+                userId,
+                delta,
+                systemConfigService.getCreditMinScore(),
+                systemConfigService.getCreditMaxScore()
+        );
         if (updatedRows != 1) {
-            throw new BusinessException(ResultCode.INTERNAL_ERROR, "更新用户信誉信息失败");
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "更新用户信用信息失败");
+        }
+    }
+
+    private void increaseCreditScore(Long userId, int delta) {
+        int updatedRows = userMapper.increaseCreditScore(
+                userId,
+                delta,
+                systemConfigService.getCreditMinScore(),
+                systemConfigService.getCreditMaxScore()
+        );
+        if (updatedRows != 1) {
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "更新用户信用信息失败");
         }
     }
 

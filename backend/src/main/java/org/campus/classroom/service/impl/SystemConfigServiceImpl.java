@@ -25,12 +25,22 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class SystemConfigServiceImpl implements SystemConfigService {
-    private static final String RESERVATION_MAX_SINGLE_MINUTES = "reservation.max_single_minutes";
-    private static final String RESERVATION_DAILY_MAX_MINUTES = "reservation.daily_max_minutes";
+    private static final String RESERVATION_LEVEL_A_MAX_SINGLE_MINUTES = "reservation.level_a_max_single_minutes";
+    private static final String RESERVATION_LEVEL_B_MAX_SINGLE_MINUTES = "reservation.level_b_max_single_minutes";
+    private static final String RESERVATION_LEVEL_C_MAX_SINGLE_MINUTES = "reservation.level_c_max_single_minutes";
+    private static final String RESERVATION_LEVEL_A_DAILY_MAX_MINUTES = "reservation.level_a_daily_max_minutes";
+    private static final String RESERVATION_LEVEL_B_DAILY_MAX_MINUTES = "reservation.level_b_daily_max_minutes";
+    private static final String RESERVATION_LEVEL_C_DAILY_MAX_MINUTES = "reservation.level_c_daily_max_minutes";
     private static final String ATTENDANCE_CHECK_IN_EARLY_MINUTES = "attendance.check_in_early_minutes";
     private static final String ATTENDANCE_CHECK_IN_GRACE_MINUTES = "attendance.check_in_grace_minutes";
     private static final String CREDIT_CHECK_IN_REWARD = "credit.check_in_reward";
     private static final String CREDIT_NO_SHOW_DEDUCTION = "credit.no_show_deduction";
+    private static final String CREDIT_CANCEL_DEDUCTION = "credit.cancel_deduction";
+    private static final String CREDIT_DAILY_RECOVERY_SCORE = "credit.daily_recovery_score";
+    private static final String CREDIT_SUCCESS_STREAK_REWARD = "credit.success_streak_reward";
+    private static final String CREDIT_SUCCESS_STREAK_SIZE = "credit.success_streak_size";
+    private static final String CREDIT_MIN_SCORE = "credit.min_score";
+    private static final String CREDIT_MAX_SCORE = "credit.max_score";
     private static final String CREDIT_LEVEL_A_MIN_SCORE = "credit.level_a_min_score";
     private static final String CREDIT_LEVEL_B_MIN_SCORE = "credit.level_b_min_score";
     private static final String CREDIT_LEVEL_A_ADVANCE_HOURS = "credit.level_a_advance_hours";
@@ -66,13 +76,23 @@ public class SystemConfigServiceImpl implements SystemConfigService {
     }
 
     @Override
-    public int getMaxSingleReservationMinutes() {
-        return getIntConfig(RESERVATION_MAX_SINGLE_MINUTES, 180);
+    public int getMaxSingleReservationMinutes(Integer creditScore) {
+        CreditRuleSnapshot creditRules = getCreditRuleSnapshot();
+        return switch (resolveCreditLevel(creditScore, creditRules)) {
+            case A -> getIntValue(creditRules.configMap().get(RESERVATION_LEVEL_A_MAX_SINGLE_MINUTES), 360, RESERVATION_LEVEL_A_MAX_SINGLE_MINUTES);
+            case B -> getIntValue(creditRules.configMap().get(RESERVATION_LEVEL_B_MAX_SINGLE_MINUTES), 180, RESERVATION_LEVEL_B_MAX_SINGLE_MINUTES);
+            case C -> getIntValue(creditRules.configMap().get(RESERVATION_LEVEL_C_MAX_SINGLE_MINUTES), 120, RESERVATION_LEVEL_C_MAX_SINGLE_MINUTES);
+        };
     }
 
     @Override
-    public int getDailyReservationLimitMinutes() {
-        return getIntConfig(RESERVATION_DAILY_MAX_MINUTES, 540);
+    public int getDailyReservationLimitMinutes(Integer creditScore) {
+        CreditRuleSnapshot creditRules = getCreditRuleSnapshot();
+        return switch (resolveCreditLevel(creditScore, creditRules)) {
+            case A -> getIntValue(creditRules.configMap().get(RESERVATION_LEVEL_A_DAILY_MAX_MINUTES), 720, RESERVATION_LEVEL_A_DAILY_MAX_MINUTES);
+            case B -> getIntValue(creditRules.configMap().get(RESERVATION_LEVEL_B_DAILY_MAX_MINUTES), 540, RESERVATION_LEVEL_B_DAILY_MAX_MINUTES);
+            case C -> getIntValue(creditRules.configMap().get(RESERVATION_LEVEL_C_DAILY_MAX_MINUTES), 480, RESERVATION_LEVEL_C_DAILY_MAX_MINUTES);
+        };
     }
 
     @Override
@@ -96,29 +116,48 @@ public class SystemConfigServiceImpl implements SystemConfigService {
     }
 
     @Override
+    public int getCancelDeductionScore() {
+        return getIntConfig(CREDIT_CANCEL_DEDUCTION, 1);
+    }
+
+    @Override
+    public int getDailyRecoveryScore() {
+        return getIntConfig(CREDIT_DAILY_RECOVERY_SCORE, 1);
+    }
+
+    @Override
+    public int getSuccessStreakRewardScore() {
+        return getIntConfig(CREDIT_SUCCESS_STREAK_REWARD, 1);
+    }
+
+    @Override
+    public int getSuccessStreakSize() {
+        return getIntConfig(CREDIT_SUCCESS_STREAK_SIZE, 3);
+    }
+
+    @Override
+    public int getCreditMinScore() {
+        return getIntConfig(CREDIT_MIN_SCORE, 30);
+    }
+
+    @Override
+    public int getCreditMaxScore() {
+        return getIntConfig(CREDIT_MAX_SCORE, 100);
+    }
+
+    @Override
     public int getSeatReservationAdvanceHours(Integer creditScore) {
-        Map<String, SystemConfig> configMap = systemConfigMapper.selectByKeys(List.of(
-                CREDIT_LEVEL_A_MIN_SCORE,
-                CREDIT_LEVEL_B_MIN_SCORE,
-                CREDIT_LEVEL_A_ADVANCE_HOURS,
-                CREDIT_LEVEL_B_ADVANCE_HOURS,
-                CREDIT_LEVEL_C_ADVANCE_HOURS
-        )).stream().collect(Collectors.toMap(SystemConfig::getConfigKey, Function.identity()));
+        CreditRuleSnapshot creditRules = getCreditRuleSnapshot();
+        return switch (resolveCreditLevel(creditScore, creditRules)) {
+            case A -> getIntValue(creditRules.configMap().get(CREDIT_LEVEL_A_ADVANCE_HOURS), 24, CREDIT_LEVEL_A_ADVANCE_HOURS);
+            case B -> getIntValue(creditRules.configMap().get(CREDIT_LEVEL_B_ADVANCE_HOURS), 12, CREDIT_LEVEL_B_ADVANCE_HOURS);
+            case C -> getIntValue(creditRules.configMap().get(CREDIT_LEVEL_C_ADVANCE_HOURS), 6, CREDIT_LEVEL_C_ADVANCE_HOURS);
+        };
+    }
 
-        int normalizedScore = CreditLevel.normalizeScore(creditScore);
-        int levelAMinScore = getIntValue(configMap.get(CREDIT_LEVEL_A_MIN_SCORE), 85, CREDIT_LEVEL_A_MIN_SCORE);
-        int levelBMinScore = getIntValue(configMap.get(CREDIT_LEVEL_B_MIN_SCORE), 60, CREDIT_LEVEL_B_MIN_SCORE);
-        int levelAAdvanceHours = getIntValue(configMap.get(CREDIT_LEVEL_A_ADVANCE_HOURS), 24, CREDIT_LEVEL_A_ADVANCE_HOURS);
-        int levelBAdvanceHours = getIntValue(configMap.get(CREDIT_LEVEL_B_ADVANCE_HOURS), 12, CREDIT_LEVEL_B_ADVANCE_HOURS);
-        int levelCAdvanceHours = getIntValue(configMap.get(CREDIT_LEVEL_C_ADVANCE_HOURS), 6, CREDIT_LEVEL_C_ADVANCE_HOURS);
-
-        if (normalizedScore >= levelAMinScore) {
-            return levelAAdvanceHours;
-        }
-        if (normalizedScore >= levelBMinScore) {
-            return levelBAdvanceHours;
-        }
-        return levelCAdvanceHours;
+    @Override
+    public String getCreditLevelCode(Integer creditScore) {
+        return resolveCreditLevel(creditScore, getCreditRuleSnapshot()).getCode();
     }
 
     @Override
@@ -133,6 +172,48 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 
     private int getIntConfig(String key, int defaultValue) {
         return getIntValue(systemConfigMapper.selectByKey(key), defaultValue, key);
+    }
+
+    private CreditRuleSnapshot getCreditRuleSnapshot() {
+        Map<String, SystemConfig> configMap = systemConfigMapper.selectByKeys(List.of(
+                CREDIT_MIN_SCORE,
+                CREDIT_MAX_SCORE,
+                CREDIT_LEVEL_A_MIN_SCORE,
+                CREDIT_LEVEL_B_MIN_SCORE,
+                CREDIT_LEVEL_A_ADVANCE_HOURS,
+                CREDIT_LEVEL_B_ADVANCE_HOURS,
+                CREDIT_LEVEL_C_ADVANCE_HOURS,
+                RESERVATION_LEVEL_A_MAX_SINGLE_MINUTES,
+                RESERVATION_LEVEL_B_MAX_SINGLE_MINUTES,
+                RESERVATION_LEVEL_C_MAX_SINGLE_MINUTES,
+                RESERVATION_LEVEL_A_DAILY_MAX_MINUTES,
+                RESERVATION_LEVEL_B_DAILY_MAX_MINUTES,
+                RESERVATION_LEVEL_C_DAILY_MAX_MINUTES
+        )).stream().collect(Collectors.toMap(SystemConfig::getConfigKey, Function.identity()));
+
+        int minScore = getIntValue(configMap.get(CREDIT_MIN_SCORE), 30, CREDIT_MIN_SCORE);
+        int maxScore = getIntValue(configMap.get(CREDIT_MAX_SCORE), 100, CREDIT_MAX_SCORE);
+        int levelAMinScore = getIntValue(configMap.get(CREDIT_LEVEL_A_MIN_SCORE), 80, CREDIT_LEVEL_A_MIN_SCORE);
+        int levelBMinScore = getIntValue(configMap.get(CREDIT_LEVEL_B_MIN_SCORE), 50, CREDIT_LEVEL_B_MIN_SCORE);
+        return new CreditRuleSnapshot(configMap, minScore, maxScore, levelAMinScore, levelBMinScore);
+    }
+
+    private CreditLevel resolveCreditLevel(Integer creditScore, CreditRuleSnapshot creditRules) {
+        int normalizedScore = normalizeScore(creditScore, creditRules.minScore(), creditRules.maxScore());
+        if (normalizedScore >= creditRules.levelAMinScore()) {
+            return CreditLevel.A;
+        }
+        if (normalizedScore >= creditRules.levelBMinScore()) {
+            return CreditLevel.B;
+        }
+        return CreditLevel.C;
+    }
+
+    private int normalizeScore(Integer score, int minScore, int maxScore) {
+        if (score == null) {
+            return maxScore;
+        }
+        return Math.max(minScore, Math.min(maxScore, score));
     }
 
     private LocalTime getTimeConfig(String key, LocalTime defaultValue) {
@@ -206,5 +287,14 @@ public class SystemConfigServiceImpl implements SystemConfigService {
         SystemConfigVO configVO = new SystemConfigVO();
         BeanUtils.copyProperties(config, configVO);
         return configVO;
+    }
+
+    private record CreditRuleSnapshot(
+            Map<String, SystemConfig> configMap,
+            int minScore,
+            int maxScore,
+            int levelAMinScore,
+            int levelBMinScore
+    ) {
     }
 }

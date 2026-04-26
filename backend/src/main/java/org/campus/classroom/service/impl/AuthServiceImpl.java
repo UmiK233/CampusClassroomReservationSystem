@@ -83,6 +83,10 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private void fillUserCreditInfo(UserInfoVO userInfoVO, Integer creditScore) {
+        userInfoVO.setCreditScore(creditScore == null ? systemConfigService.getCreditMaxScore() : creditScore);
+        userInfoVO.setCreditLevel(systemConfigService.getCreditLevelCode(creditScore));
         userInfoVO.setSeatReservationAdvanceHours(systemConfigService.getSeatReservationAdvanceHours(creditScore));
+        userInfoVO.setMaxSingleReservationMinutes(systemConfigService.getMaxSingleReservationMinutes(creditScore));
+        userInfoVO.setDailyReservationLimitMinutes(systemConfigService.getDailyReservationLimitMinutes(creditScore));
     }
 }
