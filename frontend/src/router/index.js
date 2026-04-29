@@ -8,7 +8,14 @@ const routes = [
   { path: '/dashboard', component: () => import('../views/DashboardView.vue') },
   { path: '/classrooms', component: () => import('../views/ClassroomView.vue'), meta: { keepAlive: true, roles: ['STUDENT', 'TEACHER'] } },
   { path: '/reservations', component: () => import('../views/ReservationsView.vue'), meta: { roles: ['STUDENT', 'TEACHER'] } },
-  { path: '/admin', component: () => import('../views/AdminView.vue'), meta: { role: 'ADMIN' } }
+  { path: '/notifications', component: () => import('../views/NotificationCenterView.vue') },
+  { path: '/statistics', component: () => import('../views/StatisticsView.vue'), meta: { roles: ['STUDENT', 'TEACHER'] } },
+  { path: '/profile', component: () => import('../views/ProfileView.vue') },
+  { path: '/admin', component: () => import('../views/AdminDashboardView.vue'), meta: { role: 'ADMIN' } },
+  { path: '/admin/classrooms', component: () => import('../views/AdminClassroomsView.vue'), meta: { role: 'ADMIN' } },
+  { path: '/admin/users', component: () => import('../views/AdminUsersView.vue'), meta: { role: 'ADMIN' } },
+  { path: '/admin/reservations', component: () => import('../views/AdminReservationsView.vue'), meta: { role: 'ADMIN' } },
+  { path: '/admin/configs', component: () => import('../views/AdminConfigsView.vue'), meta: { role: 'ADMIN' } }
 ]
 
 const router = createRouter({

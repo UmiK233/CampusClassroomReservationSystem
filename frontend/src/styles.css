@@ -91,6 +91,25 @@ body {
   box-shadow: inset 3px 0 0 var(--primary);
 }
 
+.side-menu .el-sub-menu .el-sub-menu__title {
+  height: 46px;
+  margin-bottom: 6px;
+  color: #475467;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.side-menu .el-sub-menu .el-sub-menu__title:hover {
+  color: #172033;
+  background: #edf4ff;
+}
+
+.side-menu .el-sub-menu .el-menu .el-menu-item {
+  padding-left: 48px !important;
+  height: 42px;
+  font-size: 13px;
+}
+
 .topbar {
   position: sticky;
   top: 0;
