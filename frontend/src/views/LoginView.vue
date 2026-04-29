@@ -19,7 +19,10 @@ const form = ref({
 
 const rules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 8, max: 20, message: '密码长度必须在8到20位之间', trigger: 'blur' }
+  ],
   email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }]
 }
 
@@ -86,13 +89,22 @@ async function submit() {
           <span>欢迎使用</span>
           <strong>{{ mode === 'login' ? '登录账号' : '创建学生账号' }}</strong>
         </div>
-        <el-segmented v-model="mode" :options="[{ label: '登录', value: 'login' }, { label: '学生注册', value: 'register' }]" />
+        <el-segmented
+          v-model="mode"
+          :options="[{ label: '登录', value: 'login' }, { label: '学生注册', value: 'register' }]"
+        />
         <el-form ref="formRef" :model="form" :rules="rules" label-position="top" class="login-form">
           <el-form-item label="用户名" prop="username">
             <el-input v-model="form.username" :prefix-icon="User" placeholder="请输入用户名" />
           </el-form-item>
           <el-form-item label="密码" prop="password">
-            <el-input v-model="form.password" :prefix-icon="Lock" type="password" show-password placeholder="请输入密码" />
+            <el-input
+              v-model="form.password"
+              :prefix-icon="Lock"
+              type="password"
+              show-password
+              placeholder="请输入8-20位密码"
+            />
           </el-form-item>
           <el-form-item v-if="mode === 'register'" label="邮箱" prop="email">
             <el-input v-model="form.email" :prefix-icon="Message" placeholder="请输入邮箱" />

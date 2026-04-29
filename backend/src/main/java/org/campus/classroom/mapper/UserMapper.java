@@ -65,6 +65,13 @@ public interface UserMapper {
 
     @Update("""
             UPDATE user
+            SET password = #{password}
+            WHERE id = #{id}
+            """)
+    int updatePassword(@Param("id") Long id, @Param("password") String password);
+
+    @Update("""
+            UPDATE user
             SET credit_score = GREATEST(#{minScore}, COALESCE(credit_score, #{maxScore}) - #{delta})
             WHERE id = #{id}
             """)

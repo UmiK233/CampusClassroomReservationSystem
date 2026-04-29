@@ -2,6 +2,7 @@ package org.campus.classroom.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.campus.classroom.dto.ChangePasswordDTO;
 import org.campus.classroom.dto.RegisterDTO;
 import org.campus.classroom.entity.User;
 import org.campus.classroom.enums.ResultCode;
@@ -50,6 +51,17 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public void validateLoginAccount(String username) {
+        User user = userMapper.selectByUsername(username);
+        if (user == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在");
+        }
+        if (user.getStatus() == null || user.getStatus() != 1) {
+            throw new BusinessException(ResultCode.FORBIDDEN, "用户已被封禁");
+        }
+    }
+
+    @Override
     public LoginVO login(LoginUser user) {
         log.info("[开始登录] 用户ID={}, 用户名={}", user.getId(), user.getUsername());
         String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
@@ -80,6 +92,26 @@ public class AuthServiceImpl implements AuthService {
         userInfoVO.setRole(loginUser.getRole());
         fillUserCreditInfo(userInfoVO, loginUser.getRole(), loginUser.getCreditScore());
         return userInfoVO;
+    }
+
+    @Override
+    public void changePassword(Long userId, ChangePasswordDTO request) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在");
+        }
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "旧密码错误");
+        }
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "新密码不能与旧密码相同");
+        }
+
+        int rows = userMapper.updatePassword(userId, passwordEncoder.encode(request.getNewPassword()));
+        if (rows != 1) {
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "修改密码失败");
+        }
+        log.info("[修改密码成功] 用户ID={}, 用户名={}", user.getId(), user.getUsername());
     }
 
     private void fillUserCreditInfo(UserInfoVO userInfoVO, String role, Integer creditScore) {

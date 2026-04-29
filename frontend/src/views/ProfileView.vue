@@ -1,14 +1,43 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { UserFilled, Clock, Histogram, Timer } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { UserFilled, Clock, Histogram, Timer, Lock } from '@element-plus/icons-vue'
 import { authApi, reservationApi } from '../api'
 import { useAuthStore } from '../stores/auth'
 import { userRoleText } from '../utils/dict'
 
 const authStore = useAuthStore()
 const loading = ref(false)
+const passwordLoading = ref(false)
+const passwordFormRef = ref()
 const activeReservations = ref([])
 const historyReservations = ref([])
+const passwordForm = ref({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+
+const passwordRules = {
+  oldPassword: [{ required: true, message: '请输入旧密码', trigger: 'blur' }],
+  newPassword: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 8, max: 20, message: '新密码长度必须在8到20位之间', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请再次输入新密码', trigger: 'blur' },
+    {
+      validator: (rule, value, callback) => {
+        if (value !== passwordForm.value.newPassword) {
+          callback(new Error('两次输入的新密码不一致'))
+          return
+        }
+        callback()
+      },
+      trigger: 'blur'
+    }
+  ]
+}
 
 const user = computed(() => authStore.user)
 
@@ -47,6 +76,26 @@ async function loadData() {
     historyReservations.value = history || []
   } finally {
     loading.value = false
+  }
+}
+
+async function changePassword() {
+  await passwordFormRef.value.validate()
+  passwordLoading.value = true
+  try {
+    await authApi.changePassword({
+      oldPassword: passwordForm.value.oldPassword,
+      newPassword: passwordForm.value.newPassword
+    })
+    ElMessage.success('修改密码成功')
+    passwordForm.value = {
+      oldPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    }
+    passwordFormRef.value.clearValidate()
+  } finally {
+    passwordLoading.value = false
   }
 }
 
@@ -144,6 +193,53 @@ onMounted(loadData)
           </div>
         </div>
       </section>
+
+      <section class="panel password-panel">
+        <div class="toolbar">
+          <div>
+            <strong><el-icon><Lock /></el-icon> 修改密码</strong>
+            <div class="hint">修改后请使用新密码登录，当前登录状态不会立即失效</div>
+          </div>
+        </div>
+        <el-form
+          ref="passwordFormRef"
+          :model="passwordForm"
+          :rules="passwordRules"
+          label-position="top"
+          class="password-form"
+        >
+          <el-form-item label="旧密码" prop="oldPassword">
+            <el-input
+              v-model="passwordForm.oldPassword"
+              type="password"
+              show-password
+              autocomplete="current-password"
+              placeholder="请输入旧密码"
+            />
+          </el-form-item>
+          <el-form-item label="新密码" prop="newPassword">
+            <el-input
+              v-model="passwordForm.newPassword"
+              type="password"
+              show-password
+              autocomplete="new-password"
+              placeholder="8-20 位新密码"
+            />
+          </el-form-item>
+          <el-form-item label="确认新密码" prop="confirmPassword">
+            <el-input
+              v-model="passwordForm.confirmPassword"
+              type="password"
+              show-password
+              autocomplete="new-password"
+              placeholder="请再次输入新密码"
+            />
+          </el-form-item>
+          <el-button type="primary" :loading="passwordLoading" @click="changePassword">
+            保存新密码
+          </el-button>
+        </el-form>
+      </section>
     </div>
   </div>
 </template>
@@ -217,6 +313,15 @@ onMounted(loadData)
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+}
+
+.password-panel {
+  grid-column: 1 / -1;
+}
+
+.password-form {
+  max-width: 520px;
+  margin-top: 16px;
 }
 
 .limit-list,
