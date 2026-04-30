@@ -42,9 +42,14 @@ export const adminApi = {
   updateSeat: (id, data) => http.put(`/admin/seats/${id}`, data),
   deleteSeat: id => http.delete(`/admin/seats/${id}`),
   users: params => http.get('/admin/users', { params }),
+  exportUsers: params => http.get('/admin/users/export', { params, responseType: 'blob' }),
   updateUserStatus: (id, data) => http.patch(`/admin/users/${id}/status`, data),
   reservations: params => http.get('/admin/reservations', { params }),
+  exportReservations: params => http.get('/admin/reservations/export', { params, responseType: 'blob' }),
   cancelReservation: (id, data) => http.delete(`/admin/reservations/${id}`, { data }),
+  maintenance: params => http.get('/admin/maintenance', { params }),
+  createMaintenance: data => http.post('/admin/maintenance', data),
+  cancelMaintenance: id => http.delete(`/admin/maintenance/${id}`),
   configs: params => http.get('/admin/configs', { params }),
   updateConfig: (key, data) => http.put(`/admin/configs/${key}`, data)
 }

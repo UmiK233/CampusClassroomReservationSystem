@@ -1,12 +1,14 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Refresh, Search } from '@element-plus/icons-vue'
+import { Download, Refresh, Search } from '@element-plus/icons-vue'
 import { adminApi } from '../api'
 import { reservationStatusText, resourceTypeText } from '../utils/dict'
 import { formatDateTimeText } from '../utils/date'
+import { dateStamp, downloadBlob } from '../utils/download'
 
 const loading = ref(false)
+const exportLoading = ref(false)
 const reservations = ref([])
 const reservationDialog = ref(false)
 const editingReservation = ref(null)
@@ -22,15 +24,30 @@ const activeReservations = computed(() => reservations.value.filter(item => item
 const cancelledReservations = computed(() => reservations.value.filter(item => item.status === 'CANCELLED').length)
 const expiredReservations = computed(() => reservations.value.filter(item => item.status === 'EXPIRED').length)
 
+function reservationQueryParams() {
+  return {
+    keyword: reservationFilters.value.keyword || undefined,
+    status: reservationFilters.value.status || undefined
+  }
+}
+
 async function loadReservations() {
   loading.value = true
   try {
-    reservations.value = await adminApi.reservations({
-      keyword: reservationFilters.value.keyword || undefined,
-      status: reservationFilters.value.status || undefined
-    })
+    reservations.value = await adminApi.reservations(reservationQueryParams())
   } finally {
     loading.value = false
+  }
+}
+
+async function exportReservations() {
+  exportLoading.value = true
+  try {
+    const blob = await adminApi.exportReservations(reservationQueryParams())
+    downloadBlob(blob, `reservations-${dateStamp()}.csv`)
+    ElMessage.success('预约数据已导出')
+  } finally {
+    exportLoading.value = false
   }
 }
 
@@ -85,6 +102,7 @@ loadReservations()
         </el-select>
         <el-button type="primary" :icon="Search" @click="loadReservations">查询</el-button>
         <el-button :icon="Refresh" @click="loadReservations">刷新</el-button>
+        <el-button :icon="Download" :loading="exportLoading" @click="exportReservations">导出</el-button>
       </div>
     </div>
 
@@ -121,10 +139,21 @@ loadReservations()
     </el-table>
   </div>
 
-  <el-dialog v-model="reservationDialog" :title="editingReservation ? `取消预约 #${editingReservation.id}` : '取消预约'" width="520px">
+  <el-dialog
+    v-model="reservationDialog"
+    :title="editingReservation ? `取消预约 #${editingReservation.id}` : '取消预约'"
+    width="520px"
+  >
     <el-form :model="reservationForm" label-position="top">
       <el-form-item label="通知原因">
-        <el-input v-model="reservationForm.reason" type="textarea" :rows="3" maxlength="255" show-word-limit placeholder="可选，将写入用户收到的取消通知" />
+        <el-input
+          v-model="reservationForm.reason"
+          type="textarea"
+          :rows="3"
+          maxlength="255"
+          show-word-limit
+          placeholder="可选，将写入用户收到的取消通知"
+        />
       </el-form-item>
     </el-form>
     <template #footer>

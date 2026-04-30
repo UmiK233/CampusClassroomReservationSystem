@@ -20,6 +20,7 @@ import org.campus.classroom.enums.ViolationType;
 import org.campus.classroom.exception.BusinessException;
 import org.campus.classroom.mapper.AttendanceMapper;
 import org.campus.classroom.mapper.ClassroomMapper;
+import org.campus.classroom.mapper.MaintenanceWindowMapper;
 import org.campus.classroom.mapper.ReservationMapper;
 import org.campus.classroom.mapper.SeatMapper;
 import org.campus.classroom.mapper.UserMapper;
@@ -55,6 +56,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final AttendanceMapper attendanceMapper;
     private final UserMapper userMapper;
     private final ViolationRecordMapper violationRecordMapper;
+    private final MaintenanceWindowMapper maintenanceWindowMapper;
     private final SystemConfigService systemConfigService;
 
     @Override
@@ -173,14 +175,23 @@ public class ReservationServiceImpl implements ReservationService {
             throw new BusinessException(ResultCode.FORBIDDEN, "教室不可用");
         }
 
-        if (reservationMapper.countClassroomConflicts(classroomId, utcStartTime, utcEndTime) > 0) {
+        if (reservationMapper.countClassroomConflicts(classroomId, utcStartTime, utcEndTime) > 0
+                || maintenanceWindowMapper.countClassroomConflicts(classroomId, utcStartTime, utcEndTime) > 0) {
             return seatMapper.selectByClassroomId(classroomId)
                     .stream()
                     .map(Seat::getId)
                     .toList();
         }
 
-        return reservationMapper.selectReservedSeatIdsInClassroom(classroomId, utcStartTime, utcEndTime);
+        List<Long> reservedSeatIds = reservationMapper.selectReservedSeatIdsInClassroom(classroomId, utcStartTime, utcEndTime);
+        List<Long> maintainedSeatIds = maintenanceWindowMapper.selectMaintainedSeatIdsInClassroom(
+                classroomId,
+                utcStartTime,
+                utcEndTime
+        );
+        return java.util.stream.Stream.concat(reservedSeatIds.stream(), maintainedSeatIds.stream())
+                .distinct()
+                .toList();
     }
 
     private Reservation buildSeatReservation(Long currentUserId, SeatReservationCreateDTO request, Long classroomId,
@@ -369,6 +380,11 @@ public class ReservationServiceImpl implements ReservationService {
             throw new BusinessException(ResultCode.CONFLICT, "该时间段内教室已被整间预约");
         }
 
+        if (!maintenanceWindowMapper.selectSeatConflictsForUpdate(request.getSeatId(), utcStartTime, utcEndTime).isEmpty()
+                || !maintenanceWindowMapper.selectClassroomConflictsForUpdate(classroomId, utcStartTime, utcEndTime).isEmpty()) {
+            throw new BusinessException(ResultCode.CONFLICT, "该时间段资源正在维护，无法预约");
+        }
+
         int conflictRows = reservationMapper.selectStudentTimeConflictForUpdate(
                 currentUserId,
                 utcStartTime,
@@ -407,6 +423,14 @@ public class ReservationServiceImpl implements ReservationService {
         ).isEmpty();
         if (withSeatConflict) {
             throw new BusinessException(ResultCode.CONFLICT, "该时间段内教室中已有座位被预约");
+        }
+
+        if (!maintenanceWindowMapper.selectConflictsInClassroomForUpdate(
+                request.getClassroomId(),
+                utcStartTime,
+                utcEndTime
+        ).isEmpty()) {
+            throw new BusinessException(ResultCode.CONFLICT, "该时间段资源正在维护，无法预约");
         }
     }
 

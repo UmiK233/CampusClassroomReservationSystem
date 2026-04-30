@@ -58,6 +58,7 @@ const pageMeta = computed(() => {
     '/admin/classrooms': { title: '教室管理', subtitle: '维护教室状态、座位布局和单个座位可用性' },
     '/admin/users': { title: '用户管理', subtitle: '按角色和状态筛选用户，执行封禁或恢复' },
     '/admin/reservations': { title: '预约管理', subtitle: '检索所有预约记录，取消后自动通知用户' },
+    '/admin/maintenance': { title: '维护管理', subtitle: '按时间段维护教室或座位，维护期内自动阻止预约' },
     '/admin/configs': { title: '规则配置', subtitle: '统一维护预约、签到和信誉规则，修改后即时生效' }
   }
   return map[path] || { title: '教室与座位', subtitle: '按时间检索可用资源并创建预约' }
@@ -123,6 +124,10 @@ onMounted(() => {
           <el-menu-item index="/admin/reservations">
             <el-icon><Tickets /></el-icon>
             <span>预约管理</span>
+          </el-menu-item>
+          <el-menu-item index="/admin/maintenance">
+            <el-icon><Setting /></el-icon>
+            <span>维护管理</span>
           </el-menu-item>
           <el-menu-item index="/admin/configs">
             <el-icon><SwitchButton /></el-icon>

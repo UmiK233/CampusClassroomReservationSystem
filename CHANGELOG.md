@@ -230,3 +230,27 @@ C：30-49
   * AuthController 把 InternalAuthenticationServiceException 一律转成“用户已被封禁”，而用户加载阶段的
     其他异常也可能被 Spring Security 包成这个异常。我会把登录前置账号状态检查放到 AuthService，明确区分用户不存在、账号禁
     用、密码错误和认证服务异常。
+## [v0.13.0] - 2026-04-29
+### ✨ 新增功能
+* 新增管理员界面导出用户和预约数据文件功能,后端直接输出带 UTF-8 BOM 的 CSV，前端通过 responseType: 'blob' 下载文件。导出内容会复用管
+  理列表接口的筛选条件
+
+## [v0.14.0] - 2026-04-29
+### ✨ 新增功能
+* 后端新增独立 maintenance_window 模型与管理接口
+  * GET /admin/maintenance：查询维护记录
+  * POST /admin/maintenance：创建教室/座位维护
+  * DELETE /admin/maintenance/{id}：取消维护
+
+
+* 预约冲突已接入维护规则：
+  - 座位维护会阻止该座位预约。
+  - 教室维护会阻止整间教室预约和该教室内所有座位预约。
+  - 创建维护时会拒绝覆盖已有预约或已有维护。
+  - 用户端查询已占用座位时，维护中的座位也会被当作不可选资源返回。
+
+
+* 前端新增管理入口：
+  - 后台菜单新增“维护管理”
+  - 新增页面：frontend/src/views/AdminMaintenanceView.vue
+  - 支持按状态、类型、教室筛选，创建教室/座位维护，取消维护。

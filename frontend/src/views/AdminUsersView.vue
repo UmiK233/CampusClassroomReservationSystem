@@ -1,12 +1,14 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Refresh, Search } from '@element-plus/icons-vue'
+import { Download, Refresh, Search } from '@element-plus/icons-vue'
 import { adminApi } from '../api'
 import { userRoleText, userStatusText } from '../utils/dict'
 import { formatDateTimeText } from '../utils/date'
+import { dateStamp, downloadBlob } from '../utils/download'
 
 const loading = ref(false)
+const exportLoading = ref(false)
 const users = ref([])
 const userDialog = ref(false)
 const editingUser = ref(null)
@@ -27,16 +29,31 @@ const bannedUsers = computed(() => users.value.filter(item => item.status === 0)
 const studentCount = computed(() => users.value.filter(item => item.role === 'STUDENT').length)
 const teacherCount = computed(() => users.value.filter(item => item.role === 'TEACHER').length)
 
+function userQueryParams() {
+  return {
+    keyword: userFilters.value.keyword || undefined,
+    role: userFilters.value.role || undefined,
+    status: userFilters.value.status
+  }
+}
+
 async function loadUsers() {
   loading.value = true
   try {
-    users.value = await adminApi.users({
-      keyword: userFilters.value.keyword || undefined,
-      role: userFilters.value.role || undefined,
-      status: userFilters.value.status
-    })
+    users.value = await adminApi.users(userQueryParams())
   } finally {
     loading.value = false
+  }
+}
+
+async function exportUsers() {
+  exportLoading.value = true
+  try {
+    const blob = await adminApi.exportUsers(userQueryParams())
+    downloadBlob(blob, `users-${dateStamp()}.csv`)
+    ElMessage.success('用户数据已导出')
+  } finally {
+    exportLoading.value = false
   }
 }
 
@@ -80,7 +97,7 @@ loadUsers()
     <div class="toolbar">
       <div>
         <strong>用户管理</strong>
-        <div class="hint">按角色和状态筛选用户，并执行封禁或恢复。</div>
+        <div class="hint">按角色和状态筛选用户，并执行封禁、恢复或导出。</div>
       </div>
       <div class="form-row">
         <el-input v-model="userFilters.keyword" placeholder="用户名 / 昵称 / 邮箱" clearable style="width: 220px" />
@@ -94,6 +111,7 @@ loadUsers()
         </el-select>
         <el-button type="primary" :icon="Search" @click="loadUsers">查询</el-button>
         <el-button :icon="Refresh" @click="loadUsers">刷新</el-button>
+        <el-button :icon="Download" :loading="exportLoading" @click="exportUsers">导出</el-button>
       </div>
     </div>
 
@@ -131,7 +149,14 @@ loadUsers()
         </el-select>
       </el-form-item>
       <el-form-item label="通知原因">
-        <el-input v-model="userForm.reason" type="textarea" :rows="3" maxlength="255" show-word-limit placeholder="可选，将发送给该用户作为通知说明" />
+        <el-input
+          v-model="userForm.reason"
+          type="textarea"
+          :rows="3"
+          maxlength="255"
+          show-word-limit
+          placeholder="可选，将发送给该用户作为通知说明"
+        />
       </el-form-item>
     </el-form>
     <template #footer>
