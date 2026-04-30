@@ -42,10 +42,12 @@ class CampusClassroomReservationSystemApplicationTests {
         return classroomVO;
     }
 
+    // 验证 Spring Boot 测试上下文可以正常启动。
     @Test
     void contextLoads() {
     }
 
+    // 验证示例预约时长累计后会超过每日预约上限。
     @Test
     void shouldExceedDailyLimit() {
         LocalDate date = LocalDate.of(2026, 4, 21);

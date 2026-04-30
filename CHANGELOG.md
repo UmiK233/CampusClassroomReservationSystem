@@ -273,3 +273,38 @@ ___
 
 * 后端新增获取教学楼列表接口/classrooms/buildings，前端预约页教学楼改为调用这个接口获取，避免写死frontend/src/config/buildings.js配置
   * 首次从后端拉取楼栋列表，结果同时放到内存和 localStorage，缓存 TTL 是 24 小时，同一会话里不会反复请求。后端新增了轻量接口
+
+___
+## [v0.16.0] - 2026-04-30
+### ✨ 新增功能
+* ### 1.预约服务测试
+测试文件：
+- [ReservationServiceImplTest.java]
+### 2.并发预约测试
+测试文件：
+
+- [ReservationConcurrencyTest.java]
+
+### 3.签到与爽约测试
+
+测试文件：
+
+- [AttendanceServiceImplTest.java]
+
+### 4.候补补位测试
+
+测试文件：
+
+- [WaitlistServiceImplTest.java]
+
+### 5.系统配置测试
+
+测试文件：
+
+- [SystemConfigServiceImplTest.java]
+
+### 6.集成与基础测试
+
+测试文件：
+
+- [CampusClassroomReservationSystemApplicationTests.java]

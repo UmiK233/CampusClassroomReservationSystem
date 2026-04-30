@@ -28,6 +28,7 @@ class ReservationConcurrencyTest {
     @Autowired
     private ReservationMapper reservationMapper;
 
+    // 验证多个用户并发抢同一座位时，系统最终只允许一个有效预约成功落库。
     @Test
     void should_allow_only_one_active_reservation_when_many_users_reserve_same_seat_concurrently() throws Exception {
         int threadCount = 5;

@@ -63,6 +63,7 @@ class ReservationServiceImplTest {
     @InjectMocks
     private ReservationServiceImpl reservationService;
 
+    // 验证学生在资源、时间和配额都满足时可以成功创建座位预约。
     @Test
     void createSeatReservation_shouldCreateSuccessfully() {
         Long userId = 10001L;
@@ -118,6 +119,7 @@ class ReservationServiceImplTest {
         assertEquals(ReservationStatus.ACTIVE.name(), created.getStatus());
     }
 
+    // 验证学生在同一时间段已有预约时会被拦截，不能重复占用时间资源。
     @Test
     void createSeatReservation_shouldThrowConflictWhenUserTimeConflict() {
         Long userId = 10001L;
@@ -150,6 +152,7 @@ class ReservationServiceImplTest {
         verify(reservationMapper, never()).insert(any(Reservation.class));
     }
 
+    // 验证禁用座位不能被创建预约。
     @Test
     void createSeatReservation_shouldThrowForbiddenWhenSeatDisabled() {
         Long userId = 10001L;
@@ -173,6 +176,7 @@ class ReservationServiceImplTest {
         verify(reservationMapper, never()).insert(any(Reservation.class));
     }
 
+    // 验证学生单次预约时长会受信用等级对应的上限约束。
     @Test
     void createSeatReservation_shouldUseCreditBasedSingleLimit() {
         Long userId = 10001L;
@@ -195,6 +199,7 @@ class ReservationServiceImplTest {
         verify(reservationMapper, never()).insert(any(Reservation.class));
     }
 
+    // 验证教师或管理员在教室空闲时可以成功创建整间教室预约。
     @Test
     void createClassroomReservation_shouldCreateSuccessfully() {
         Long userId = 10001L;
@@ -243,6 +248,7 @@ class ReservationServiceImplTest {
         verify(attendanceMapper, never()).insertStatusIfAbsent(any(Long.class), any(String.class));
     }
 
+    // 验证教室已存在整间预约冲突时不能再次整间预约。
     @Test
     void createClassroomReservation_shouldThrowConflictWhenClassroomOccupied() {
         Long userId = 10001L;
@@ -270,6 +276,7 @@ class ReservationServiceImplTest {
         verify(reservationMapper, never()).insert(any(Reservation.class));
     }
 
+    // 验证教室内已有座位预约时不能再创建整间教室预约。
     @Test
     void createClassroomReservation_shouldThrowConflictWhenSeatAlreadyReserved() {
         Long userId = 10001L;
@@ -299,6 +306,7 @@ class ReservationServiceImplTest {
         verify(reservationMapper, never()).insert(any(Reservation.class));
     }
 
+    // 验证有效预约可以被用户主动取消，并回滚已占用的预约额度与信用分。
     @Test
     void cancelReservation_shouldSucceedWhenReservationIsActive() {
         Long userId = 10001L;
@@ -329,6 +337,7 @@ class ReservationServiceImplTest {
         verify(userMapper).decreaseCreditScore(userId, 1, 30, 100);
     }
 
+    // 验证教师整间预约不受学生信用分对应的单次和每日预约额度限制。
     @Test
     void createClassroomReservation_shouldBypassSingleAndDailyQuotaForTeacher() {
         Long userId = 10001L;
@@ -368,6 +377,7 @@ class ReservationServiceImplTest {
         verify(systemConfigService, never()).getDailyReservationLimitMinutes(any());
     }
 
+    // 验证教师取消整间教室预约时不会触发学生侧的信用扣分和签到状态处理。
     @Test
     void cancelReservation_shouldNotDeductTeacherCredit() {
         Long userId = 10001L;
@@ -400,6 +410,7 @@ class ReservationServiceImplTest {
         verify(attendanceMapper, never()).updateStatusIfPending(any(Long.class), any(String.class));
     }
 
+    // 验证取消预约时如果状态被并发修改，会返回冲突而不是误判成功。
     @Test
     void cancelReservation_shouldThrowConflictWhenReservationStatusChangesConcurrently() {
         Long userId = 10001L;
