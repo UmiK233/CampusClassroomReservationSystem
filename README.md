@@ -1,310 +1,268 @@
-# Campus Classroom Reservation System
-
-# 项目说明文档
-
-## 一、项目背景
-
-本项目是一个面向校园场景的教室预约系统，支持学生进行**座位级预约**，教师进行**整间教室预约**，用于解决以下问题：
-
-- 自习室/教室资源利用不均
-- 多人预约冲突（同一时间重复占用）
-- 权限混乱（学生误占整间教室）
-- 缺乏统一管理与状态控制
-
-系统核心目标是实现一个**具备权限控制 + 冲突检测 + 状态管理的预约系统后端服务**。
-
-------
-
-## 二、技术栈
-
-| 类别     | 技术                  |
-| -------- | --------------------- |
-| 后端框架 | Spring Boot           |
-| 安全认证 | Spring Security + JWT |
-| 持久层   | MyBatis               |
-| 数据库   | MySQL                 |
-| 参数校验 | Jakarta Validation    |
-| 构建工具 | Maven                 |
-
-------
-
-## 三、系统架构
-
-系统采用经典三层架构：
-
-```
-Controller → Service → Mapper → Database
-```
-
-同时引入以下模块：
-
-- `security`：JWT 认证与权限控制
-- `dto / vo`：数据传输与返回封装
-- `exception`：统一异常处理
-- `config`：系统配置
-
-------
-
-## 四、核心功能模块
-
-### 1. 用户认证与授权
-
-- 用户注册 / 登录
-- JWT Token 鉴权
-- 获取当前用户信息（/me）
-- 基于角色的权限控制（学生 / 管理员）
-
-------
-
-### 2. 教室管理
-
-- 教室 CRUD
-- 教室容量、状态管理
-- 支持启用 / 禁用
-
-------
-
-### 3. 座位管理
-
-- 按教室生成座位（seatRows × seatCols）
-- 控制座位状态（可用 / 禁用）
-- 支持按教室查询座位
-
-------
-
-### 4. 预约系统（核心模块）
-
-#### 支持两种预约类型：
-
-1. 学生 → 座位预约
-2. 教师 → 整间教室预约
-
-------
-
-## 五、核心业务设计（重点）
-
-### 1. 预约冲突控制
-
-系统设计了多层冲突校验机制：
-
-#### （1）时间冲突
-
-- 同一用户在同一时间段只能有一个预约
-- 禁止预约过去时间
-
-#### （2）资源冲突
-
-- 同一座位同一时间不可重复预约
-- 教室整间预约时：
-  - 禁止座位预约
-- 座位预约存在时：
-  - 禁止整间教室预约
-
-实现思路：
-
-- 查询同一用户下已有的预约记录
-- 使用数据库锁（如 `FOR UPDATE`）防止多用户并发冲突
-- 在 Service 层统一校验
-
-------
-
-### 2. 权限控制
-
-| 角色        | 权限          |
-| ----------- | ------------- |
-| 学生        | 座位预约      |
-| 教师/管理员 | 教室预约      |
-| 管理员      | 教室/座位管理 |
-
-使用 Spring Security 实现：
-
-- JWT 解析用户身份
-- 基于角色控制接口访问
-
-------
-
-### 3. 状态管理
-
-预约状态设计：
-
-- ACTIVE（有效）
-- CANCELLED（已取消）
-- EXPIRED（已过期）
-
-用于：
-
-- 防止重复取消
-- 历史记录管理
-- 查询优化
-
-------
-
-## 六、数据库设计
-
-核心表：
-
-### user
-
-- id
-- username
-- password
-- nickname
-- email
-- role
-- status
-
-### classroom
-
-- id
-- room_number
-- building
-- seat_rows
-- seat_cols
-- status
-- remark
-
-### seat
-
-- id
-- classroom_id
-- seat_number
-- row_number
-- col_number
-- status
-- remark
-
-### reservation
-
-- id
-- user_id
-- resource_type
-- resource_id
-- classroom_id
-- start_time
-- end_time
-- reason
-- status
-
-------
-
-## 七、接口示例
-
-### 登录
-
-```
-POST /auth/login
+# 校园教室预约管理系统
+
+基于 `Spring Boot 3 + Vue 3 + MySQL` 的校园教室预约系统，面向学生、教师与管理员提供教室/座位预约、签到、候补、通知、维护管理、统计分析等完整业务能力。项目已包含前后端源码、数据库脚本、Docker 部署文件、接口文档和测试用例，适合作为课程设计或毕业设计项目。
+
+## 项目特性
+
+- 学生按时间段预约座位，查看已预约记录与历史记录
+- 教师或管理员按时间段预约整间教室
+- 预约冲突校验，避免同一资源在相同时间被重复占用
+- 签到与爽约处理，支持信用分扣减、违规记录、通知提醒
+- 候补队列机制，在资源释放后自动补位
+- 通知中心，支持未读数统计、已读处理
+- 教室维护窗口管理，维护期间自动限制预约
+- 管理端提供用户管理、教室管理、预约管理、系统配置、统计分析
+- 前端楼栋列表改为后端驱动，并在本地做缓存以减少重复请求
+
+## 技术栈
+
+### 后端
+
+- `Java 17`
+- `Spring Boot 3.5.9`
+- `Spring Security`
+- `JWT`
+- `MyBatis`
+- `MySQL 8`
+- `Spring Validation`
+- `Spring Scheduling`
+- `SpringDoc OpenAPI / Swagger UI`
+- `JUnit 5 + Mockito`
+
+### 前端
+
+- `Vue 3`
+- `Vue Router 4`
+- `Pinia`
+- `Element Plus`
+- `Axios`
+- `ECharts`
+- `Vite`
+
+### 部署
+
+- `Docker`
+- `Docker Compose`
+- `Nginx`
+
+## 功能模块
+
+### 用户端
+
+- 登录、注册、获取当前用户信息、修改密码
+- 查询可用教室、楼栋、座位布局、已占用座位
+- 提交座位预约或整间教室预约
+- 取消预约、查看当前预约与历史预约
+- 签到
+- 提交候补、查看我的候补、取消候补
+- 查看通知、标记已读
+
+### 管理端
+
+- 用户状态管理与用户数据导出
+- 教室、座位、楼栋信息维护
+- 预约记录查询、删除与导出
+- 教室维护时间段管理
+- 系统配置项管理
+- 数据统计与分析面板
+
+## 项目结构
+
+```text
+campusClassroomReservationSystem
+|- backend                    # Spring Boot 后端
+|  |- src/main/java           # 控制器、服务、Mapper、实体、配置
+|  |- src/main/resources      # 应用配置
+|  `- sql/classroom.sql       # 数据库初始化脚本
+|- frontend                   # Vue 3 前端
+|  |- src/api                 # 接口封装
+|  |- src/stores              # Pinia 状态管理
+|  |- src/views               # 页面视图
+|  `- src/config              # 前端配置
+|- nginx                      # Nginx 反向代理配置
+|- docker-compose.yaml        # 容器编排
+|- 接口文档.md                # 当前接口说明
+|- 测试点清单.md              # 测试覆盖清单
+`- 毕业设计评估与答辩建议.md  # 毕设视角说明
 ```
 
-返回：
+## 本地运行
 
-```
-{
-  "code": 200,
-  "message": "登录成功",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMDAwNCIsInVzZXJuYW1lIjoiMjMzIiwicm9sZSI6IlNUVURFTlQiLCJpYXQiOjE3NzU4MDQ0MDgsImV4cCI6MTc3NTg5MDgwOH0.OA7gyuHm0iBI4iU9Te_clRVIhwsLXavX_NDHNhgxqjQ",
-    "userInfo": {
-      "id": 10004,
-      "username": "233",
-      "nickname": "233",
-      "email": "223@qq.com",
-      "role": "STUDENT"
-    }
-  }
-}
+### 1. 环境要求
+
+- `JDK 17`
+- `Node.js 18+`
+- `MySQL 8`
+- `Maven 3.9+` 或使用仓库自带 `mvnw`
+
+### 2. 初始化数据库
+
+创建数据库：
+
+```sql
+CREATE DATABASE classroom DEFAULT CHARACTER SET utf8mb4;
 ```
 
-------
+然后执行：
 
-### 获取当前用户
-
-```
-GET /auth/me
-Authorization: Bearer xxx
+```text
+backend/sql/classroom.sql
 ```
 
-------
+### 3. 配置后端
 
-### 创建预约
+后端默认使用：
 
-```
-POST /reservations/classroom
-```
-
-参数：
-
-```
-{
-  "classroom_id": "6",
-  "start_time": "2026-04-10T18:42:06",
-  "end_time": "2026-04-10T23:52:20"
-}
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/classroom?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
 ```
 
-返回:
+对应文件为：
 
+- `backend/src/main/resources/application.yaml`
+- `backend/src/main/resources/application-local.yaml`
+
+如果你的本地数据库账号、密码或端口不同，需要先修改 `application-local.yaml`。
+
+### 4. 启动后端
+
+在项目根目录执行：
+
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run
 ```
-{
-  "code": 200,
-  "message": "预约教室成功",
-  "data": 43
-}
+
+后端默认端口：
+
+```text
+http://localhost:8080
 ```
 
-____
+### 5. 启动前端
 
-## 八、项目亮点
+在项目根目录执行：
 
-✅ 1. 真实业务场景
- 不只是 CRUD，而是包含**资源竞争与冲突控制**的系统
-
-✅ 2. 权限体系完整
- JWT + Spring Security，实现角色隔离
-
-✅ 3. 冲突控制设计
-
-- 时间冲突
-- 资源冲突
-- 角色冲突
-
-✅ 4. 分层清晰
- Controller / Service / Mapper 职责明确
-
-✅ 5. 可扩展性
- 支持后续扩展：
-
-- Redis 缓存
-- 分布式锁
-- 消息队列（预约提醒）
-
-------
-
-## 九、TODO
-
-- 暂未实现高并发优化（如 Redis / 分布式锁）
-- 冲突控制主要在数据库层，存在性能瓶颈
-- 测试覆盖率不足（缺少核心业务测试）
-- 未实现接口文档（Swagger）
-- 未部署线上环境
-
-后续优化方向：
-
-- 引入 Redis 做预约缓存
-- 使用乐观锁 / 分布式锁优化并发
-- 增加单元测试与集成测试
-- 增加接口文档与部署脚本
-
-------
-
-## 十、运行项目
-
+```powershell
+cd frontend
+npm install
+npm run dev
 ```
-# 1. 克隆项目
-git clone https://github.com/UmiK233/CampusClassroomReservationSystem
 
-# 2. 配置数据库
-修改 application.yaml
+前端默认端口：
 
-# 3. 启动项目
-mvn spring-boot:run
+```text
+http://localhost:5173
 ```
+
+前端开发服务器已配置代理：
+
+- `/api -> http://localhost:8080`
+
+对应配置文件：
+
+- `frontend/vite.config.js`
+
+## Docker 部署
+
+在项目根目录执行：
+
+```powershell
+docker compose up --build
+```
+
+默认端口：
+
+- 前端：`http://localhost`
+- 后端：`http://localhost:8080`
+- MySQL：`localhost:3307`
+
+### 注意事项
+
+当前 `docker-compose.yaml` 中挂载的初始化脚本是：
+
+```text
+./backend/sql/classroom_withdata.sql
+```
+
+但仓库中目前存在的是：
+
+```text
+./backend/sql/classroom.sql
+```
+
+如果直接使用 Docker Compose，请先将 `docker-compose.yaml` 中的脚本路径改为现有文件，或补充对应的 `classroom_withdata.sql`。
+
+## 接口文档
+
+- 项目内文档：[`接口文档.md`](./接口文档.md)
+- Swagger UI：`http://localhost:8080/swagger-ui.html`
+
+当前主要接口包括：
+
+- 认证接口：`/auth/*`
+- 教室接口：`/classrooms/*`
+- 预约接口：`/reservations/*`
+- 候补接口：`/waitlist/*`
+- 通知接口：`/notifications/*`
+- 管理端接口：`/admin/*`
+
+## 测试
+
+后端已补充核心业务单元测试，覆盖：
+
+- 系统配置解析与更新
+- 签到与爽约处理
+- 候补创建、补位与取消
+- 预约服务核心规则
+
+示例测试命令：
+
+```powershell
+cd backend
+.\mvnw.cmd "-Dtest=SystemConfigServiceImplTest,AttendanceServiceImplTest,WaitlistServiceImplTest" test
+```
+
+相关文档：
+
+- [`测试点清单.md`](./测试点清单.md)
+
+## 已验证
+
+以下命令已在当前项目中通过：
+
+```powershell
+cd frontend
+npm run build
+```
+
+```powershell
+cd backend
+.\mvnw.cmd -DskipTests compile
+```
+
+```powershell
+cd backend
+.\mvnw.cmd "-Dtest=SystemConfigServiceImplTest,AttendanceServiceImplTest,WaitlistServiceImplTest" test
+```
+
+## 适用场景
+
+- 本科课程设计
+- 毕业设计
+- 校园资源预约系统原型
+- Spring Boot + Vue 全栈练习项目
+
+## 相关文档
+
+- [`接口文档.md`](./接口文档.md)
+- [`测试点清单.md`](./测试点清单.md)
+- [`毕业设计评估与答辩建议.md`](./毕业设计评估与答辩建议.md)
+
+## 许可证
+
+本仓库当前包含 `LICENSE` 文件；如需对外分发或商用，请先确认许可证内容与适用范围。

@@ -12,7 +12,7 @@ services:
       MYSQL_DATABASE: classroom
     volumes:
       # 将本地的SQL文件挂载到容器中，MySQL会在启动时自动执行该文件来初始化数据库
-      - ./backend/sql/classroom_withdata.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./backend/sql/classroom.sql:/docker-entrypoint-initdb.d/init.sql
       # 持久化数据到本地目录
       - db-data:/var/lib/mysql
 
