@@ -44,6 +44,9 @@ public interface ClassroomMapper {
     @ResultMap("classroomResultMap")
     List<Classroom> selectAll();
 
+    @Select("select distinct building from classroom where building is not null and trim(building) <> '' order by building asc")
+    List<String> selectDistinctBuildings();
+
     @Select("select * from classroom where building = #{building} and seat_rows*seat_cols >= #{min_capacity} and status = #{status}")
     @ResultMap("classroomResultMap")
     List<Classroom> selectList(@Param("building") String building, @Param("min_capacity") Integer minCapacity, @Param("status") String status);

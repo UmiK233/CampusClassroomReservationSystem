@@ -2,41 +2,50 @@
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Bell, CircleCheck, Close, Refresh } from '@element-plus/icons-vue'
-import { authApi, notificationApi, reservationApi } from '../api'
+import { authApi, notificationApi, reservationApi, waitlistApi } from '../api'
 import { useAuthStore } from '../stores/auth'
 import { useReservationStore } from '../stores/reservation'
 import { formatDateTimeText, parseUtcTime } from '../utils/date'
-import { attendanceStatusText, notificationTypeText, reservationStatusText, resourceTypeText } from '../utils/dict'
+import {
+  attendanceStatusText,
+  notificationTypeText,
+  reservationStatusText,
+  resourceTypeText,
+  waitlistStatusText
+} from '../utils/dict'
 
 const authStore = useAuthStore()
 const reservationStore = useReservationStore()
 const active = ref([])
 const history = ref([])
+const waitlists = ref([])
 const notifications = ref([])
 const unreadCount = ref(0)
 const loading = ref(false)
 const cancelDialogVisible = ref(false)
 const canceling = ref(false)
+const waitlistCancelingId = ref(null)
 const pendingCancelReservation = ref(null)
 
 const sortedActive = computed(() => [...active.value].sort((a, b) => getTime(a.startTime) - getTime(b.startTime)))
 const currentReservations = computed(() => sortedActive.value.filter(item => getTime(item.startTime) <= Date.now() && getTime(item.endTime) >= Date.now()))
 const upcomingReservations = computed(() => sortedActive.value.filter(item => getTime(item.startTime) > Date.now()))
 const nextReservation = computed(() => upcomingReservations.value[0] || sortedActive.value[0])
-const cancelledCount = computed(() => history.value.filter(item => item.status === 'CANCELLED').length)
-const expiredCount = computed(() => history.value.filter(item => item.status === 'EXPIRED').length)
+const waitingWaitlistCount = computed(() => waitlists.value.filter(item => item.status === 'WAITING').length)
 
 async function loadData() {
   loading.value = true
   try {
-    const [activeList, historyList, notificationList, unread] = await Promise.all([
+    const [activeList, historyList, waitlistList, notificationList, unread] = await Promise.all([
       reservationApi.list(),
       reservationApi.history(),
+      waitlistApi.list(),
       notificationApi.list({ limit: 6 }),
       notificationApi.unreadCount()
     ])
     active.value = activeList || []
     history.value = historyList || []
+    waitlists.value = waitlistList || []
     notifications.value = notificationList || []
     unreadCount.value = unread?.count || 0
   } finally {
@@ -91,6 +100,18 @@ async function markNotificationsRead() {
   ElMessage.success('通知已全部标记为已读')
 }
 
+async function cancelWaitlist(row) {
+  if (!row || row.status !== 'WAITING') return
+  waitlistCancelingId.value = row.id
+  try {
+    await waitlistApi.cancel(row.id)
+    ElMessage.success('候补申请已取消')
+    await loadData()
+  } finally {
+    waitlistCancelingId.value = null
+  }
+}
+
 function getTime(value) {
   return parseUtcTime(value)
 }
@@ -101,6 +122,16 @@ function attendanceTagType(status) {
     CHECKED_IN: 'success',
     NO_SHOW: 'danger',
     CANCELLED: 'info'
+  }
+  return map[status] || 'info'
+}
+
+function waitlistTagType(status) {
+  const map = {
+    WAITING: 'warning',
+    PROMOTED: 'success',
+    CANCELLED: 'info',
+    EXPIRED: 'info'
   }
   return map[status] || 'info'
 }
@@ -121,8 +152,8 @@ onMounted(() => {
       <div class="metric-value">{{ currentReservations.length }}</div>
     </div>
     <div class="metric">
-      <div class="metric-label">已取消</div>
-      <div class="metric-value">{{ cancelledCount }}</div>
+      <div class="metric-label">候补排队</div>
+      <div class="metric-value">{{ waitingWaitlistCount }}</div>
     </div>
     <div class="metric">
       <div class="metric-label">未读通知</div>
@@ -168,7 +199,7 @@ onMounted(() => {
       <div class="toolbar">
         <div>
           <strong>通知中心</strong>
-          <div class="hint">管理员封禁账号或取消预约后，会在这里收到站内通知</div>
+          <div class="hint">管理员处理、爽约提醒和候补补位成功后，都会在这里通知你</div>
         </div>
         <el-button :disabled="unreadCount === 0" :icon="Bell" @click="markNotificationsRead">全部已读</el-button>
       </div>
@@ -190,7 +221,7 @@ onMounted(() => {
     <div class="toolbar">
       <div>
         <strong>有效预约</strong>
-        <div class="hint">当前生效中的预约可以在这里直接取消</div>
+        <div class="hint">当前生效中的预约可以在这里直接取消或完成签到</div>
       </div>
     </div>
     <el-empty v-if="active.length === 0 && !loading" description="暂无有效预约" />
@@ -220,6 +251,48 @@ onMounted(() => {
         <p>{{ item.reason || '暂无预约原因' }}</p>
       </article>
     </div>
+  </div>
+
+  <div class="panel history-panel">
+    <div class="toolbar">
+      <div>
+        <strong>候补列表</strong>
+        <div class="hint">只有座位资源冲突时才会加入候补，资源释放后系统会自动尝试补位</div>
+      </div>
+    </div>
+    <el-empty v-if="waitlists.length === 0 && !loading" description="暂无候补申请" />
+    <el-table v-else :data="waitlists" v-loading="loading">
+      <el-table-column prop="resourceName" label="资源" min-width="220" />
+      <el-table-column label="开始时间" min-width="180">
+        <template #default="{ row }">{{ formatDateTimeText(row.startTime) }}</template>
+      </el-table-column>
+      <el-table-column label="结束时间" min-width="180">
+        <template #default="{ row }">{{ formatDateTimeText(row.endTime) }}</template>
+      </el-table-column>
+      <el-table-column prop="status" label="状态" width="140">
+        <template #default="{ row }">
+          <el-tag :type="waitlistTagType(row.status)">{{ waitlistStatusText(row.status) }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="reason" label="原因" min-width="160" show-overflow-tooltip />
+      <el-table-column label="申请时间" min-width="180">
+        <template #default="{ row }">{{ formatDateTimeText(row.createTime) }}</template>
+      </el-table-column>
+      <el-table-column label="操作" width="140" fixed="right">
+        <template #default="{ row }">
+          <el-button
+            v-if="row.status === 'WAITING'"
+            type="danger"
+            size="small"
+            :loading="waitlistCancelingId === row.id"
+            @click="cancelWaitlist(row)"
+          >
+            取消候补
+          </el-button>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
+    </el-table>
   </div>
 
   <div class="panel history-panel">

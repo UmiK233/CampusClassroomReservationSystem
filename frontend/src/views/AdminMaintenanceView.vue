@@ -1,9 +1,14 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Refresh, Search } from '@element-plus/icons-vue'
 import { adminApi, classroomApi } from '../api'
-import { buildingOptions } from '../config/buildings'
+import {
+  buildingOptions,
+  ensureBuildingOptionsLoaded,
+  getDefaultBuildingValue,
+  hasBuildingOption
+} from '../config/buildings'
 import { formatDateTimeText, toUtcIsoString } from '../utils/date'
 
 const loading = ref(false)
@@ -18,13 +23,13 @@ const maintenanceDialog = ref(false)
 const filters = ref({
   status: 'ACTIVE',
   resourceType: '',
-  building: buildingOptions[0]?.value || '',
+  building: '',
   classroomId: null
 })
 
 const form = ref({
   resourceType: 'CLASSROOM',
-  building: buildingOptions[0]?.value || '',
+  building: '',
   classroomId: null,
   seatId: null,
   timeRange: [],
@@ -101,7 +106,7 @@ async function loadMaintenance() {
 async function openCreate() {
   form.value = {
     resourceType: 'CLASSROOM',
-    building: filters.value.building || buildingOptions[0]?.value || '',
+    building: filters.value.building || getDefaultBuildingValue(),
     classroomId: null,
     seatId: null,
     timeRange: [],
@@ -180,8 +185,18 @@ watch(() => form.value.resourceType, async resourceType => {
   }
 })
 
-loadClassrooms()
-loadMaintenance()
+onMounted(async () => {
+  await ensureBuildingOptionsLoaded()
+  const defaultBuilding = getDefaultBuildingValue()
+  if (!hasBuildingOption(filters.value.building)) {
+    filters.value.building = defaultBuilding
+  }
+  if (!hasBuildingOption(form.value.building)) {
+    form.value.building = defaultBuilding
+  }
+  await loadClassrooms()
+  await loadMaintenance()
+})
 </script>
 
 <template>

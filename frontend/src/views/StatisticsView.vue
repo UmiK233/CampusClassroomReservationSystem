@@ -5,7 +5,7 @@ import 'echarts'
 import { Clock, Histogram, OfficeBuilding, TrendCharts } from '@element-plus/icons-vue'
 import { reservationApi } from '../api'
 import { useAuthStore } from '../stores/auth'
-import { buildingOptions } from '../config/buildings'
+import { buildingOptions, ensureBuildingOptionsLoaded } from '../config/buildings'
 
 const authStore = useAuthStore()
 const isStudent = computed(() => authStore.role === 'STUDENT')
@@ -190,7 +190,10 @@ async function loadData() {
   }
 }
 
-onMounted(loadData)
+onMounted(async () => {
+  await ensureBuildingOptionsLoaded()
+  await loadData()
+})
 </script>
 
 <template>

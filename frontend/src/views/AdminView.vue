@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   CircleCheck,
@@ -12,7 +12,13 @@ import {
 } from '@element-plus/icons-vue'
 import AdminAnalyticsPanel from '../components/AdminAnalyticsPanel.vue'
 import { adminApi, classroomApi } from '../api'
-import { buildingOptions } from '../config/buildings'
+import {
+  buildingOptions,
+  ensureBuildingOptionsLoaded,
+  getDefaultBuildingValue,
+  hasBuildingOption,
+  refreshBuildingOptions
+} from '../config/buildings'
 import {
   enabledStatusText,
   reservationStatusText,
@@ -46,7 +52,7 @@ const configCategory = ref('')
 const savingConfigKey = ref('')
 
 const classroomFilters = ref({
-  building: buildingOptions[0]?.value || '',
+  building: '',
   min_capacity: 1,
   status: 'ENABLED'
 })
@@ -110,6 +116,12 @@ const activeReservations = computed(() => reservations.value.filter(item => item
 const cancelledReservations = computed(() => reservations.value.filter(item => item.status === 'CANCELLED').length)
 
 async function loadClassrooms() {
+  if (!classroomFilters.value.building) {
+    classrooms.value = []
+    selected.value = null
+    layout.value = null
+    return
+  }
   loading.value = true
   try {
     classrooms.value = await adminApi.classrooms({
@@ -170,7 +182,7 @@ async function loadConfigs() {
 function openCreate() {
   classroomForm.value = {
     roomNumber: '',
-    building: classroomFilters.value.building || buildingOptions[0]?.value || '',
+    building: classroomFilters.value.building || getDefaultBuildingValue(),
     seatRows: 8,
     seatCols: 6,
     status: 'ENABLED',
@@ -208,6 +220,10 @@ async function saveClassroom() {
   } else {
     await adminApi.createClassroom(payload)
     ElMessage.success('教室已创建')
+  }
+  await refreshBuildingOptions()
+  if (!hasBuildingOption(classroomFilters.value.building)) {
+    classroomFilters.value.building = getDefaultBuildingValue()
   }
   classroomDialog.value = false
   await loadClassrooms()
@@ -350,7 +366,13 @@ function handleTabChange(tab) {
   }
 }
 
-loadClassrooms()
+onMounted(async () => {
+  await ensureBuildingOptionsLoaded()
+  if (!hasBuildingOption(classroomFilters.value.building)) {
+    classroomFilters.value.building = getDefaultBuildingValue()
+  }
+  await loadClassrooms()
+})
 </script>
 
 <template>

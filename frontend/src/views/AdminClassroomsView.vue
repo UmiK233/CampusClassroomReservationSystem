@@ -1,9 +1,15 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { CircleCheck, CircleClose, Edit, Grid, Plus, Refresh, Search } from '@element-plus/icons-vue'
 import { adminApi, classroomApi } from '../api'
-import { buildingOptions } from '../config/buildings'
+import {
+  buildingOptions,
+  ensureBuildingOptionsLoaded,
+  getDefaultBuildingValue,
+  hasBuildingOption,
+  refreshBuildingOptions
+} from '../config/buildings'
 import { enabledStatusText } from '../utils/dict'
 
 const loading = ref(false)
@@ -16,7 +22,7 @@ const createSeatDialog = ref(false)
 const editingSeat = ref(null)
 
 const classroomFilters = ref({
-  building: buildingOptions[0]?.value || '',
+  building: '',
   min_capacity: 1,
   status: 'ENABLED'
 })
@@ -49,6 +55,12 @@ const enabledSeats = computed(() => layout.value?.seatVOS?.filter(item => item.s
 const totalSeats = computed(() => layout.value?.seatVOS?.length || 0)
 
 async function loadClassrooms() {
+  if (!classroomFilters.value.building) {
+    classrooms.value = []
+    selected.value = null
+    layout.value = null
+    return
+  }
   loading.value = true
   try {
     classrooms.value = await adminApi.classrooms({
@@ -71,7 +83,7 @@ async function loadSeats(row) {
 function openCreate() {
   classroomForm.value = {
     roomNumber: '',
-    building: classroomFilters.value.building || buildingOptions[0]?.value || '',
+    building: classroomFilters.value.building || getDefaultBuildingValue(),
     seatRows: 8,
     seatCols: 6,
     status: 'ENABLED',
@@ -109,6 +121,10 @@ async function saveClassroom() {
   } else {
     await adminApi.createClassroom(payload)
     ElMessage.success('教室已创建')
+  }
+  await refreshBuildingOptions()
+  if (!hasBuildingOption(classroomFilters.value.building)) {
+    classroomFilters.value.building = getDefaultBuildingValue()
   }
   classroomDialog.value = false
   await loadClassrooms()
@@ -171,7 +187,13 @@ function seatStyle(seat) {
   return { gridColumn: seat.colNumber, gridRow: seat.rowNumber }
 }
 
-loadClassrooms()
+onMounted(async () => {
+  await ensureBuildingOptionsLoaded()
+  if (!hasBuildingOption(classroomFilters.value.building)) {
+    classroomFilters.value.building = getDefaultBuildingValue()
+  }
+  await loadClassrooms()
+})
 </script>
 
 <template>

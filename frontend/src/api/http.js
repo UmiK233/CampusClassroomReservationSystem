@@ -24,6 +24,9 @@ http.interceptors.response.use(
     const silentError = response.config?.silentError
     if (body && typeof body.code !== 'undefined' && body.code !== 200) {
       const message = body.message || '请求失败'
+      const apiError = new Error(message)
+      apiError.businessCode = body.code
+      apiError.response = { data: body }
       if (!silentError) {
         ElMessage.error(message)
       }
@@ -32,7 +35,7 @@ http.interceptors.response.use(
         authStore.clearAuth()
         router.replace('/login')
       }
-      return Promise.reject(new Error(message))
+      return Promise.reject(apiError)
     }
     return body?.data ?? body
   },

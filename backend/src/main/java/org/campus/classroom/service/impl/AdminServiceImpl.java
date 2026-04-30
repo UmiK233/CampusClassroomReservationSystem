@@ -11,6 +11,7 @@ import org.campus.classroom.enums.AttendanceStatus;
 import org.campus.classroom.enums.ReservationStatus;
 import org.campus.classroom.enums.ResourceType;
 import org.campus.classroom.enums.ResultCode;
+import org.campus.classroom.event.SeatReservationReleasedEvent;
 import org.campus.classroom.exception.BusinessException;
 import org.campus.classroom.mapper.AttendanceMapper;
 import org.campus.classroom.mapper.ClassroomMapper;
@@ -28,6 +29,7 @@ import org.campus.classroom.vo.AdminTimeSlotHeatVO;
 import org.campus.classroom.vo.AdminUserReservationStatVO;
 import org.campus.classroom.vo.AdminUserVO;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -59,6 +61,7 @@ public class AdminServiceImpl implements AdminService {
     private final AttendanceMapper attendanceMapper;
     private final NotificationService notificationService;
     private final SystemConfigService systemConfigService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     public List<AdminUserVO> listUsers(String keyword, String role, Integer status) {
@@ -160,6 +163,13 @@ public class AdminServiceImpl implements AdminService {
         );
 
         log.info("[管理员取消预约成功] 管理员ID={}, 预约ID={}", adminUserId, reservationId);
+        if (ResourceType.SEAT.name().equals(reservation.getResourceType())) {
+            applicationEventPublisher.publishEvent(new SeatReservationReleasedEvent(
+                    reservation.getResourceId(),
+                    reservation.getStartTime(),
+                    reservation.getEndTime()
+            ));
+        }
     }
 
     @Override

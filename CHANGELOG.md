@@ -254,3 +254,22 @@ C：30-49
   - 后台菜单新增“维护管理”
   - 新增页面：frontend/src/views/AdminMaintenanceView.vue
   - 支持按状态、类型、教室筛选，创建教室/座位维护，取消维护。
+
+___
+
+## [v0.15.0] - 2026-04-29
+### ✨ 新增功能
+* 新增候补预约功能,当用户预约的座位已被占用时，可以选择加入候补名单。当有预约取消时，系统会按照候补名单的顺序自动将候补用户的预约转为正式预约，并通知该用户。
+* 后端新增候补预约模型和接口：
+  - POST /waitlist：加入候补
+  - GET /waitlist/my：查询当前用户的候补预约列表
+  - DELETE /waitlist/{id}：取消候补
+* 通过ApplicationEventPublisher的publishEvent方法发布SeatReservationReleasedEvent事件，当预约被取消时触发该事件。
+* 通过handleSeatReservationReleased事件监听预约取消事件，当有预约被取消时，检查是否有候补用户等待该座位，如果有，则自动将候补用户的预约转为正式预约，并发送通知。
+
+* 前端新增候补预约界面：
+  * 预约时如果座位已被占用，可选择该座位并加入候补
+  * 我的预约新增候补预约列表，显示候补状态和相关预约信息
+
+* 后端新增获取教学楼列表接口/classrooms/buildings，前端预约页教学楼改为调用这个接口获取，避免写死frontend/src/config/buildings.js配置
+  * 首次从后端拉取楼栋列表，结果同时放到内存和 localStorage，缓存 TTL 是 24 小时，同一会话里不会反复请求。后端新增了轻量接口

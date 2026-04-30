@@ -123,6 +123,11 @@ public class ClassroomServiceImpl implements ClassroomService {
     }
 
     @Override
+    public List<String> listBuildings() {
+        return classroomMapper.selectDistinctBuildings();
+    }
+
+    @Override
     public List<ClassroomVO> getAvailableClassroomList(String building, Integer minCapacity) {
         List<Classroom> classroomList = classroomMapper.selectList(building, minCapacity, ClassroomStatus.ENABLED.name());
         return classroomList.stream().map(this::classroomToClassroomVO).collect(Collectors.toList());

@@ -17,7 +17,8 @@ const typeOptions = [
   { label: '全部类型', value: '' },
   { label: '账号通知', value: 'USER_STATUS' },
   { label: '预约通知', value: 'RESERVATION_CANCELLED' },
-  { label: '爽约通知', value: 'RESERVATION_NO_SHOW' }
+  { label: '爽约通知', value: 'RESERVATION_NO_SHOW' },
+  { label: '候补成功', value: 'WAITLIST_PROMOTED' }
 ]
 
 const filteredNotifications = computed(() => {
@@ -86,7 +87,7 @@ onMounted(loadNotifications)
     <div class="toolbar">
       <div>
         <strong>通知中心</strong>
-        <div class="hint">管理员对您的账号或预约有操作后，会在这里看到提醒。</div>
+        <div class="hint">管理员操作、爽约处理和候补补位成功后，都会在这里看到提醒。</div>
       </div>
       <div class="form-row">
         <el-select v-model="typeFilter" style="width: 140px" @change="handleTypeChange">

@@ -15,6 +15,8 @@ public interface ClassroomService {
 
     ClassroomVO getClassroomById(Long id);
 
+    List<String> listBuildings();
+
     List<ClassroomVO> getAvailableClassroomList(String building, Integer minCapacity);
 
     List<BuildingPreferenceVO> listPreferredBuildings(Long currentUserId);

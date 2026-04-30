@@ -97,6 +97,17 @@ public interface ReservationMapper {
             """)
     int minusUsage(@Param("userId") Long userId, @Param("date") LocalDate date,@Param("minusMinutes") Long minusMinutes);
 
+    @Select("""
+            SELECT COALESCE((
+                SELECT used_minutes
+                FROM reservation_usage
+                WHERE user_id = #{userId}
+                  AND date = #{date}
+                LIMIT 1
+            ), 0)
+            """)
+    long selectUsedMinutes(@Param("userId") Long userId, @Param("date") LocalDate date);
+
 
     @Select("""
             SELECT *

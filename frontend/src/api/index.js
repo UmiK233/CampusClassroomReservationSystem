@@ -14,6 +14,7 @@ export const notificationApi = {
 }
 
 export const classroomApi = {
+  buildings: () => http.get('/classrooms/buildings'),
   available: params => http.get('/classrooms/available_list', { params }),
   preferredBuildings: () => http.get('/classrooms/preferred_buildings'),
   detail: id => http.get(`/classrooms/${id}`),
@@ -24,10 +25,16 @@ export const reservationApi = {
   list: () => http.get('/reservations'),
   history: () => http.get('/reservations/history'),
   reservedSeats: (id, params, config = {}) => http.get(`/classrooms/${id}/reserved_seats`, { params, ...config }),
-  reserveSeat: data => http.post('/reservations/seats', data),
+  reserveSeat: (data, config = {}) => http.post('/reservations/seats', data, config),
   reserveClassroom: data => http.post('/reservations/classrooms', data),
   checkIn: id => http.post(`/reservations/${id}/check-in`),
   cancel: id => http.delete(`/reservations/${id}`)
+}
+
+export const waitlistApi = {
+  create: data => http.post('/waitlist', data),
+  list: () => http.get('/waitlist/my'),
+  cancel: id => http.delete(`/waitlist/${id}`)
 }
 
 export const adminApi = {

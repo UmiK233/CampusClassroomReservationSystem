@@ -17,6 +17,7 @@ import org.campus.classroom.enums.ResourceType;
 import org.campus.classroom.enums.ResultCode;
 import org.campus.classroom.enums.SeatStatus;
 import org.campus.classroom.enums.ViolationType;
+import org.campus.classroom.event.SeatReservationReleasedEvent;
 import org.campus.classroom.exception.BusinessException;
 import org.campus.classroom.mapper.AttendanceMapper;
 import org.campus.classroom.mapper.ClassroomMapper;
@@ -28,6 +29,7 @@ import org.campus.classroom.mapper.ViolationRecordMapper;
 import org.campus.classroom.service.ReservationService;
 import org.campus.classroom.service.SystemConfigService;
 import org.campus.classroom.vo.ReservationVO;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,6 +60,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final ViolationRecordMapper violationRecordMapper;
     private final MaintenanceWindowMapper maintenanceWindowMapper;
     private final SystemConfigService systemConfigService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @Transactional
@@ -133,6 +136,7 @@ public class ReservationServiceImpl implements ReservationService {
             attendanceMapper.updateStatusIfPending(reservationId, AttendanceStatus.CANCELLED.name());
         }
         applyCancelCreditPenalty(reservation);
+        publishSeatReleaseEventIfNeeded(reservation);
         return true;
     }
 
@@ -461,6 +465,17 @@ public class ReservationServiceImpl implements ReservationService {
         violationRecord.setType(ViolationType.USER_CANCEL.name());
         violationRecord.setRemark("用户主动取消预约，扣除" + cancelDeductionScore + "分信用分。");
         violationRecordMapper.insert(violationRecord);
+    }
+
+    private void publishSeatReleaseEventIfNeeded(Reservation reservation) {
+        if (!ResourceType.SEAT.name().equals(reservation.getResourceType())) {
+            return;
+        }
+        applicationEventPublisher.publishEvent(new SeatReservationReleasedEvent(
+                reservation.getResourceId(),
+                reservation.getStartTime(),
+                reservation.getEndTime()
+        ));
     }
 
     private User getUserOrThrow(Long currentUserId) {

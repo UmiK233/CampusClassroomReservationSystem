@@ -1,12 +1,17 @@
 ﻿<script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Calendar, Grid, Search } from '@element-plus/icons-vue'
-import { classroomApi, reservationApi } from '../api'
+import { classroomApi, reservationApi, waitlistApi } from '../api'
 import { useAuthStore } from '../stores/auth'
 import { useReservationStore } from '../stores/reservation'
-import { buildingOptions } from '../config/buildings'
+import {
+  buildingOptions,
+  ensureBuildingOptionsLoaded,
+  getDefaultBuildingValue,
+  hasBuildingOption
+} from '../config/buildings'
 import { formatLocalDateTimeText, toUtcIsoString } from '../utils/date'
 
 const RESERVATION_TIME_KEY = 'campus_reservation_time'
@@ -82,7 +87,7 @@ const reserveForm = ref({
 })
 
 const filters = ref({
-  building: buildingOptions[0]?.value || '',
+  building: '',
   min_capacity: 1
 })
 
@@ -107,6 +112,7 @@ const pageActionLabel = computed(() => user.value?.role === 'TEACHER' ? '查看�
 const startMinTime = computed(() => isSelectedDateToday() ? currentClockTime() : '')
 const studentSeatAdvanceHours = computed(() => user.value?.seatReservationAdvanceHours || 24)
 const maxSingleReservationMinutes = computed(() => user.value?.maxSingleReservationMinutes || 180)
+const selectedSeatIsReserved = computed(() => Boolean(selectedSeat.value && isSeatReserved(selectedSeat.value)))
 const selectedTimeLabel = computed(() => {
   if (!hasReservationTime()) return ''
   const { start, end } = getReservationDateTimes()
@@ -155,7 +161,9 @@ async function loadBuildingPreferences() {
       filters.value.building = preferredBuilding
     }
   } catch {
-    filters.value.building = buildingOptions[0]?.value || ''
+    if (!filters.value.building || !hasBuildingOption(filters.value.building)) {
+      filters.value.building = getDefaultBuildingValue()
+    }
   }
 }
 
@@ -254,8 +262,8 @@ function seatStyle(seat) {
 
 function chooseSeat(seat) {
   if (user.value?.role !== 'STUDENT') return
-  if (isSeatUnavailable(seat)) return
-  selectedSeat.value = seat
+  if (seat.status === 'DISABLED' || isSeatWaitingForTime()) return
+  selectedSeat.value = selectedSeat.value?.id === seat.id ? null : seat
 }
 
 function openReserve(type) {
@@ -371,7 +379,16 @@ async function submitReservation() {
       ElMessage.warning('请选择座位')
       return
     }
-    await reservationApi.reserveSeat({ ...payload, seat_id: selectedSeat.value.id })
+    try {
+      await reservationApi.reserveSeat({ ...payload, seat_id: selectedSeat.value.id }, { silentError: true })
+    } catch (error) {
+      if (isSeatWaitlistEligibleError(error)) {
+        await offerSeatWaitlist({ ...payload, seat_id: selectedSeat.value.id })
+        return
+      }
+      ElMessage.error(error?.response?.data?.message || error?.message || '座位预约失败')
+      return
+    }
   } else {
     await reservationApi.reserveClassroom({ ...payload, classroom_id: selectedClassroom.value.id })
   }
@@ -379,6 +396,56 @@ async function submitReservation() {
   reserveDialog.value = false
   selectedSeat.value = null
   await loadReservedSeats()
+}
+
+function isSeatWaitlistEligibleError(error) {
+  const message = error?.response?.data?.message || error?.message || ''
+  const businessCode = error?.businessCode ?? error?.response?.data?.code
+  if (businessCode !== 409) return false
+  return message.includes('座位已被预约') || message.includes('教室已被整间预约')
+}
+
+async function offerSeatWaitlist(payload) {
+  try {
+    await ElMessageBox.confirm(
+      '当前座位在该时间段已被占用，是否加入候补？资源释放后系统会自动尝试为你补位。',
+      '加入候补',
+      {
+        type: 'warning',
+        confirmButtonText: '加入候补',
+        cancelButtonText: '返回调整'
+      }
+    )
+  } catch {
+    return
+  }
+
+  await waitlistApi.create(payload)
+  reserveDialog.value = false
+  ElMessage.success('已加入候补队列，资源释放后系统会自动尝试补位')
+}
+
+async function joinSelectedSeatWaitlist() {
+  if (!selectedSeat.value) {
+    ElMessage.warning('请先选择座位')
+    return
+  }
+  if (!isSeatReserved(selectedSeat.value)) {
+    ElMessage.warning('当前座位尚可直接预约，无需加入候补')
+    return
+  }
+  const validationMessage = getAvailabilityValidationMessage()
+  if (validationMessage) {
+    ElMessage.warning(validationMessage)
+    return
+  }
+  const { start, end } = getReservationDateTimes()
+  await offerSeatWaitlist({
+    seat_id: selectedSeat.value.id,
+    start_time: toUtcIsoString(start),
+    end_time: toUtcIsoString(end),
+    reason: reserveForm.value.reason
+  })
 }
 
 async function loadReservedSeats() {
@@ -398,8 +465,7 @@ async function loadReservedSeats() {
   }
 
   if (selectedSeat.value && reservedSeatIds.value.has(selectedSeat.value.id)) {
-    selectedSeat.value = null
-    ElMessage.warning('原座位在该时间段已被预约，请重新选择')
+    ElMessage.warning('原选座位在该时间段已被占用，如需等待可直接加入候补')
   }
 }
 
@@ -457,7 +523,12 @@ watch(
 )
 
 onMounted(() => {
-  loadBuildingPreferences().then(() => {
+  ensureBuildingOptionsLoaded().then(() => {
+    if (!filters.value.building || !hasBuildingOption(filters.value.building)) {
+      filters.value.building = getDefaultBuildingValue()
+    }
+    return loadBuildingPreferences()
+  }).then(() => {
     if (canQueryAvailability()) {
       loadClassrooms()
     }
@@ -626,7 +697,11 @@ onMounted(() => {
           {{
             user?.role === 'TEACHER'
               ? selectedClassroom ? '系统会按当前时间段判断整间教室是否可预约。' : '先选择时间和教学楼，再查看具体教室。'
-              : selectedSeat ? `已选择座位 ${selectedSeat.seatNumber}` : selectedClassroom ? '已按当前预约时间标记不可用座位。' : '先选择时间和教学楼，再查看具体教室。'
+              : selectedSeat
+              ? isSeatReserved(selectedSeat)
+                ? `已选择占用座位 ${selectedSeat.seatNumber}，可直接加入候补`
+                : `已选择座位 ${selectedSeat.seatNumber}`
+              : selectedClassroom ? '已按当前预约时间标记不可用座位，点击占用座位可直接加入候补。' : '先选择时间和教学楼，再查看具体教室。'
           }}
         </div>
       </div>
@@ -635,10 +710,20 @@ onMounted(() => {
           v-if="user?.role === 'STUDENT'"
           type="primary"
           :icon="Calendar"
-          :disabled="!selectedSeat || !canQueryAvailability()"
+          :disabled="!selectedSeat || selectedSeatIsReserved || !canQueryAvailability()"
           @click="openReserve('seat')"
         >
           预约座位
+        </el-button>
+        <el-button
+          v-if="user?.role === 'STUDENT'"
+          type="warning"
+          plain
+          :icon="Calendar"
+          :disabled="!selectedSeat || !selectedSeatIsReserved || !canQueryAvailability()"
+          @click="joinSelectedSeatWaitlist"
+        >
+          加入候补
         </el-button>
         <el-button
           v-if="user?.role === 'TEACHER'"
@@ -718,7 +803,7 @@ onMounted(() => {
         class="seat-cell"
         :class="{ 'is-disabled': seat.status === 'DISABLED', 'is-reserved': isSeatReserved(seat), 'is-pending-time': isSeatWaitingForTime(), 'is-selected': selectedSeat?.id === seat.id }"
         :style="seatStyle(seat)"
-        :title="isSeatWaitingForTime() ? '请先选择预约时间' : isSeatReserved(seat) ? '该时间段已被预约' : (seat.remark || seat.seatNumber)"
+        :title="isSeatWaitingForTime() ? '请先选择预约时间' : isSeatReserved(seat) ? '该时间段已被占用，点击可加入候补' : (seat.remark || seat.seatNumber)"
         @click="chooseSeat(seat)"
       >
         {{ seat.seatNumber }}
@@ -1082,12 +1167,12 @@ onMounted(() => {
   background: #fffbeb;
   color: #b45309;
   border-color: #fde68a;
-  cursor: not-allowed;
+  cursor: pointer;
 }
 
 :deep(.seat-cell.is-reserved:hover) {
-  transform: none;
-  box-shadow: none;
+  border-color: #f59e0b;
+  box-shadow: 0 10px 22px rgba(245, 158, 11, 0.15);
 }
 
 :deep(.seat-cell.is-pending-time) {

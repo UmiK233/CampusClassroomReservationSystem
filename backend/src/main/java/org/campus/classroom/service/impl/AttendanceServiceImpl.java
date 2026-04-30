@@ -10,6 +10,7 @@ import org.campus.classroom.enums.AttendanceStatus;
 import org.campus.classroom.enums.ReservationStatus;
 import org.campus.classroom.enums.ResultCode;
 import org.campus.classroom.enums.ViolationType;
+import org.campus.classroom.event.SeatReservationReleasedEvent;
 import org.campus.classroom.exception.BusinessException;
 import org.campus.classroom.mapper.AttendanceMapper;
 import org.campus.classroom.mapper.ReservationMapper;
@@ -18,6 +19,7 @@ import org.campus.classroom.mapper.ViolationRecordMapper;
 import org.campus.classroom.service.AttendanceService;
 import org.campus.classroom.service.NotificationService;
 import org.campus.classroom.service.SystemConfigService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +41,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final UserMapper userMapper;
     private final NotificationService notificationService;
     private final SystemConfigService systemConfigService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @Transactional
@@ -176,6 +179,11 @@ public class AttendanceServiceImpl implements AttendanceService {
                 "预约已按爽约处理",
                 buildNoShowNotice()
         );
+        applicationEventPublisher.publishEvent(new SeatReservationReleasedEvent(
+                reservation.getResourceId(),
+                reservation.getStartTime(),
+                reservation.getEndTime()
+        ));
         return true;
     }
 

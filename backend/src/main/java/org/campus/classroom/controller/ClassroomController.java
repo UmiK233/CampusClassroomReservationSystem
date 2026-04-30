@@ -35,6 +35,11 @@ public class ClassroomController {
         return Result.success("查询成功", classroomService.getClassroomById(id));
     }
 
+    @GetMapping("/buildings")
+    public Result<List<String>> listBuildings() {
+        return Result.success("获取教学楼列表成功", classroomService.listBuildings());
+    }
+
     @GetMapping("/{id}/seats")
     public Result<ClassroomSeatLayoutVO> getClassroomSeatLayout(@PathVariable @NotNull Long id) {
         return Result.success("查询成功", seatService.getSeatLayout(id));
