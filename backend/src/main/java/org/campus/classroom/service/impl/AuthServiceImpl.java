@@ -11,9 +11,11 @@ import org.campus.classroom.mapper.UserMapper;
 import org.campus.classroom.security.LoginUser;
 import org.campus.classroom.service.AuthService;
 import org.campus.classroom.service.SystemConfigService;
+import org.campus.classroom.service.TokenService;
 import org.campus.classroom.utils.JwtUtil;
 import org.campus.classroom.vo.LoginVO;
 import org.campus.classroom.vo.UserInfoVO;
+import org.springframework.data.util.Pair;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final SystemConfigService systemConfigService;
+    private final TokenService tokenService;
 
     @Override
     public void register(RegisterDTO request) {
@@ -62,36 +65,33 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public LoginVO login(LoginUser user) {
-        log.info("[开始登录] 用户ID={}, 用户名={}", user.getId(), user.getUsername());
-        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
-
-        UserInfoVO userInfoVO = new UserInfoVO();
-        userInfoVO.setId(user.getId());
-        userInfoVO.setUsername(user.getUsername());
-        userInfoVO.setNickname(user.getNickname());
-        userInfoVO.setEmail(user.getEmail());
-        userInfoVO.setRole(user.getRole());
-        fillUserCreditInfo(userInfoVO, user.getRole(), user.getCreditScore());
-
-        LoginVO loginVO = new LoginVO();
-        loginVO.setToken(token);
-        loginVO.setUserInfo(userInfoVO);
-        log.info("[登录成功] 用户ID={}, 用户名={}, 角色={}", user.getId(), user.getUsername(), user.getRole());
+    public LoginVO login(LoginUser loginUser) {
+        log.info("[开始登录] 用户ID={}, 用户名={}", loginUser.getId(), loginUser.getUsername());
+        String accessToken = jwtUtil.generateToken(loginUser);
+        String refreshToken = tokenService.generateRefreshToken(loginUser.getId());
+        LoginVO loginVO = buildLoginVO(loginUser, accessToken, refreshToken);
+        log.info("[登录成功] 用户ID={}, 用户名={}, 角色={}", loginUser.getId(), loginUser.getUsername(), loginUser.getRole());
         return loginVO;
+    }
+
+    @Override
+    public LoginVO refresh(String refreshToken) {
+        log.info("[刷新 Token] request received");
+        Pair<Long, String> rotateResult = tokenService.rotateRefreshToken(refreshToken);
+        LoginUser loginUser = new LoginUser(requireActiveUser(rotateResult.getFirst()));
+        String accessToken = jwtUtil.generateToken(loginUser);
+        return buildLoginVO(loginUser, accessToken, rotateResult.getSecond());
+    }
+
+    @Override
+    public void logout(String refreshToken) {
+        tokenService.revokeRefreshToken(refreshToken);
     }
 
     @Override
     public UserInfoVO getUserInfo(LoginUser loginUser) {
         log.info("[获取用户信息] 用户ID={}, 用户名={}", loginUser.getId(), loginUser.getUsername());
-        UserInfoVO userInfoVO = new UserInfoVO();
-        userInfoVO.setId(loginUser.getId());
-        userInfoVO.setUsername(loginUser.getUsername());
-        userInfoVO.setNickname(loginUser.getNickname());
-        userInfoVO.setEmail(loginUser.getEmail());
-        userInfoVO.setRole(loginUser.getRole());
-        fillUserCreditInfo(userInfoVO, loginUser.getRole(), loginUser.getCreditScore());
-        return userInfoVO;
+        return buildUserInfoVO(loginUser);
     }
 
     @Override
@@ -111,7 +111,39 @@ public class AuthServiceImpl implements AuthService {
         if (rows != 1) {
             throw new BusinessException(ResultCode.INTERNAL_ERROR, "修改密码失败");
         }
+        int updated = userMapper.incrementTokenVersion(userId);
+        if (updated != 1) {
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "修改密码后未能刷新登录状态");
+        }
+        tokenService.revokeAllRefreshTokens(userId);
         log.info("[修改密码成功] 用户ID={}, 用户名={}", user.getId(), user.getUsername());
+    }
+
+    private User requireActiveUser(Long userId) {
+        User user = userMapper.selectById(userId);
+        if (user == null || user.getStatus() == null || user.getStatus() != 1) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED, "用户状态异常");
+        }
+        return user;
+    }
+
+    private LoginVO buildLoginVO(LoginUser loginUser, String accessToken, String refreshToken) {
+        LoginVO loginVO = new LoginVO();
+        loginVO.setAccessToken(accessToken);
+        loginVO.setRefreshToken(refreshToken);
+        loginVO.setUserInfo(buildUserInfoVO(loginUser));
+        return loginVO;
+    }
+
+    private UserInfoVO buildUserInfoVO(LoginUser loginUser) {
+        UserInfoVO userInfoVO = new UserInfoVO();
+        userInfoVO.setId(loginUser.getId());
+        userInfoVO.setUsername(loginUser.getUsername());
+        userInfoVO.setNickname(loginUser.getNickname());
+        userInfoVO.setEmail(loginUser.getEmail());
+        userInfoVO.setRole(loginUser.getRole());
+        fillUserCreditInfo(userInfoVO, loginUser.getRole(), loginUser.getCreditScore());
+        return userInfoVO;
     }
 
     private void fillUserCreditInfo(UserInfoVO userInfoVO, String role, Integer creditScore) {

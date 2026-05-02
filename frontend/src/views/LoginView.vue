@@ -35,7 +35,7 @@ async function submit() {
         username: form.value.username,
         password: form.value.password
       })
-      authStore.setAuth(data.token, data.userInfo)
+      authStore.setAuth(data.accessToken, data.refreshToken, data.userInfo)
       router.replace(data.userInfo?.role === 'ADMIN' ? '/admin' : '/dashboard')
       ElMessage.success('登录成功')
     } else {

@@ -8,6 +8,7 @@ import org.campus.classroom.mapper.ReservationMapper;
 import org.campus.classroom.mapper.SeatMapper;
 import org.campus.classroom.service.ClassroomService;
 import org.campus.classroom.service.ReservationService;
+import org.campus.classroom.service.TokenService;
 import org.campus.classroom.vo.ClassroomVO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.BeanUtils;
@@ -23,6 +24,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 class CampusClassroomReservationSystemApplicationTests {
+    @Autowired
+    private TokenService tokenService;
+
     @Autowired
     ClassroomService service;
     @Autowired

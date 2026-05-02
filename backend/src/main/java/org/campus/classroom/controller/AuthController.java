@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.campus.classroom.common.Result;
 import org.campus.classroom.dto.ChangePasswordDTO;
 import org.campus.classroom.dto.LoginDTO;
+import org.campus.classroom.dto.RefreshTokenDTO;
 import org.campus.classroom.dto.RegisterDTO;
 import org.campus.classroom.enums.ResultCode;
 import org.campus.classroom.exception.BusinessException;
@@ -80,5 +81,17 @@ public class AuthController {
                                        @AuthenticationPrincipal LoginUser user) {
         authService.changePassword(user.getId(), request);
         return Result.success("修改密码成功");
+    }
+
+    @PostMapping("/refresh")
+    public Result<LoginVO> refresh(@RequestBody @Valid RefreshTokenDTO request) {
+        LoginVO loginVO = authService.refresh(request.getRefreshToken());
+        return Result.success("刷新成功", loginVO);
+    }
+
+    @PostMapping("/logout")
+    public Result<Void> logout(@RequestBody @Valid RefreshTokenDTO request) {
+        authService.logout(request.getRefreshToken());
+        return Result.success("退出成功");
     }
 }

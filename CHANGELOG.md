@@ -308,3 +308,29 @@ ___
 测试文件：
 
 - [CampusClassroomReservationSystemApplicationTests.java]
+
+___
+## [v0.17.0] - 2026-05-02
+### 认证改造
+* 将登录响应正式切换为 `accessToken + refreshToken + userInfo`，补齐 `/auth/refresh` 与 `/auth/logout` 的闭环。
+* refresh token 改为存入 Redis 的哈希 key，而不是直接把明文 token 暴露在 Redis key 上。
+* Redis 中新增按用户维度维护的 refresh token 集合，用于密码修改后批量失效全部 refresh token。
+* `JwtAuthenticationFilter` 现在会校验 JWT 中的 `tokenVersion`，旧 access token 在密码修改后会被立即拒绝。
+
+### 前端联动
+* Pinia `auth` store 改为同时持久化 `accessToken`、`refreshToken`，并兼容旧的单 token 本地存储键。
+* Axios 拦截器新增自动刷新逻辑：当业务码或 HTTP 状态返回 `401` 时，优先用 refresh token 换新 access token，再重放原请求。
+* 页面退出登录时会调用后端 `/auth/logout` 撤销 refresh token，而不是只清本地状态。
+*  应用启动时若检测到本地存在 access token，将尝试调用 `/auth/me` 恢复用户信息；
+   若 access token 已失效，则自动使用 refresh token 获取新的 access token 并重试，
+   以保证刷新页面后登录态与用户信息的一致性。
+### 数据库与部署
+* `user` 表新增 `token_version` 字段
+* `backend/sql/classroom.sql` 已同步更新建表结构和种子数据导入语句。
+* `docker-compose.yaml` 新增 Redis 服务，并为后端补齐 `SPRING_DATA_REDIS_*`、`JWT_ACCESS_EXPIRATION`、`JWT_REFRESH_EXPIRATION` 环境变量。
+* `application-local.yaml` 新增本地 Redis 连接配置。
+
+### 修改过程
+* 重构了后端 token 服务，补齐 refresh token 轮换、单点退出、密码修改后的全量失效和 JWT 版本校验。
+* 修改前端 store、登录页、全局请求拦截器和退出流程，把双 token 存储与自动刷新真正接上。
+* 补了数据库升级脚本和 Redis 部署配置，并完成构建验证。

@@ -3,6 +3,8 @@ import http from './http'
 export const authApi = {
   login: data => http.post('/auth/login', data),
   register: data => http.post('/auth/register', data),
+  refresh: (data, config = {}) => http.post('/auth/refresh', data, config),
+  logout: (data, config = {}) => http.post('/auth/logout', data, config),
   me: () => http.get('/auth/me'),
   changePassword: data => http.put('/auth/password', data)
 }

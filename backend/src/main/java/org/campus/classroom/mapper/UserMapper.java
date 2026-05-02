@@ -7,6 +7,10 @@ import org.campus.classroom.entity.User;
 import java.util.List;
 
 public interface UserMapper {
+
+    @Update("UPDATE user SET token_version = token_version + 1 WHERE id = #{userId}")
+    int incrementTokenVersion(Long userId);
+
     @Select("select * from user where id = #{id}")
     @Results(id = "userResultMap", value = {
             @Result(column = "id", property = "id"),
@@ -17,6 +21,7 @@ public interface UserMapper {
             @Result(column = "role", property = "role"),
             @Result(column = "status", property = "status"),
             @Result(column = "credit_score", property = "creditScore"),
+            @Result(column = "token_version", property = "tokenVersion"),
             @Result(column = "create_time", property = "createTime")
     })
     User selectById(Long id);

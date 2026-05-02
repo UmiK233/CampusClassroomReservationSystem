@@ -14,6 +14,7 @@ public class User {
     private String role;
     private Integer status;
     private Integer creditScore;
+    private Integer tokenVersion;
     //插入自动生成,取出时需要对应
     private LocalDateTime createTime;
 }

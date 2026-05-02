@@ -1,8 +1,6 @@
 package org.campus.classroom.service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import org.campus.classroom.dto.ChangePasswordDTO;
-import org.campus.classroom.dto.LoginDTO;
 import org.campus.classroom.dto.RegisterDTO;
 import org.campus.classroom.security.LoginUser;
 import org.campus.classroom.vo.LoginVO;
@@ -15,6 +13,10 @@ public interface AuthService {
     void validateLoginAccount(String username);
 
     LoginVO login(LoginUser loginUser);
+
+    LoginVO refresh(String refreshToken);
+
+    void logout(String refreshToken);
 
     UserInfoVO getUserInfo(LoginUser token);
 

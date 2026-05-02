@@ -22,7 +22,7 @@ const authStore = useAuthStore()
 const user = computed(() => authStore.user)
 
 async function refreshUser() {
-  if (!user.value) return
+  if (!authStore.accessToken) return
   try {
     const data = await authApi.me()
     authStore.setUser(data)
@@ -31,9 +31,15 @@ async function refreshUser() {
   }
 }
 
-function logout() {
-  authStore.clearAuth()
-  router.replace('/login')
+async function logout() {
+  try {
+    if (authStore.refreshToken) {
+      await authApi.logout({ refreshToken: authStore.refreshToken }, { silentError: true })
+    }
+  } finally {
+    authStore.clearAuth()
+    router.replace('/login')
+  }
 }
 
 const menuIndex = computed(() => {

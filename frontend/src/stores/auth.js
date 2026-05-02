@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 
-const TOKEN_KEY = 'campus_reservation_token'
+const LEGACY_TOKEN_KEY = 'campus_reservation_token'
+const ACCESS_TOKEN_KEY = 'campus_reservation_access_token'
+const REFRESH_TOKEN_KEY = 'campus_reservation_refresh_token'
 const USER_KEY = 'campus_reservation_user'
 
 function readUser() {
@@ -17,27 +19,42 @@ function readUser() {
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    token: localStorage.getItem(TOKEN_KEY),
+    accessToken: localStorage.getItem(ACCESS_TOKEN_KEY) || localStorage.getItem(LEGACY_TOKEN_KEY),
+    refreshToken: localStorage.getItem(REFRESH_TOKEN_KEY),
     user: readUser()
   }),
   getters: {
+    token: state => state.accessToken,
     role: state => state.user?.role
   },
   actions: {
-    setAuth(token, user) {
-      this.token = token
+    setAuth(accessToken, refreshToken, user) {
+      this.accessToken = accessToken
+      this.refreshToken = refreshToken
       this.user = user
-      localStorage.setItem(TOKEN_KEY, token)
+      localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
+      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+      localStorage.removeItem(LEGACY_TOKEN_KEY)
       localStorage.setItem(USER_KEY, JSON.stringify(user))
+    },
+    setTokens(accessToken, refreshToken) {
+      this.accessToken = accessToken
+      this.refreshToken = refreshToken
+      localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
+      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+      localStorage.removeItem(LEGACY_TOKEN_KEY)
     },
     setUser(user) {
       this.user = user
       localStorage.setItem(USER_KEY, JSON.stringify(user))
     },
     clearAuth() {
-      this.token = null
+      this.accessToken = null
+      this.refreshToken = null
       this.user = null
-      localStorage.removeItem(TOKEN_KEY)
+      localStorage.removeItem(ACCESS_TOKEN_KEY)
+      localStorage.removeItem(REFRESH_TOKEN_KEY)
+      localStorage.removeItem(LEGACY_TOKEN_KEY)
       localStorage.removeItem(USER_KEY)
     }
   }

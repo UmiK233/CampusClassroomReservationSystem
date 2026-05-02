@@ -41,6 +41,10 @@ public class LoginUser implements UserDetails {
         return user.getCreditScore();
     }
 
+    public Integer getTokenVersion() {
+        return user.getTokenVersion();
+    }
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class LoginVO {
-    private String token;
+    private String accessToken;
+    private String refreshToken;
     private UserInfoVO userInfo;
 }

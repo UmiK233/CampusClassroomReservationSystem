@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.campus.classroom.security.LoginUser;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -17,17 +18,17 @@ import java.util.Map;
 @Component
 public class JwtUtil {
     private final SecretKey KEY;
-    private final long DEFAULT_EXPIRATION; // 默认过期时间1小时
+    private final long ACCESS_EXPIRATION; // 默认过期时间1小时
 
-    public JwtUtil(@Value("${jwt.secret}") String secretKey, @Value("${jwt.expiration}") long expirationTime) {
+    public JwtUtil(@Value("${jwt.secret}") String secretKey, @Value("${jwt.access-expiration}") long expirationTime) {
         this.KEY = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
-        this.DEFAULT_EXPIRATION = expirationTime; // 1小时
+        this.ACCESS_EXPIRATION = expirationTime; // 1小时
     }
 
 
     public String generateToken(Long userId) {
         Date now = new Date();
-        Date expireDate = new Date(now.getTime() + DEFAULT_EXPIRATION);
+        Date expireDate = new Date(now.getTime() + ACCESS_EXPIRATION);
 
         return Jwts.builder()
                 .header().add("alg", "HS256").add("typ", "JWT").and()
@@ -46,17 +47,18 @@ public class JwtUtil {
      * @param role 1
      * @return token
      */
-    public String generateToken(Long userId, String username, String role) {
+    public String generateToken(LoginUser user) {
         Date now = new Date();
-        Date expireDate = new Date(now.getTime() + DEFAULT_EXPIRATION);
+        Date expireDate = new Date(now.getTime() + ACCESS_EXPIRATION);
         Map<String, Object> claims = new LinkedHashMap<>();
-        claims.put("username", username);
-        claims.put("role", role);
+        claims.put("username", user.getUsername());
+        claims.put("role", user.getRole());
+        claims.put("tokenVersion", user.getTokenVersion());
 
         return Jwts.builder()
                 .header().add("alg", "HS256").add("typ", "JWT")
                 .and()
-                .subject(String.valueOf(userId))
+                .subject(String.valueOf(user.getId()))
                 .claims(claims)
                 .issuedAt(now)
                 .expiration(expireDate)
