@@ -1,7 +1,13 @@
 package org.campus.classroom.mapper;
 
-
-import org.apache.ibatis.annotations.*;
+import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Options;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Result;
+import org.apache.ibatis.annotations.ResultMap;
+import org.apache.ibatis.annotations.Results;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 import org.campus.classroom.entity.User;
 
 import java.util.List;
@@ -29,6 +35,10 @@ public interface UserMapper {
     @Select("select * from user where username = #{username} limit 1")
     @ResultMap("userResultMap")
     User selectByUsername(String username);
+
+    @Select("select * from user where email = #{email} limit 1")
+    @ResultMap("userResultMap")
+    User selectByEmail(String email);
 
     @Insert("insert into user(username, password,nickname,email, role) values(#{username}, #{password}, #{nickname}, #{email},#{role})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
@@ -74,6 +84,13 @@ public interface UserMapper {
             WHERE id = #{id}
             """)
     int updatePassword(@Param("id") Long id, @Param("password") String password);
+
+    @Update("""
+            UPDATE user
+            SET nickname = #{nickname}
+            WHERE id = #{id}
+            """)
+    int updateNickname(@Param("id") Long id, @Param("nickname") String nickname);
 
     @Update("""
             UPDATE user

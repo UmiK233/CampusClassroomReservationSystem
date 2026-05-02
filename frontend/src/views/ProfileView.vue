@@ -1,33 +1,45 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { UserFilled, Clock, Histogram, Timer, Lock } from '@element-plus/icons-vue'
+import { UserFilled, Clock, Histogram, Timer, Lock, EditPen } from '@element-plus/icons-vue'
 import { authApi, reservationApi } from '../api'
 import { useAuthStore } from '../stores/auth'
 import { userRoleText } from '../utils/dict'
 
 const authStore = useAuthStore()
 const loading = ref(false)
+const nicknameLoading = ref(false)
 const passwordLoading = ref(false)
+const nicknameFormRef = ref()
 const passwordFormRef = ref()
 const activeReservations = ref([])
 const historyReservations = ref([])
+const nicknameForm = ref({
+  nickname: ''
+})
 const passwordForm = ref({
   oldPassword: '',
   newPassword: '',
   confirmPassword: ''
 })
 
+const nicknameRules = {
+  nickname: [
+    { required: true, message: '请输入昵称', trigger: 'blur' },
+    { max: 20, message: '昵称长度不能超过 20 位', trigger: ['blur', 'change'] }
+  ]
+}
+
 const passwordRules = {
   oldPassword: [{ required: true, message: '请输入旧密码', trigger: 'blur' }],
   newPassword: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 8, max: 20, message: '新密码长度必须在8到20位之间', trigger: 'blur' }
+    { min: 8, max: 20, message: '新密码长度必须在 8 到 20 位之间', trigger: 'blur' }
   ],
   confirmPassword: [
     { required: true, message: '请再次输入新密码', trigger: 'blur' },
     {
-      validator: (rule, value, callback) => {
+      validator: (_, value, callback) => {
         if (value !== passwordForm.value.newPassword) {
           callback(new Error('两次输入的新密码不一致'))
           return
@@ -59,6 +71,7 @@ async function refreshUser() {
   try {
     const data = await authApi.me()
     authStore.setUser(data)
+    nicknameForm.value.nickname = data.nickname || ''
   } catch {
     // keep existing user data on failure
   }
@@ -76,6 +89,21 @@ async function loadData() {
     historyReservations.value = history || []
   } finally {
     loading.value = false
+  }
+}
+
+async function updateNickname() {
+  await nicknameFormRef.value.validate()
+  nicknameLoading.value = true
+  try {
+    const data = await authApi.updateNickname({
+      nickname: nicknameForm.value.nickname
+    })
+    authStore.setUser(data)
+    nicknameForm.value.nickname = data.nickname || ''
+    ElMessage.success('昵称修改成功')
+  } finally {
+    nicknameLoading.value = false
   }
 }
 
@@ -194,11 +222,34 @@ onMounted(loadData)
         </div>
       </section>
 
+      <section class="panel">
+        <div class="toolbar">
+          <div>
+            <strong><el-icon><EditPen /></el-icon> 修改昵称</strong>
+            <div class="hint">修改后会立即同步到当前账号信息</div>
+          </div>
+        </div>
+        <el-form
+          ref="nicknameFormRef"
+          :model="nicknameForm"
+          :rules="nicknameRules"
+          label-position="top"
+          class="nickname-form"
+        >
+          <el-form-item label="昵称" prop="nickname">
+            <el-input v-model="nicknameForm.nickname" maxlength="20" show-word-limit placeholder="请输入昵称" />
+          </el-form-item>
+          <el-button type="primary" :loading="nicknameLoading" @click="updateNickname">
+            保存昵称
+          </el-button>
+        </el-form>
+      </section>
+
       <section class="panel password-panel">
         <div class="toolbar">
           <div>
             <strong><el-icon><Lock /></el-icon> 修改密码</strong>
-            <div class="hint">修改后请使用新密码登录，当前登录状态不会立即失效</div>
+            <div class="hint">修改后请使用新密码登录，当前登录状态不会立刻失效</div>
           </div>
         </div>
         <el-form
@@ -309,6 +360,34 @@ onMounted(loadData)
   font-weight: 600;
 }
 
+.metric-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.metric {
+  padding: 18px;
+  border: 1px solid #e4e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.metric-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #667085;
+  font-size: 13px;
+}
+
+.metric-value {
+  margin-top: 10px;
+  color: #172033;
+  font-size: 26px;
+  font-weight: 700;
+}
+
 .profile-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -319,6 +398,7 @@ onMounted(loadData)
   grid-column: 1 / -1;
 }
 
+.nickname-form,
 .password-form {
   max-width: 520px;
   margin-top: 16px;
@@ -369,6 +449,12 @@ onMounted(loadData)
   color: #2563eb;
 }
 
+@media (max-width: 960px) {
+  .metric-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 @media (max-width: 860px) {
   .profile-grid {
     grid-template-columns: 1fr;
@@ -377,6 +463,12 @@ onMounted(loadData)
   .profile-hero {
     flex-direction: column;
     text-align: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .metric-row {
+    grid-template-columns: 1fr;
   }
 }
 </style>

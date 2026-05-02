@@ -2,11 +2,15 @@ import http from './http'
 
 export const authApi = {
   login: data => http.post('/auth/login', data),
+  loginByCode: data => http.post('/auth/login/code', data),
+  sendEmailCode: data => http.post('/auth/email-code', data),
   register: data => http.post('/auth/register', data),
+  resetPasswordByCode: data => http.post('/auth/password/reset', data),
   refresh: (data, config = {}) => http.post('/auth/refresh', data, config),
   logout: (data, config = {}) => http.post('/auth/logout', data, config),
   me: () => http.get('/auth/me'),
-  changePassword: data => http.put('/auth/password', data)
+  changePassword: data => http.put('/auth/password', data),
+  updateNickname: data => http.put('/auth/nickname', data)
 }
 
 export const notificationApi = {

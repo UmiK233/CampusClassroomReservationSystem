@@ -3,13 +3,19 @@ package org.campus.classroom.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.campus.classroom.dto.ChangePasswordDTO;
+import org.campus.classroom.dto.EmailCodeSendDTO;
+import org.campus.classroom.dto.EmailLoginDTO;
 import org.campus.classroom.dto.RegisterDTO;
+import org.campus.classroom.dto.ResetPasswordByCodeDTO;
+import org.campus.classroom.dto.UpdateNicknameDTO;
 import org.campus.classroom.entity.User;
+import org.campus.classroom.enums.EmailCodeScene;
 import org.campus.classroom.enums.ResultCode;
 import org.campus.classroom.exception.BusinessException;
 import org.campus.classroom.mapper.UserMapper;
 import org.campus.classroom.security.LoginUser;
 import org.campus.classroom.service.AuthService;
+import org.campus.classroom.service.EmailCodeService;
 import org.campus.classroom.service.SystemConfigService;
 import org.campus.classroom.service.TokenService;
 import org.campus.classroom.utils.JwtUtil;
@@ -18,6 +24,8 @@ import org.campus.classroom.vo.UserInfoVO;
 import org.springframework.data.util.Pair;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -28,29 +36,39 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final SystemConfigService systemConfigService;
     private final TokenService tokenService;
+    private final EmailCodeService emailCodeService;
+
+    @Override
+    public void sendEmailCode(EmailCodeSendDTO request) {
+        EmailCodeScene scene = EmailCodeScene.fromCode(request.getScene());
+        String email = request.getEmail().trim();
+        validateEmailCodeScene(email, scene);
+        emailCodeService.sendCode(email, scene);
+    }
 
     @Override
     public void register(RegisterDTO request) {
-        log.info("[开始注册] 用户名={}, 邮箱={}", request.getUsername(), request.getEmail());
-        User existUser = userMapper.selectByUsername(request.getUsername());
-        if (existUser != null) {
-            log.warn("[注册失败] 用户名={}, 原因=用户名重复", request.getUsername());
-            throw new BusinessException(ResultCode.BAD_REQUEST, "用户名已存在");
-        }
+        log.info("[开始注册] username={}, email={}", request.getUsername(), request.getEmail());
+        assertUsernameAvailable(request.getUsername());
+        assertEmailAvailable(request.getEmail());
+        emailCodeService.verifyCode(request.getEmail(), EmailCodeScene.REGISTER, request.getVerificationCode());
 
+        String normalizedUsername = request.getUsername().trim();
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
+        String normalizedNickname = Objects.requireNonNullElse(request.getNickname(), "").trim();
         User user = new User();
-        user.setUsername(request.getUsername());
+        user.setUsername(normalizedUsername);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setNickname(request.getUsername());
-        user.setEmail(request.getEmail());
+        user.setNickname(normalizedNickname.isEmpty() ? normalizedUsername : normalizedNickname);
+        user.setEmail(normalizedEmail);
         user.setRole("STUDENT");
 
         int rows = userMapper.insert(user);
         if (rows <= 0) {
-            log.error("[注册失败] 用户名={}, 原因=写入数据库失败", request.getUsername());
+            log.error("[注册失败] username={}, 原因=写入数据库失败", request.getUsername());
             throw new BusinessException(ResultCode.INTERNAL_ERROR, "注册失败");
         }
-        log.info("[注册成功] 用户ID={}, 用户名={}", user.getId(), user.getUsername());
+        log.info("[注册成功] userId={}, username={}", user.getId(), user.getUsername());
     }
 
     @Override
@@ -59,24 +77,30 @@ public class AuthServiceImpl implements AuthService {
         if (user == null) {
             throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在");
         }
-        if (user.getStatus() == null || user.getStatus() != 1) {
-            throw new BusinessException(ResultCode.FORBIDDEN, "用户已被封禁");
-        }
+        ensureUserActive(user);
     }
 
     @Override
     public LoginVO login(LoginUser loginUser) {
-        log.info("[开始登录] 用户ID={}, 用户名={}", loginUser.getId(), loginUser.getUsername());
+        log.info("[开始登录] userId={}, username={}", loginUser.getId(), loginUser.getUsername());
         String accessToken = jwtUtil.generateToken(loginUser);
         String refreshToken = tokenService.generateRefreshToken(loginUser.getId());
         LoginVO loginVO = buildLoginVO(loginUser, accessToken, refreshToken);
-        log.info("[登录成功] 用户ID={}, 用户名={}, 角色={}", loginUser.getId(), loginUser.getUsername(), loginUser.getRole());
+        log.info("[登录成功] userId={}, username={}, role={}", loginUser.getId(), loginUser.getUsername(), loginUser.getRole());
         return loginVO;
     }
 
     @Override
+    public LoginVO loginByEmailCode(EmailLoginDTO request) {
+        User user = requireUserByEmail(request.getEmail());
+        ensureUserActive(user);
+        emailCodeService.verifyCode(request.getEmail(), EmailCodeScene.LOGIN, request.getVerificationCode());
+        return login(new LoginUser(user));
+    }
+
+    @Override
     public LoginVO refresh(String refreshToken) {
-        log.info("[刷新 Token] request received");
+        log.info("[刷新Token] request received");
         Pair<Long, String> rotateResult = tokenService.rotateRefreshToken(refreshToken);
         LoginUser loginUser = new LoginUser(requireActiveUser(rotateResult.getFirst()));
         String accessToken = jwtUtil.generateToken(loginUser);
@@ -85,46 +109,122 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void logout(String refreshToken) {
-        tokenService.revokeRefreshToken(refreshToken);
+        Long userId = tokenService.validateRefreshToken(refreshToken);
+        int updated = userMapper.incrementTokenVersion(userId);
+        if (updated != 1) {
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "退出登录后未能刷新登录状态");
+        }
+        tokenService.revokeAllRefreshTokens(userId);
     }
 
     @Override
     public UserInfoVO getUserInfo(LoginUser loginUser) {
-        log.info("[获取用户信息] 用户ID={}, 用户名={}", loginUser.getId(), loginUser.getUsername());
+        log.info("[获取用户信息] userId={}, username={}", loginUser.getId(), loginUser.getUsername());
         return buildUserInfoVO(loginUser);
     }
 
     @Override
     public void changePassword(Long userId, ChangePasswordDTO request) {
-        User user = userMapper.selectById(userId);
-        if (user == null) {
-            throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在");
-        }
+        User user = requireActiveUser(userId);
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "旧密码错误");
         }
         if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "新密码不能与旧密码相同");
         }
+        updatePasswordAndRevokeTokens(user, request.getNewPassword());
+        log.info("[修改密码成功] userId={}, username={}", user.getId(), user.getUsername());
+    }
 
-        int rows = userMapper.updatePassword(userId, passwordEncoder.encode(request.getNewPassword()));
+    @Override
+    public void resetPasswordByEmailCode(ResetPasswordByCodeDTO request) {
+        User user = requireUserByEmail(request.getEmail());
+        ensureUserActive(user);
+        emailCodeService.verifyCode(request.getEmail(), EmailCodeScene.RESET_PASSWORD, request.getVerificationCode());
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "新密码不能与旧密码相同");
+        }
+        updatePasswordAndRevokeTokens(user, request.getNewPassword());
+        log.info("[邮箱重置密码成功] userId={}, username={}", user.getId(), user.getUsername());
+    }
+
+    @Override
+    public UserInfoVO updateNickname(Long userId, UpdateNicknameDTO request) {
+        User user = requireActiveUser(userId);
+        String nickname = request.getNickname().trim();
+        int rows = userMapper.updateNickname(userId, nickname);
         if (rows != 1) {
-            throw new BusinessException(ResultCode.INTERNAL_ERROR, "修改密码失败");
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "修改昵称失败");
         }
-        int updated = userMapper.incrementTokenVersion(userId);
-        if (updated != 1) {
-            throw new BusinessException(ResultCode.INTERNAL_ERROR, "修改密码后未能刷新登录状态");
+        user.setNickname(nickname);
+        log.info("[修改昵称成功] userId={}, username={}, nickname={}", user.getId(), user.getUsername(), nickname);
+        return buildUserInfoVO(new LoginUser(user));
+    }
+
+    private void validateEmailCodeScene(String email, EmailCodeScene scene) {
+        User user = userMapper.selectByEmail(email.trim().toLowerCase());
+        switch (scene) {
+            case REGISTER -> {
+                if (user != null) {
+                    throw new BusinessException(ResultCode.BAD_REQUEST, "邮箱已被注册");
+                }
+            }
+            case LOGIN, RESET_PASSWORD -> {
+                if (user == null) {
+                    throw new BusinessException(ResultCode.NOT_FOUND, "邮箱未注册");
+                }
+                ensureUserActive(user);
+            }
         }
-        tokenService.revokeAllRefreshTokens(userId);
-        log.info("[修改密码成功] 用户ID={}, 用户名={}", user.getId(), user.getUsername());
+    }
+
+    private void assertUsernameAvailable(String username) {
+        User existUser = userMapper.selectByUsername(username.trim());
+        if (existUser != null) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "用户名已存在");
+        }
+    }
+
+    private void assertEmailAvailable(String email) {
+        User existUser = userMapper.selectByEmail(email.trim().toLowerCase());
+        if (existUser != null) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "邮箱已被注册");
+        }
+    }
+
+    private User requireUserByEmail(String email) {
+        User user = userMapper.selectByEmail(email.trim().toLowerCase());
+        if (user == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在");
+        }
+        return user;
     }
 
     private User requireActiveUser(Long userId) {
         User user = userMapper.selectById(userId);
-        if (user == null || user.getStatus() == null || user.getStatus() != 1) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED, "用户状态异常");
+        if (user == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在");
         }
+        ensureUserActive(user);
         return user;
+    }
+
+    private void ensureUserActive(User user) {
+        if (user.getStatus() == null || user.getStatus() != 1) {
+            throw new BusinessException(ResultCode.FORBIDDEN, "用户已被封禁");
+        }
+    }
+
+    private void updatePasswordAndRevokeTokens(User user, String newPassword) {
+        int rows = userMapper.updatePassword(user.getId(), passwordEncoder.encode(newPassword));
+        if (rows != 1) {
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "修改密码失败");
+        }
+        int updated = userMapper.incrementTokenVersion(user.getId());
+        if (updated != 1) {
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "修改密码后未能刷新登录状态");
+        }
+        tokenService.revokeAllRefreshTokens(user.getId());
     }
 
     private LoginVO buildLoginVO(LoginUser loginUser, String accessToken, String refreshToken) {

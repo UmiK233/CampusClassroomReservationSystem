@@ -34,7 +34,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
         return "/auth/login".equals(path)
+                || "/auth/login/code".equals(path)
+                || "/auth/email-code".equals(path)
                 || "/auth/register".equals(path)
+                || "/auth/password/reset".equals(path)
                 || "/auth/logout".equals(path)
                 || "/auth/refresh".equals(path);
     }
@@ -87,7 +90,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (Exception e) {
-            log.debug("认证过滤器: 令牌解析失败, 错误信息={}", e.getMessage());
+            log.debug("认证过滤器: 令牌解析失败, message={}", e.getMessage());
             returnUnauthorizedResponse(response);
             return;
         }

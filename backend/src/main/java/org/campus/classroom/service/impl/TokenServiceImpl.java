@@ -32,6 +32,8 @@ public class TokenServiceImpl implements TokenService {
     @Value("${jwt.refresh-expiration}")
     private long refreshExpiration;
 
+
+    //使用Lua脚本原子性旋转refreshToken
     private static DefaultRedisScript<String> createRotateRefreshTokenScript() {
         DefaultRedisScript<String> script = new DefaultRedisScript<>();
         script.setResultType(String.class);
@@ -127,12 +129,12 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public void revokeRefreshToken(String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
-            return;
+            throw new BusinessException(ResultCode.UNAUTHORIZED, "refreshToken 无效或已过期");
         }
         String key = buildTokenKey(refreshToken);
         String userId = stringRedisTemplate.opsForValue().get(key);
         if (userId == null) {
-            return;
+            throw new BusinessException(ResultCode.UNAUTHORIZED, "refreshToken 无效或已过期");
         }
         stringRedisTemplate.delete(key);
         stringRedisTemplate.opsForSet().remove(buildUserRefreshSetKey(Long.valueOf(userId)), buildTokenHash(refreshToken));
