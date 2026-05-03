@@ -11,7 +11,7 @@ public interface AdminService {
 
     AdminUserVO updateUserStatus(Long adminUserId, Long targetUserId, Integer status, String reason);
 
-    void forceLogoutUser(Long adminUserId, Long targetUserId, String reason);
+    AdminUserVO forceLogoutUser(Long adminUserId, Long targetUserId, String reason);
 
     List<AdminReservationVO> listReservations(String keyword, String status);
 

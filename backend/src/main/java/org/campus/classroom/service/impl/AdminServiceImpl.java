@@ -101,7 +101,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     @Transactional
-    public void forceLogoutUser(Long adminUserId, Long targetUserId, String reason) {
+    public AdminUserVO forceLogoutUser(Long adminUserId, Long targetUserId, String reason) {
         if (Objects.equals(adminUserId, targetUserId)) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "管理员不能强制下线自己");
         }
@@ -122,6 +122,7 @@ public class AdminServiceImpl implements AdminService {
                 buildForceLogoutNotice(reason)
         );
         log.info("[管理员强制下线用户成功] adminUserId={}, targetUserId={}", adminUserId, targetUserId);
+        return toUserVO(user);
     }
 
     @Override

@@ -8,12 +8,24 @@ import org.campus.classroom.dto.ClassroomCreateDTO;
 import org.campus.classroom.dto.ClassroomUpdateDTO;
 import org.campus.classroom.dto.SeatCreateDTO;
 import org.campus.classroom.dto.SeatUpdateDTO;
+import org.campus.classroom.security.LoginUser;
+import org.campus.classroom.service.AdminAuditService;
 import org.campus.classroom.service.ClassroomService;
 import org.campus.classroom.service.SeatService;
 import org.campus.classroom.vo.ClassroomVO;
 import org.campus.classroom.vo.SeatVO;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -24,17 +36,41 @@ import java.util.List;
 public class AdminClassroomController {
     private final ClassroomService classroomService;
     private final SeatService seatService;
+    private final AdminAuditService adminAuditService;
 
     @PostMapping
-    public Result<ClassroomVO> create(@RequestBody @Valid ClassroomCreateDTO request) {
+    public Result<ClassroomVO> create(@RequestBody @Valid ClassroomCreateDTO request,
+                                      @AuthenticationPrincipal LoginUser loginUser) {
         Long id = classroomService.create(request);
-        return Result.success("教室创建成功", classroomService.getClassroomById(id));
+        ClassroomVO classroomVO = classroomService.getClassroomById(id);
+        adminAuditService.log(
+                loginUser.getId(),
+                loginUser.getUsername(),
+                "CLASSROOM_CREATE",
+                "CLASSROOM",
+                classroomVO.getId(),
+                classroomVO.getBuilding() + " " + classroomVO.getRoomNumber(),
+                "status=" + classroomVO.getStatus() + ", capacity=" + classroomVO.getCapacity()
+        );
+        return Result.success("教室创建成功", classroomVO);
     }
 
     @PutMapping("/{id}")
-    public Result<ClassroomVO> update(@PathVariable Long id, @RequestBody @Valid ClassroomUpdateDTO request) {
+    public Result<ClassroomVO> update(@PathVariable Long id,
+                                      @RequestBody @Valid ClassroomUpdateDTO request,
+                                      @AuthenticationPrincipal LoginUser loginUser) {
         classroomService.update(id, request);
-        return Result.success("教室信息更新成功", classroomService.getClassroomById(id));
+        ClassroomVO classroomVO = classroomService.getClassroomById(id);
+        adminAuditService.log(
+                loginUser.getId(),
+                loginUser.getUsername(),
+                "CLASSROOM_UPDATE",
+                "CLASSROOM",
+                classroomVO.getId(),
+                classroomVO.getBuilding() + " " + classroomVO.getRoomNumber(),
+                "status=" + classroomVO.getStatus() + ", capacity=" + classroomVO.getCapacity()
+        );
+        return Result.success("教室信息更新成功", classroomVO);
     }
 
     @PostMapping("/{id}/seat_layout")

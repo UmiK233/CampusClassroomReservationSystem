@@ -6,6 +6,7 @@ import org.campus.classroom.common.Result;
 import org.campus.classroom.dto.AdminForceLogoutDTO;
 import org.campus.classroom.dto.AdminUserStatusUpdateDTO;
 import org.campus.classroom.security.LoginUser;
+import org.campus.classroom.service.AdminAuditService;
 import org.campus.classroom.service.AdminService;
 import org.campus.classroom.vo.AdminUserVO;
 import org.springframework.http.ContentDisposition;
@@ -34,6 +35,7 @@ import java.util.List;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminUserController {
     private final AdminService adminService;
+    private final AdminAuditService adminAuditService;
 
     @GetMapping
     public Result<List<AdminUserVO>> list(@RequestParam(required = false) String keyword,
@@ -61,9 +63,19 @@ public class AdminUserController {
     public Result<AdminUserVO> updateStatus(@PathVariable Long id,
                                             @RequestBody @Valid AdminUserStatusUpdateDTO request,
                                             @AuthenticationPrincipal LoginUser loginUser) {
+        AdminUserVO userVO = adminService.updateUserStatus(loginUser.getId(), id, request.getStatus(), request.getReason());
+        adminAuditService.log(
+                loginUser.getId(),
+                loginUser.getUsername(),
+                "USER_STATUS_UPDATE",
+                "USER",
+                userVO.getId(),
+                userVO.getUsername(),
+                "status=" + userVO.getStatus() + (request.getReason() == null || request.getReason().isBlank() ? "" : ", reason=" + request.getReason().trim())
+        );
         return Result.success(
                 "用户状态更新成功",
-                adminService.updateUserStatus(loginUser.getId(), id, request.getStatus(), request.getReason())
+                userVO
         );
     }
 
@@ -71,7 +83,16 @@ public class AdminUserController {
     public Result<Void> forceLogout(@PathVariable Long id,
                                     @RequestBody @Valid AdminForceLogoutDTO request,
                                     @AuthenticationPrincipal LoginUser loginUser) {
-        adminService.forceLogoutUser(loginUser.getId(), id, request.getReason());
+        AdminUserVO userVO = adminService.forceLogoutUser(loginUser.getId(), id, request.getReason());
+        adminAuditService.log(
+                loginUser.getId(),
+                loginUser.getUsername(),
+                "USER_FORCE_LOGOUT",
+                "USER",
+                userVO.getId(),
+                userVO.getUsername(),
+                request.getReason()
+        );
         return Result.success("用户已强制下线");
     }
 

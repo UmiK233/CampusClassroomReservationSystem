@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.campus.classroom.common.Result;
 import org.campus.classroom.dto.MaintenanceCreateDTO;
 import org.campus.classroom.security.LoginUser;
+import org.campus.classroom.service.AdminAuditService;
 import org.campus.classroom.service.MaintenanceService;
 import org.campus.classroom.vo.MaintenanceWindowVO;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,6 +27,7 @@ import java.util.List;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminMaintenanceController {
     private final MaintenanceService maintenanceService;
+    private final AdminAuditService adminAuditService;
 
     @GetMapping
     public Result<List<MaintenanceWindowVO>> list(@RequestParam(required = false) String status,
@@ -37,12 +39,33 @@ public class AdminMaintenanceController {
     @PostMapping
     public Result<Long> create(@RequestBody @Valid MaintenanceCreateDTO request,
                                @AuthenticationPrincipal LoginUser loginUser) {
-        return Result.success("创建维护成功", maintenanceService.create(loginUser.getId(), request));
+        Long id = maintenanceService.create(loginUser.getId(), request);
+        adminAuditService.log(
+                loginUser.getId(),
+                loginUser.getUsername(),
+                "MAINTENANCE_CREATE",
+                "MAINTENANCE",
+                id,
+                request.getResourceType() + "#" + request.getResourceId(),
+                "start=" + request.getStartTime() + ", end=" + request.getEndTime()
+                        + (request.getReason() == null || request.getReason().isBlank() ? "" : ", reason=" + request.getReason().trim())
+        );
+        return Result.success("创建维护成功", id);
     }
 
     @DeleteMapping("/{id}")
-    public Result<Void> cancel(@PathVariable Long id) {
+    public Result<Void> cancel(@PathVariable Long id,
+                               @AuthenticationPrincipal LoginUser loginUser) {
         maintenanceService.cancel(id);
+        adminAuditService.log(
+                loginUser.getId(),
+                loginUser.getUsername(),
+                "MAINTENANCE_CANCEL",
+                "MAINTENANCE",
+                id,
+                "maintenance#" + id,
+                null
+        );
         return Result.success("取消维护成功");
     }
 }

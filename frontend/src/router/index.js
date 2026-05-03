@@ -16,6 +16,7 @@ const routes = [
   { path: '/admin/users', component: () => import('../views/AdminUsersView.vue'), meta: { role: 'ADMIN' } },
   { path: '/admin/reservations', component: () => import('../views/AdminReservationsView.vue'), meta: { role: 'ADMIN' } },
   { path: '/admin/maintenance', component: () => import('../views/AdminMaintenanceView.vue'), meta: { role: 'ADMIN' } },
+  { path: '/admin/audit-logs', component: () => import('../views/AdminAuditLogsView.vue'), meta: { role: 'ADMIN' } },
   { path: '/admin/configs', component: () => import('../views/AdminConfigsView.vue'), meta: { role: 'ADMIN' } }
 ]
 

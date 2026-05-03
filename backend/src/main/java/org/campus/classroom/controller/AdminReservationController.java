@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.campus.classroom.common.Result;
 import org.campus.classroom.dto.AdminReservationCancelDTO;
 import org.campus.classroom.security.LoginUser;
+import org.campus.classroom.service.AdminAuditService;
 import org.campus.classroom.service.AdminService;
 import org.campus.classroom.vo.AdminReservationVO;
 import org.springframework.http.ContentDisposition;
@@ -33,6 +34,7 @@ import java.util.List;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminReservationController {
     private final AdminService adminService;
+    private final AdminAuditService adminAuditService;
 
     @GetMapping
     public Result<List<AdminReservationVO>> list(@RequestParam(required = false) String keyword,
@@ -59,6 +61,15 @@ public class AdminReservationController {
                                @RequestBody(required = false) @Valid AdminReservationCancelDTO request,
                                @AuthenticationPrincipal LoginUser loginUser) {
         adminService.cancelReservation(loginUser.getId(), id, request == null ? null : request.getReason());
+        adminAuditService.log(
+                loginUser.getId(),
+                loginUser.getUsername(),
+                "RESERVATION_CANCEL",
+                "RESERVATION",
+                id,
+                "reservation#" + id,
+                request == null ? null : request.getReason()
+        );
         return Result.success("管理员取消预约成功");
     }
 

@@ -66,6 +66,7 @@ export const adminApi = {
   maintenance: params => http.get('/admin/maintenance', { params }),
   createMaintenance: data => http.post('/admin/maintenance', data),
   cancelMaintenance: id => http.delete(`/admin/maintenance/${id}`),
+  auditLogs: params => http.get('/admin/audit-logs', { params }),
   configs: params => http.get('/admin/configs', { params }),
   updateConfig: (key, data) => http.put(`/admin/configs/${key}`, data)
 }
