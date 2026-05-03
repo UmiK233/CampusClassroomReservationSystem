@@ -13,18 +13,21 @@ import org.campus.classroom.enums.EmailCodeScene;
 import org.campus.classroom.enums.ResultCode;
 import org.campus.classroom.exception.BusinessException;
 import org.campus.classroom.mapper.UserMapper;
+import org.campus.classroom.security.DeviceContext;
 import org.campus.classroom.security.LoginUser;
 import org.campus.classroom.service.AuthService;
 import org.campus.classroom.service.EmailCodeService;
 import org.campus.classroom.service.SystemConfigService;
 import org.campus.classroom.service.TokenService;
 import org.campus.classroom.utils.JwtUtil;
+import org.campus.classroom.vo.DeviceSessionVO;
 import org.campus.classroom.vo.LoginVO;
 import org.campus.classroom.vo.UserInfoVO;
 import org.springframework.data.util.Pair;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -81,29 +84,29 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public LoginVO login(LoginUser loginUser) {
+    public LoginVO login(LoginUser loginUser, DeviceContext deviceContext) {
         log.info("[开始登录] userId={}, username={}", loginUser.getId(), loginUser.getUsername());
-        String accessToken = jwtUtil.generateToken(loginUser);
-        String refreshToken = tokenService.generateRefreshToken(loginUser.getId());
+        String accessToken = jwtUtil.generateToken(loginUser, deviceContext);
+        String refreshToken = tokenService.generateRefreshToken(loginUser.getId(), deviceContext);
         LoginVO loginVO = buildLoginVO(loginUser, accessToken, refreshToken);
         log.info("[登录成功] userId={}, username={}, role={}", loginUser.getId(), loginUser.getUsername(), loginUser.getRole());
         return loginVO;
     }
 
     @Override
-    public LoginVO loginByEmailCode(EmailLoginDTO request) {
+    public LoginVO loginByEmailCode(EmailLoginDTO request, DeviceContext deviceContext) {
         User user = requireUserByEmail(request.getEmail());
         ensureUserActive(user);
         emailCodeService.verifyCode(request.getEmail(), EmailCodeScene.LOGIN, request.getVerificationCode());
-        return login(new LoginUser(user));
+        return login(new LoginUser(user), deviceContext);
     }
 
     @Override
-    public LoginVO refresh(String refreshToken) {
+    public LoginVO refresh(String refreshToken, DeviceContext deviceContext) {
         log.info("[刷新Token] request received");
-        Pair<Long, String> rotateResult = tokenService.rotateRefreshToken(refreshToken);
+        Pair<Long, String> rotateResult = tokenService.rotateRefreshToken(refreshToken, deviceContext);
         LoginUser loginUser = new LoginUser(requireActiveUser(rotateResult.getFirst()));
-        String accessToken = jwtUtil.generateToken(loginUser);
+        String accessToken = jwtUtil.generateToken(loginUser, deviceContext);
         return buildLoginVO(loginUser, accessToken, rotateResult.getSecond());
     }
 
@@ -159,6 +162,18 @@ public class AuthServiceImpl implements AuthService {
         user.setNickname(nickname);
         log.info("[修改昵称成功] userId={}, username={}, nickname={}", user.getId(), user.getUsername(), nickname);
         return buildUserInfoVO(new LoginUser(user));
+    }
+
+    @Override
+    public List<DeviceSessionVO> listDeviceSessions(Long userId) {
+        requireActiveUser(userId);
+        return tokenService.listDeviceSessions(userId);
+    }
+
+    @Override
+    public void revokeDeviceSession(Long userId, String deviceId) {
+        requireActiveUser(userId);
+        tokenService.revokeDeviceSession(userId, deviceId);
     }
 
     private void validateEmailCodeScene(String email, EmailCodeScene scene) {

@@ -430,7 +430,7 @@ async function submit() {
 
           <el-form-item
             v-if="mode === MODE_REGISTER || (mode === MODE_LOGIN && loginView === LOGIN_VIEW_FORM && loginMethod === LOGIN_METHOD_PASSWORD)"
-            :label="mode === MODE_REGISTER ? '登录密码' : '密码'"
+            :label="mode === MODE_REGISTER ? '密码' : '密码'"
             prop="password"
           >
             <el-input

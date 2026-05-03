@@ -9,6 +9,8 @@ export const authApi = {
   refresh: (data, config = {}) => http.post('/auth/refresh', data, config),
   logout: (data, config = {}) => http.post('/auth/logout', data, config),
   me: () => http.get('/auth/me'),
+  deviceSessions: () => http.get('/auth/devices'),
+  revokeDevice: deviceId => http.delete(`/auth/devices/${encodeURIComponent(deviceId)}`),
   changePassword: data => http.put('/auth/password', data),
   updateNickname: data => http.put('/auth/nickname', data)
 }

@@ -10,6 +10,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.campus.classroom.common.Result;
 import org.campus.classroom.enums.ResultCode;
+import org.campus.classroom.service.TokenService;
 import org.campus.classroom.utils.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,7 @@ import java.util.Objects;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final JWTUserDetailsService jwtUserDetailsService;
+    private final TokenService tokenService;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Override
@@ -66,8 +68,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Claims claims = jwtUtil.parseToken(token);
             String username = claims.get("username", String.class);
             Integer tokenVersion = claims.get("tokenVersion", Integer.class);
+            String deviceId = claims.get("deviceId", String.class);
 
-            if (username == null || tokenVersion == null) {
+            if (username == null || tokenVersion == null || deviceId == null) {
                 returnUnauthorizedResponse(response);
                 return;
             }
@@ -75,18 +78,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             LoginUser loginUser = (LoginUser) jwtUserDetailsService.loadUserByUsername(username);
             Long tokenUserId = Long.valueOf(claims.getSubject());
             if (!Objects.equals(tokenUserId, loginUser.getId())
-                    || !Objects.equals(tokenVersion, loginUser.getTokenVersion())) {
+                    || !Objects.equals(tokenVersion, loginUser.getTokenVersion())
+                    || !tokenService.isDeviceSessionActive(tokenUserId, deviceId)) {
                 returnUnauthorizedResponse(response);
                 return;
             }
 
             UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            loginUser,
-                            null,
-                            loginUser.getAuthorities()
-                    );
-
+                    new UsernamePasswordAuthenticationToken(loginUser, null, loginUser.getAuthorities());
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (Exception e) {

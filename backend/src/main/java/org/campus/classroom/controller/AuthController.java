@@ -1,5 +1,6 @@
 package org.campus.classroom.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,8 +15,10 @@ import org.campus.classroom.dto.ResetPasswordByCodeDTO;
 import org.campus.classroom.dto.UpdateNicknameDTO;
 import org.campus.classroom.enums.ResultCode;
 import org.campus.classroom.exception.BusinessException;
+import org.campus.classroom.security.DeviceContextResolver;
 import org.campus.classroom.security.LoginUser;
 import org.campus.classroom.service.AuthService;
+import org.campus.classroom.vo.DeviceSessionVO;
 import org.campus.classroom.vo.LoginVO;
 import org.campus.classroom.vo.UserInfoVO;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,12 +27,16 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -38,9 +45,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final AuthService authService;
     private final AuthenticationManager authenticationManager;
+    private final DeviceContextResolver deviceContextResolver;
 
     @PostMapping("/login")
-    public Result<LoginVO> login(@RequestBody @Valid LoginDTO request) {
+    public Result<LoginVO> login(@RequestBody @Valid LoginDTO request, HttpServletRequest httpServletRequest) {
         String username = request.getUsername();
         String password = request.getPassword();
         try {
@@ -49,7 +57,7 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(username, password);
             Authentication authentication = authenticationManager.authenticate(token);
             LoginUser loginUser = (LoginUser) authentication.getPrincipal();
-            LoginVO loginVO = authService.login(loginUser);
+            LoginVO loginVO = authService.login(loginUser, deviceContextResolver.resolve(httpServletRequest));
             return Result.success("登录成功", loginVO);
         } catch (InternalAuthenticationServiceException e) {
             if (e.getCause() instanceof BusinessException businessException) {
@@ -69,8 +77,9 @@ public class AuthController {
     }
 
     @PostMapping("/login/code")
-    public Result<LoginVO> loginByEmailCode(@RequestBody @Valid EmailLoginDTO request) {
-        LoginVO loginVO = authService.loginByEmailCode(request);
+    public Result<LoginVO> loginByEmailCode(@RequestBody @Valid EmailLoginDTO request,
+                                            HttpServletRequest httpServletRequest) {
+        LoginVO loginVO = authService.loginByEmailCode(request, deviceContextResolver.resolve(httpServletRequest));
         return Result.success("登录成功", loginVO);
     }
 
@@ -98,6 +107,19 @@ public class AuthController {
         return Result.success("获取成功", userInfoVO);
     }
 
+    @GetMapping("/devices")
+    public Result<List<DeviceSessionVO>> listDevices(@AuthenticationPrincipal LoginUser user) {
+        List<DeviceSessionVO> sessions = authService.listDeviceSessions(user.getId());
+        return Result.success("获取成功", sessions);
+    }
+
+    @DeleteMapping("/devices/{deviceId}")
+    public Result<Void> revokeDevice(@PathVariable String deviceId,
+                                     @AuthenticationPrincipal LoginUser user) {
+        authService.revokeDeviceSession(user.getId(), deviceId);
+        return Result.success("下线成功");
+    }
+
     @PutMapping("/password")
     public Result<Void> changePassword(@RequestBody @Valid ChangePasswordDTO request,
                                        @AuthenticationPrincipal LoginUser user) {
@@ -113,8 +135,8 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public Result<LoginVO> refresh(@RequestBody @Valid RefreshTokenDTO request) {
-        LoginVO loginVO = authService.refresh(request.getRefreshToken());
+    public Result<LoginVO> refresh(@RequestBody @Valid RefreshTokenDTO request, HttpServletRequest httpServletRequest) {
+        LoginVO loginVO = authService.refresh(request.getRefreshToken(), deviceContextResolver.resolve(httpServletRequest));
         return Result.success("刷新成功", loginVO);
     }
 

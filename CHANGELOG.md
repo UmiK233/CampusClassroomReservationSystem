@@ -358,4 +358,9 @@ ___
 * 注册表单新增可选昵称输入，后端优先保存用户填写的昵称，未填写时才回退为用户名。
 * 注册表单将昵称调整到最上方，并新增个人中心昵称修改接口与前端表单，修改后会立即同步当前登录用户信息。
 * 调整退出登录逻辑：`/auth/logout` 现在也会递增 `tokenVersion` 并撤销该用户全部 `refreshToken`，使当前 `accessToken` 立即失效。
+* refresh token 的 Redis value 由单个 `userId` 改为 hash session 对象，新增 `deviceId`、`deviceName`、`loginTime` 字段，并由前端统一发送设备标识请求头。
+* 新增三设备上限策略：同设备重复登录覆盖旧会话，新设备登录超过 3 台时自动挤掉最旧设备的登录记录；refresh 时会校验 `deviceId` 与原会话一致。
+* 新增在线设备管理：个人中心可查看当前设备列表、标记当前设备并手动下线任意设备；后端会基于 access token 中的 `deviceId` 校验设备会话是否仍有效，被踢设备会立即失效。
+* 明确区分两类下线语义：`POST /auth/logout` 表示当前账号全部下线，会递增 `tokenVersion` 并撤销该用户全部 refresh 会话；`DELETE /auth/devices/{deviceId}` 表示单独下线某一台设备，只移除该设备对应的 Redis 会话。
+* access token 的失效分为两条链路：全部下线、改密、找回密码依赖 JWT 中的 `tokenVersion` 与数据库版本比对实现全局失效；单设备下线依赖 JWT 中的 `deviceId` 与 Redis 活跃设备会话比对实现定点失效。
 

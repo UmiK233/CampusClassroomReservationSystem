@@ -1,19 +1,25 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { ElMessage } from 'element-plus'
-import { UserFilled, Clock, Histogram, Timer, Lock, EditPen } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { UserFilled, Clock, Histogram, Timer, Lock, EditPen, Monitor } from '@element-plus/icons-vue'
 import { authApi, reservationApi } from '../api'
+import { getDeviceId } from '../api/http'
 import { useAuthStore } from '../stores/auth'
 import { userRoleText } from '../utils/dict'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const loading = ref(false)
 const nicknameLoading = ref(false)
 const passwordLoading = ref(false)
+const deviceLoading = ref(false)
 const nicknameFormRef = ref()
 const passwordFormRef = ref()
 const activeReservations = ref([])
 const historyReservations = ref([])
+const deviceSessions = ref([])
+const currentDeviceId = getDeviceId()
 const nicknameForm = ref({
   nickname: ''
 })
@@ -67,6 +73,21 @@ const totalReservations = computed(() => activeReservations.value.length + histo
 const checkedInCount = computed(() => historyReservations.value.filter(item => item.attendanceStatus === 'CHECKED_IN').length)
 const cancelledCount = computed(() => historyReservations.value.filter(item => item.status === 'CANCELLED').length)
 
+function isCurrentDevice(session) {
+  return session?.deviceId === currentDeviceId
+}
+
+function formatLoginTime(timestamp) {
+  if (!timestamp) return '-'
+  return new Date(timestamp * 1000).toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
 async function refreshUser() {
   try {
     const data = await authApi.me()
@@ -77,16 +98,27 @@ async function refreshUser() {
   }
 }
 
+async function loadDeviceSessions() {
+  deviceLoading.value = true
+  try {
+    deviceSessions.value = (await authApi.deviceSessions()) || []
+  } finally {
+    deviceLoading.value = false
+  }
+}
+
 async function loadData() {
   loading.value = true
   try {
     await refreshUser()
-    const [active, history] = await Promise.all([
+    const [active, history, sessions] = await Promise.all([
       reservationApi.list(),
-      reservationApi.history()
+      reservationApi.history(),
+      authApi.deviceSessions()
     ])
     activeReservations.value = active || []
     historyReservations.value = history || []
+    deviceSessions.value = sessions || []
   } finally {
     loading.value = false
   }
@@ -104,6 +136,33 @@ async function updateNickname() {
     ElMessage.success('昵称修改成功')
   } finally {
     nicknameLoading.value = false
+  }
+}
+
+async function revokeDevice(session) {
+  const currentDevice = isCurrentDevice(session)
+  await ElMessageBox.confirm(
+    currentDevice ? '下线当前设备后将返回登录页，是否继续？' : `确认下线设备“${session.deviceName}”吗？`,
+    '确认下线',
+    {
+      type: 'warning',
+      confirmButtonText: '确认',
+      cancelButtonText: '取消'
+    }
+  )
+
+  deviceLoading.value = true
+  try {
+    await authApi.revokeDevice(session.deviceId)
+    ElMessage.success('设备已下线')
+    if (currentDevice) {
+      authStore.clearAuth()
+      router.replace('/login')
+      return
+    }
+    await loadDeviceSessions()
+  } finally {
+    deviceLoading.value = false
   }
 }
 
@@ -243,6 +302,33 @@ onMounted(loadData)
             保存昵称
           </el-button>
         </el-form>
+      </section>
+
+      <section class="panel device-panel" v-loading="deviceLoading">
+        <div class="toolbar">
+          <div>
+            <strong><el-icon><Monitor /></el-icon> 登录设备</strong>
+            <div class="hint">最多保留 3 台设备，新设备登录会自动挤掉最旧设备</div>
+          </div>
+        </div>
+        <div v-if="deviceSessions.length" class="device-list">
+          <div v-for="session in deviceSessions" :key="session.deviceId" class="device-item">
+            <div class="device-meta">
+              <strong>{{ session.deviceName }}</strong>
+              <div class="device-subline">
+                <span>{{ session.deviceId }}</span>
+                <span>登录时间：{{ formatLoginTime(session.loginTime) }}</span>
+              </div>
+            </div>
+            <div class="device-actions">
+              <el-tag v-if="isCurrentDevice(session)" type="success">当前设备</el-tag>
+              <el-button size="small" type="danger" plain @click="revokeDevice(session)">
+                {{ isCurrentDevice(session) ? '退出当前设备' : '下线设备' }}
+              </el-button>
+            </div>
+          </div>
+        </div>
+        <el-empty v-else description="暂无在线设备记录" />
       </section>
 
       <section class="panel password-panel">
@@ -394,6 +480,7 @@ onMounted(loadData)
   gap: 16px;
 }
 
+.device-panel,
 .password-panel {
   grid-column: 1 / -1;
 }
@@ -404,21 +491,51 @@ onMounted(loadData)
   margin-top: 16px;
 }
 
+.device-list,
 .limit-list,
 .info-list {
   display: grid;
   gap: 12px;
 }
 
+.device-item,
 .limit-item,
 .info-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 12px;
   border: 1px solid #e4e8f0;
   border-radius: 8px;
   background: #fff;
+}
+
+.device-meta {
+  min-width: 0;
+}
+
+.device-meta strong {
+  display: block;
+  color: #172033;
+  font-size: 14px;
+}
+
+.device-subline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+  color: #667085;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.device-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .limit-item span,
@@ -460,15 +577,26 @@ onMounted(loadData)
     grid-template-columns: 1fr;
   }
 
-  .profile-hero {
+  .profile-hero,
+  .device-item {
     flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .profile-hero {
     text-align: center;
+    align-items: center;
   }
 }
 
 @media (max-width: 640px) {
   .metric-row {
     grid-template-columns: 1fr;
+  }
+
+  .device-actions {
+    width: 100%;
+    justify-content: space-between;
   }
 }
 </style>

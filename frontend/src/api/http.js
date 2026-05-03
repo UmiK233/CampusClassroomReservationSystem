@@ -14,7 +14,45 @@ const refreshClient = axios.create({
   timeout: 12000
 })
 
+const DEVICE_ID_KEY = 'campus_reservation_device_id'
 let refreshPromise = null
+
+export function getDeviceId() {
+  const existing = localStorage.getItem(DEVICE_ID_KEY)
+  if (existing) return existing
+
+  const value =
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `device-${Date.now()}-${Math.random().toString(16).slice(2)}`
+  localStorage.setItem(DEVICE_ID_KEY, value)
+  return value
+}
+
+function getDeviceName() {
+  const ua = navigator.userAgent || ''
+  const browser =
+    ua.includes('Edg/') ? 'Edge'
+      : ua.includes('Chrome/') ? 'Chrome'
+        : ua.includes('Firefox/') ? 'Firefox'
+          : ua.includes('Safari/') && !ua.includes('Chrome/') ? 'Safari'
+            : 'Browser'
+  const os =
+    ua.includes('Windows') ? 'Windows'
+      : ua.includes('Mac OS X') ? 'macOS'
+        : ua.includes('Android') ? 'Android'
+          : ua.includes('iPhone') || ua.includes('iPad') ? 'iOS'
+            : ua.includes('Linux') ? 'Linux'
+              : 'Unknown OS'
+  return `${browser} on ${os}`
+}
+
+function attachDeviceHeaders(config) {
+  config.headers = config.headers ?? {}
+  config.headers['X-Device-Id'] = getDeviceId()
+  config.headers['X-Device-Name'] = getDeviceName()
+  return config
+}
 
 function buildApiError(message, body) {
   const apiError = new Error(message)
@@ -71,6 +109,7 @@ async function retryWithRefresh(config, originalError) {
     const accessToken = await refreshAccessToken(authStore)
     config.headers = config.headers ?? {}
     config.headers.Authorization = `Bearer ${accessToken}`
+    attachDeviceHeaders(config)
     return http(config)
   } catch (refreshError) {
     authStore.clearAuth()
@@ -82,11 +121,14 @@ async function retryWithRefresh(config, originalError) {
 http.interceptors.request.use(config => {
   const authStore = useAuthStore(pinia)
   const accessToken = authStore.accessToken
+  attachDeviceHeaders(config)
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`
   }
   return config
 })
+
+refreshClient.interceptors.request.use(config => attachDeviceHeaders(config))
 
 http.interceptors.response.use(
   response => {
