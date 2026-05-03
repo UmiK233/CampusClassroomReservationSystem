@@ -21,6 +21,7 @@ import org.campus.classroom.mapper.UserMapper;
 import org.campus.classroom.service.AdminService;
 import org.campus.classroom.service.NotificationService;
 import org.campus.classroom.service.SystemConfigService;
+import org.campus.classroom.service.TokenService;
 import org.campus.classroom.vo.AdminAnalyticsVO;
 import org.campus.classroom.vo.AdminBuildingHeatVO;
 import org.campus.classroom.vo.AdminClassroomUtilizationVO;
@@ -61,6 +62,7 @@ public class AdminServiceImpl implements AdminService {
     private final AttendanceMapper attendanceMapper;
     private final NotificationService notificationService;
     private final SystemConfigService systemConfigService;
+    private final TokenService tokenService;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
@@ -95,6 +97,31 @@ public class AdminServiceImpl implements AdminService {
 
         log.info("[管理员更新用户状态成功] 管理员ID={}, 目标用户ID={}, 新状态={}", adminUserId, targetUserId, status);
         return toUserVO(getUser(targetUserId));
+    }
+
+    @Override
+    @Transactional
+    public void forceLogoutUser(Long adminUserId, Long targetUserId, String reason) {
+        if (Objects.equals(adminUserId, targetUserId)) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "管理员不能强制下线自己");
+        }
+        User user = getUser(targetUserId);
+        if ("ADMIN".equals(user.getRole())) {
+            throw new BusinessException(ResultCode.FORBIDDEN, "不能通过此接口强制下线管理员");
+        }
+
+        int updatedRows = userMapper.incrementTokenVersion(targetUserId);
+        if (updatedRows != 1) {
+            throw new BusinessException(ResultCode.CONFLICT, "用户登录状态更新失败，请刷新后重试");
+        }
+        tokenService.revokeAllRefreshTokens(targetUserId);
+        notificationService.createSystemNotification(
+                targetUserId,
+                "USER_STATUS",
+                "账号已被管理员强制下线",
+                buildForceLogoutNotice(reason)
+        );
+        log.info("[管理员强制下线用户成功] adminUserId={}, targetUserId={}", adminUserId, targetUserId);
     }
 
     @Override
@@ -329,6 +356,7 @@ public class AdminServiceImpl implements AdminService {
     private AdminUserVO toUserVO(User user) {
         AdminUserVO userVO = new AdminUserVO();
         BeanUtils.copyProperties(user, userVO);
+        userVO.setOnline(tokenService.hasActiveSession(user.getId()));
         return userVO;
     }
 
@@ -569,6 +597,14 @@ public class AdminServiceImpl implements AdminService {
 
     private String buildReservationCancelNotice(String reason) {
         String content = "您的预约已被管理员取消，请重新选择时间或联系管理员。";
+        if (!StringUtils.hasText(reason)) {
+            return content;
+        }
+        return content + "\n原因：" + reason.trim();
+    }
+
+    private String buildForceLogoutNotice(String reason) {
+        String content = "您的账号已被管理员强制下线，请重新登录后继续使用。";
         if (!StringUtils.hasText(reason)) {
             return content;
         }

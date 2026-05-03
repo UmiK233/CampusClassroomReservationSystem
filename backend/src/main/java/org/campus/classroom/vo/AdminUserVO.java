@@ -12,5 +12,6 @@ public class AdminUserVO {
     private String email;
     private String role;
     private Integer status;
+    private Boolean online;
     private LocalDateTime createTime;
 }

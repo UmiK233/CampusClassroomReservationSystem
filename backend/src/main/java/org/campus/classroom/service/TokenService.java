@@ -17,6 +17,8 @@ public interface TokenService {
 
     void revokeAllRefreshTokens(Long userId);
 
+    boolean hasActiveSession(Long userId);
+
     boolean isDeviceSessionActive(Long userId, String deviceId);
 
     List<DeviceSessionVO> listDeviceSessions(Long userId);

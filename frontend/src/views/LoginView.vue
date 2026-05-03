@@ -115,7 +115,7 @@ function passwordValidator(message) {
       callback(new Error(message))
       return
     }
-    if (value.length < 8 || value.length > 20) {
+    if (value.length < 1 || value.length > 20) {
       callback(new Error('密码长度必须在 8 到 20 位之间'))
       return
     }

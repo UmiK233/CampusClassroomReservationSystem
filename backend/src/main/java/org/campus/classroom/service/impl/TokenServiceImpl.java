@@ -286,6 +286,15 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
+    public boolean hasActiveSession(Long userId) {
+        if (userId == null) {
+            return false;
+        }
+        Long sessionCount = stringRedisTemplate.opsForHash().size(buildUserDeviceHashKey(userId));
+        return sessionCount != null && sessionCount > 0;
+    }
+
+    @Override
     public boolean isDeviceSessionActive(Long userId, String deviceId) {
         if (userId == null || deviceId == null || deviceId.isBlank()) {
             return false;

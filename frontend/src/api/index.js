@@ -59,6 +59,7 @@ export const adminApi = {
   users: params => http.get('/admin/users', { params }),
   exportUsers: params => http.get('/admin/users/export', { params, responseType: 'blob' }),
   updateUserStatus: (id, data) => http.patch(`/admin/users/${id}/status`, data),
+  forceLogoutUser: (id, data) => http.post(`/admin/users/${id}/logout`, data),
   reservations: params => http.get('/admin/reservations', { params }),
   exportReservations: params => http.get('/admin/reservations/export', { params, responseType: 'blob' }),
   cancelReservation: (id, data) => http.delete(`/admin/reservations/${id}`, { data }),
