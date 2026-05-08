@@ -27,6 +27,7 @@ const canceling = ref(false)
 const waitlistCancelingId = ref(null)
 const pendingCancelReservation = ref(null)
 
+const isStudent = computed(() => authStore.role === 'STUDENT')
 const sortedActive = computed(() => [...active.value].sort((a, b) => getTime(a.startTime) - getTime(b.startTime)))
 const currentReservations = computed(() => sortedActive.value.filter(item => getTime(item.startTime) <= Date.now() && getTime(item.endTime) >= Date.now()))
 const upcomingReservations = computed(() => sortedActive.value.filter(item => getTime(item.startTime) > Date.now()))
@@ -36,10 +37,11 @@ const waitingWaitlistCount = computed(() => waitlists.value.filter(item => item.
 async function loadData() {
   loading.value = true
   try {
+    const waitlistRequest = isStudent.value ? waitlistApi.list() : Promise.resolve([])
     const [activeList, historyList, waitlistList, notificationList, unread] = await Promise.all([
       reservationApi.list(),
       reservationApi.history(),
-      waitlistApi.list(),
+      waitlistRequest,
       notificationApi.list({ limit: 6 }),
       notificationApi.unreadCount()
     ])
