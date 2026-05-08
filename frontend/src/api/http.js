@@ -71,6 +71,10 @@ function redirectToLogin() {
   }
 }
 
+function showError(message, fallback = '请求失败') {
+  ElMessage.error(message || fallback)
+}
+
 async function refreshAccessToken(authStore) {
   if (!authStore.refreshToken) {
     throw new Error('missing refresh token')
@@ -136,10 +140,16 @@ http.interceptors.response.use(
     const silentError = response.config?.silentError
     if (body && typeof body.code !== 'undefined' && body.code !== 200) {
       if (body.code === 401) {
+        if (isAuthRoute(response.config?.url)) {
+          if (!silentError) {
+            showError(body.message)
+          }
+          return Promise.reject(buildApiError(body.message || '请求失败', body))
+        }
         return retryWithRefresh(response.config, buildApiError(body.message || '请求失败', body))
       }
       if (!silentError) {
-        ElMessage.error(body.message || '请求失败')
+        showError(body.message)
       }
       return Promise.reject(buildApiError(body.message || '请求失败', body))
     }
@@ -150,10 +160,16 @@ http.interceptors.response.use(
     const message = error.response?.data?.message || error.message || '网络请求失败'
     const silentError = error.config?.silentError
     if (status === 401) {
+      if (isAuthRoute(error.config?.url)) {
+        if (!silentError) {
+          showError(message)
+        }
+        return Promise.reject(error)
+      }
       return retryWithRefresh(error.config, error)
     }
     if (!silentError) {
-      ElMessage.error(message)
+      showError(message, '网络请求失败')
     }
     return Promise.reject(error)
   }
