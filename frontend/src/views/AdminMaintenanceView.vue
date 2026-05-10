@@ -33,7 +33,8 @@ const form = ref({
   classroomId: null,
   seatId: null,
   timeRange: [],
-  reason: ''
+  reason: '',
+  clearConflictingReservations: false
 })
 
 const activeCount = computed(() => maintenanceList.value.filter(item => item.status === 'ACTIVE').length)
@@ -110,7 +111,8 @@ async function openCreate() {
     classroomId: null,
     seatId: null,
     timeRange: [],
-    reason: ''
+    reason: '',
+    clearConflictingReservations: false
   }
   await loadClassrooms(form.value)
   maintenanceDialog.value = true
@@ -135,6 +137,14 @@ async function createMaintenance() {
     return
   }
 
+  if (form.value.clearConflictingReservations) {
+    await ElMessageBox.confirm(
+      '开启后会取消维护时间段内已有的冲突预约，并向相关用户发送取消通知。',
+      '确认清退冲突预约',
+      { type: 'warning' }
+    )
+  }
+
   saving.value = true
   try {
     await adminApi.createMaintenance({
@@ -142,9 +152,10 @@ async function createMaintenance() {
       resourceId: form.value.resourceType === 'CLASSROOM' ? form.value.classroomId : form.value.seatId,
       start_time: toUtcIsoString(startTime),
       end_time: toUtcIsoString(endTime),
-      reason: form.value.reason
+      reason: form.value.reason,
+      clear_conflicting_reservations: form.value.clearConflictingReservations
     })
-    ElMessage.success('维护已创建')
+    ElMessage.success(form.value.clearConflictingReservations ? '维护已创建，冲突预约已清退' : '维护已创建')
     maintenanceDialog.value = false
     await loadMaintenance()
   } finally {
@@ -223,7 +234,7 @@ onMounted(async () => {
     <div class="toolbar">
       <div>
         <strong>维护窗口</strong>
-        <div class="hint">维护时间段内，相关教室或座位会自动阻止新预约。</div>
+        <div class="hint">维护时间段内，相关教室或座位会自动阻止新的预约。</div>
       </div>
       <div class="form-row">
         <el-select v-model="filters.status" clearable placeholder="状态" style="width: 120px">
@@ -355,6 +366,12 @@ onMounted(async () => {
           show-word-limit
           placeholder="例如：投影仪维修、座椅损坏、考试占用"
         />
+      </el-form-item>
+      <el-form-item>
+        <el-checkbox v-model="form.clearConflictingReservations">
+          清退维护时间段内的冲突预约
+        </el-checkbox>
+        <div class="hint">开启后，系统会先创建维护，再取消冲突预约并通知相关用户。</div>
       </el-form-item>
     </el-form>
     <template #footer>

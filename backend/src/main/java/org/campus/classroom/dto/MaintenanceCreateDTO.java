@@ -26,4 +26,6 @@ public class MaintenanceCreateDTO {
 
     @Size(max = 255, message = "维护原因长度不能超过255")
     private String reason;
+    @JsonProperty("clear_conflicting_reservations")
+    private Boolean clearConflictingReservations;
 }

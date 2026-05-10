@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.campus.classroom.dto.MaintenanceCreateDTO;
 import org.campus.classroom.entity.Classroom;
 import org.campus.classroom.entity.MaintenanceWindow;
+import org.campus.classroom.entity.Reservation;
 import org.campus.classroom.entity.Seat;
 import org.campus.classroom.entity.User;
 import org.campus.classroom.enums.ClassroomStatus;
@@ -16,16 +17,20 @@ import org.campus.classroom.mapper.MaintenanceWindowMapper;
 import org.campus.classroom.mapper.ReservationMapper;
 import org.campus.classroom.mapper.SeatMapper;
 import org.campus.classroom.mapper.UserMapper;
+import org.campus.classroom.service.AdminService;
 import org.campus.classroom.service.MaintenanceService;
 import org.campus.classroom.vo.MaintenanceWindowVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -41,6 +46,7 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     private final ClassroomMapper classroomMapper;
     private final SeatMapper seatMapper;
     private final UserMapper userMapper;
+    private final AdminService adminService;
 
     @Override
     public List<MaintenanceWindowVO> list(String status, String resourceType, Long classroomId) {
@@ -61,7 +67,16 @@ public class MaintenanceServiceImpl implements MaintenanceService {
         validateTime(startTime, endTime);
 
         Long classroomId = resolveAndLockClassroomId(resourceType, request.getResourceId());
-        validateNoReservationConflict(resourceType, request.getResourceId(), classroomId, startTime, endTime);
+        List<Reservation> conflicts = findReservationConflicts(
+                resourceType,
+                request.getResourceId(),
+                classroomId,
+                startTime,
+                endTime
+        );
+        if (!conflicts.isEmpty() && !Boolean.TRUE.equals(request.getClearConflictingReservations())) {
+            throw new BusinessException(ResultCode.CONFLICT, "维护时间段内已有预约，不能创建维护");
+        }
         validateNoMaintenanceConflict(resourceType, request.getResourceId(), classroomId, startTime, endTime);
 
         MaintenanceWindow maintenanceWindow = new MaintenanceWindow();
@@ -74,6 +89,13 @@ public class MaintenanceServiceImpl implements MaintenanceService {
         maintenanceWindow.setStatus("ACTIVE");
         maintenanceWindow.setCreateBy(adminUserId);
         maintenanceWindowMapper.insert(maintenanceWindow);
+
+        if (!conflicts.isEmpty()) {
+            String cancelReason = buildConflictCancelReason(request.getReason());
+            for (Reservation conflict : conflicts) {
+                adminService.cancelReservation(adminUserId, conflict.getId(), cancelReason);
+            }
+        }
         return maintenanceWindow.getId();
     }
 
@@ -122,20 +144,27 @@ public class MaintenanceServiceImpl implements MaintenanceService {
         return seat.getClassroomId();
     }
 
-    private void validateNoReservationConflict(String resourceType, Long resourceId, Long classroomId,
-                                               LocalDateTime startTime, LocalDateTime endTime) {
+    private List<Reservation> findReservationConflicts(String resourceType, Long resourceId, Long classroomId,
+                                                       LocalDateTime startTime, LocalDateTime endTime) {
+        List<Reservation> conflicts = new ArrayList<>();
         if (ResourceType.CLASSROOM.name().equals(resourceType)) {
-            if (!reservationMapper.selectClassroomConflictsForUpdate(classroomId, startTime, endTime).isEmpty()
-                    || !reservationMapper.selectSeatConflictsInClassroomForUpdate(classroomId, startTime, endTime).isEmpty()) {
-                throw new BusinessException(ResultCode.CONFLICT, "维护时间段内已有预约，不能创建维护");
-            }
-            return;
+            conflicts.addAll(reservationMapper.selectClassroomConflictsForUpdate(classroomId, startTime, endTime));
+            conflicts.addAll(reservationMapper.selectSeatConflictsInClassroomForUpdate(classroomId, startTime, endTime));
+        } else {
+            conflicts.addAll(reservationMapper.selectSeatConflictsForUpdate(resourceId, startTime, endTime));
+            conflicts.addAll(reservationMapper.selectClassroomConflictsForUpdate(classroomId, startTime, endTime));
         }
-
-        if (!reservationMapper.selectSeatConflictsForUpdate(resourceId, startTime, endTime).isEmpty()
-                || !reservationMapper.selectClassroomConflictsForUpdate(classroomId, startTime, endTime).isEmpty()) {
-            throw new BusinessException(ResultCode.CONFLICT, "维护时间段内已有预约，不能创建维护");
-        }
+        return conflicts.stream()
+                .filter(item -> item.getId() != null)
+                .collect(Collectors.toMap(
+                        Reservation::getId,
+                        Function.identity(),
+                        (left, right) -> left,
+                        LinkedHashMap::new
+                ))
+                .values()
+                .stream()
+                .toList();
     }
 
     private void validateNoMaintenanceConflict(String resourceType, Long resourceId, Long classroomId,
@@ -232,6 +261,13 @@ public class MaintenanceServiceImpl implements MaintenanceService {
 
     private String normalize(String value) {
         return value == null || value.isBlank() ? null : value.trim().toUpperCase();
+    }
+
+    private String buildConflictCancelReason(String maintenanceReason) {
+        if (!StringUtils.hasText(maintenanceReason)) {
+            return "资源维护";
+        }
+        return "资源维护：" + maintenanceReason.trim();
     }
 
     private LocalDateTime toUtcLocalDateTime(OffsetDateTime dateTime) {

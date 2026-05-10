@@ -48,6 +48,7 @@ public class AdminMaintenanceController {
                 id,
                 request.getResourceType() + "#" + request.getResourceId(),
                 "start=" + request.getStartTime() + ", end=" + request.getEndTime()
+                        + (Boolean.TRUE.equals(request.getClearConflictingReservations()) ? ", clear_conflicts=true" : "")
                         + (request.getReason() == null || request.getReason().isBlank() ? "" : ", reason=" + request.getReason().trim())
         );
         return Result.success("创建维护成功", id);
